@@ -277,19 +277,28 @@ private fun Header(state: TableRenderState, onToggleSound: () -> Unit, onSetting
         SoundButton(state.settings, onToggleSound)
         SettingsButton(onSettings)
         Spacer(Modifier.width(4.dp))
+        // With large text on a phone the label no longer fits beside the icons: keep
+        // the help glyph as a 48 dp button that still announces "How to Play".
+        val iconOnly = metrics.compact && metrics.largeText
         Box(
             Modifier
                 .heightIn(min = 48.dp)
+                .widthIn(min = 48.dp)
                 .clickable(role = Role.Button, onClick = onRules)
-                .padding(horizontal = 8.dp),
+                .testTag("rules")
+                .then(if (iconOnly) Modifier.semantics { contentDescription = UiCopy.rulesButton } else Modifier)
+                .padding(horizontal = if (iconOnly) 0.dp else 8.dp),
             contentAlignment = Alignment.Center,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(UiCopy.rulesButton, style = NoirType.style(14.sp, color = Noir.Text), maxLines = 1, softWrap = false)
-                if (!metrics.compact) {
-                    Spacer(Modifier.width(8.dp))
-                    Box(Modifier.size(20.dp).border(1.dp, Noir.Muted, CircleShape), contentAlignment = Alignment.Center) {
-                        Text("?", style = NoirType.style(11.sp, color = Noir.Muted))
+                if (!iconOnly) {
+                    Text(UiCopy.rulesButton, style = NoirType.style(14.sp, color = Noir.Text), maxLines = 1, softWrap = false)
+                }
+                if (!metrics.compact || iconOnly) {
+                    if (!iconOnly) Spacer(Modifier.width(8.dp))
+                    val glyph = if (iconOnly) 32.dp else 20.dp
+                    Box(Modifier.size(glyph).border(1.dp, if (iconOnly) Noir.Line else Noir.Muted, CircleShape), contentAlignment = Alignment.Center) {
+                        Text("?", style = NoirType.style(if (iconOnly) 12.sp else 11.sp, color = if (iconOnly) Noir.TextDialogBody else Noir.Muted))
                     }
                 }
             }
@@ -382,7 +391,8 @@ private fun SurfaceTopBar(state: TableRenderState, onSeatCount: (Int) -> Unit, o
             ) {
                 OpponentsButton(state, onOpponents)
                 Spacer(Modifier.weight(1f))
-                SeatCountPicker(state.settings, onSeatCount)
+                // On the narrowest phones the "6 players" value carries the label, so both fit on one row.
+                SeatCountPicker(state.settings, onSeatCount, showLabel = !metrics.tiny)
             }
             DifficultyPicker(state.settings, onDifficulty)
         }
@@ -464,11 +474,11 @@ private fun OpponentsButton(state: TableRenderState, onClick: () -> Unit) {
 }
 
 @Composable
-private fun SeatCountPicker(settings: SettingsState, onSeatCount: (Int) -> Unit) {
+private fun SeatCountPicker(settings: SettingsState, onSeatCount: (Int) -> Unit, showLabel: Boolean = true) {
     var open by remember { mutableStateOf(false) }
     val current = settings.seatCountOptions.firstOrNull { it.value == settings.requestedSeatCount }?.label ?: UiCopy.playersOption(settings.requestedSeatCount)
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(UiCopy.playersLabel, style = NoirType.style(12.sp, color = Noir.TextSubtle))
+        if (showLabel) Text(UiCopy.playersLabel, style = NoirType.style(12.sp, color = Noir.TextSubtle))
         Box {
             Row(
                 Modifier
