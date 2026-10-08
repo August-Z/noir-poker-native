@@ -187,7 +187,7 @@ jobs:
     name: iOS build, Swift tests, and simulator launch
     needs: source
     runs-on: macos-15
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
         with:
@@ -198,7 +198,9 @@ jobs:
           swift --version
           brew list xcodegen >/dev/null 2>&1 || brew install xcodegen
       - name: Test native Swift core
-        run: swift test --package-path ios/Packages/PokerCore
+        # Optimized build with testability: the review and simulation fixtures
+        # take over 20 minutes in a debug build on hosted macOS runners.
+        run: swift test --package-path ios/Packages/PokerCore -c release -Xswiftc -enable-testing
       - name: Generate and build Xcode project
         run: |
           xcodegen generate --spec ios/project.yml

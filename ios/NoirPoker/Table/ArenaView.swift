@@ -148,7 +148,6 @@ private struct CenterView: View {
                 .minimumHitTarget()
             }
             .buttonStyle(PressScaleStyle())
-            .accessibilityElement(children: .ignore)
             .accessibilityLabel("\(state.potButtonLabel), \(state.potText)")
             .accessibilityHint(state.potButtonA11y)
             .accessibilityIdentifier("pot-details")
