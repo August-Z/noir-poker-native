@@ -24,20 +24,43 @@ import kotlin.math.exp
 import kotlin.math.ln
 import kotlin.math.sin
 
-/** The session timer on the main looper, with a monotonic clock that keeps running in deep sleep. */
-class HandlerScheduler(private val handler: Handler = Handler(Looper.getMainLooper())) : Scheduler {
-    override val nowMs: Long get() = SystemClock.elapsedRealtime()
+/**
+ * The session timer on the main looper, with a monotonic clock that keeps running
+ * in deep sleep. A [timeScale] above 1 runs the session clock faster for UI tests:
+ * the clock and every delay are scaled together, so deadlines stay consistent,
+ * and changing the scale keeps the clock continuous. Main thread only.
+ */
+class HandlerScheduler(
+    private val handler: Handler = Handler(Looper.getMainLooper()),
+    timeScale: Double = 1.0,
+) : Scheduler {
+    private var anchorRealMs = SystemClock.elapsedRealtime()
+    private var anchorVirtualMs = anchorRealMs.toDouble()
+
+    var timeScale: Double = timeScale
+        set(value) {
+            require(value > 0.0)
+            val now = virtualNow()
+            anchorRealMs = SystemClock.elapsedRealtime()
+            anchorVirtualMs = now
+            field = value
+        }
+
+    private fun virtualNow(): Double = anchorVirtualMs + (SystemClock.elapsedRealtime() - anchorRealMs) * timeScale
+
+    override val nowMs: Long get() = virtualNow().toLong()
 
     override fun schedule(delayMs: Long, action: () -> Unit): Cancellable {
         val runnable = Runnable(action)
-        handler.postDelayed(runnable, maxOf(0L, delayMs))
+        handler.postDelayed(runnable, (maxOf(0L, delayMs) / timeScale).toLong())
         return Cancellable { handler.removeCallbacks(runnable) }
     }
 }
 
 /** Preferences in `SharedPreferences`, under the reference's keys (`noir-table-v1`, …). */
 class SharedPreferencesStorage(private val prefs: SharedPreferences) : KeyValueStorage {
-    constructor(context: Context) : this(context.getSharedPreferences("noir-preferences", Context.MODE_PRIVATE))
+    constructor(context: Context, name: String = LaunchOptions.DEFAULT_PREFERENCES) :
+        this(context.getSharedPreferences(name, Context.MODE_PRIVATE))
 
     override fun getString(key: String): String? = prefs.getString(key, null)
 
