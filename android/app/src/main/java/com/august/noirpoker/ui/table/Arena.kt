@@ -60,6 +60,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
@@ -73,7 +74,9 @@ import com.august.noirpoker.core.Phase
 import com.august.noirpoker.core.session.ActionChip
 import com.august.noirpoker.core.session.HeroState
 import com.august.noirpoker.core.session.SeatState
+import com.august.noirpoker.core.session.SessionEffect
 import com.august.noirpoker.core.session.TableRenderState
+import kotlinx.coroutines.flow.Flow
 import com.august.noirpoker.ui.UiCopy
 import com.august.noirpoker.ui.components.CardBackView
 import com.august.noirpoker.ui.components.CardEntrance
@@ -167,15 +170,40 @@ fun Arena(
     onTogglePeek: (Int) -> Unit,
     onPotDetails: () -> Unit,
     modifier: Modifier = Modifier,
+    effects: Flow<SessionEffect>? = null,
+) {
+    // The arena is a spatial diagram: its text scales up to 1.3× so seats keep their
+    // places; above that the full-size seat list below the table carries the details.
+    val outer = androidx.compose.ui.platform.LocalDensity.current
+    val fontScale = outer.fontScale.coerceAtMost(ARENA_MAX_FONT_SCALE)
+    androidx.compose.runtime.CompositionLocalProvider(
+        androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(outer.density, fontScale),
+    ) {
+        ArenaContent(state, onTogglePeek, onPotDetails, modifier, effects, fontScale)
+    }
+}
+
+/** Largest text scale used inside the arena. */
+const val ARENA_MAX_FONT_SCALE = 1.3f
+
+@Composable
+private fun ArenaContent(
+    state: TableRenderState,
+    onTogglePeek: (Int) -> Unit,
+    onPotDetails: () -> Unit,
+    modifier: Modifier,
+    effects: Flow<SessionEffect>?,
+    fontScale: Float,
 ) {
     val metrics = LocalNoirMetrics.current
-    val fontScale = androidx.compose.ui.platform.LocalDensity.current.fontScale
+    val anchors = remember { ArenaAnchors() }
     val done = state.phase == Phase.DONE
     val geo = arenaGeometry(state.playerCount, done, state.hasFullPlayerNames, metrics, fontScale)
     BoxWithConstraints(
         modifier
             .fillMaxWidth()
             .height(geo.height)
+            .then(anchors.rootModifier())
             .semantics { contentDescription = UiCopy.tableRegionA11y },
     ) {
         val cards = cardMetrics(state.playerCount, metrics, maxWidth)
@@ -190,27 +218,33 @@ fun Arena(
             state,
             cards,
             onPotDetails,
+            anchors,
             Modifier
                 .align(Alignment.TopCenter)
                 .offset(y = geo.height * geo.centerTop),
         )
+        // Settled 6-max on phones: the two upper side seats move up 20 dp to clear the badges.
+        val lift = if (metrics.compact && done && state.playerCount == 6) setOf(2, 4) else emptySet()
+        SeatsLayout(state.seats, lift, 20.dp, Modifier.fillMaxSize()) { seat ->
+            SeatView(seat, state, cards, onTogglePeek, anchors)
+        }
+        // The hero sits above the seats (z 4 over z 3), bottom-anchored 20 dp above the arena edge.
         HeroArea(
             state.hero,
             state,
             cards,
+            anchors,
             Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 20.dp),
         )
-        SeatsLayout(state.seats, Modifier.fillMaxSize()) { seat ->
-            SeatView(seat, state, cards, onTogglePeek)
-        }
+        ChipFlightLayer(effects, anchors)
     }
 }
 
 /** Places each seat's top-center at (layoutX %, layoutY %) of the arena, clamped inside it. */
 @Composable
-private fun SeatsLayout(seats: List<SeatState>, modifier: Modifier, content: @Composable (SeatState) -> Unit) {
+private fun SeatsLayout(seats: List<SeatState>, lifted: Set<Int>, lift: Dp, modifier: Modifier, content: @Composable (SeatState) -> Unit) {
     Layout(
         content = { seats.forEach { seat -> Box { content(seat) } } },
         modifier = modifier,
@@ -223,7 +257,8 @@ private fun SeatsLayout(seats: List<SeatState>, modifier: Modifier, content: @Co
             placeables.forEachIndexed { i, p ->
                 val seat = seats[i]
                 val x = (seat.layoutX / 100.0 * w - p.width / 2.0).toInt().coerceIn(0, (w - p.width).coerceAtLeast(0))
-                val y = (seat.layoutY / 100.0 * h).toInt().coerceIn(0, (h - p.height).coerceAtLeast(0))
+                val dy = if (seat.id in lifted) lift.roundToPx() else 0
+                val y = (seat.layoutY / 100.0 * h - dy).toInt().coerceIn(0, (h - p.height).coerceAtLeast(0))
                 p.place(x, y, zIndex = 3f)
             }
         }
@@ -302,7 +337,7 @@ private fun Felt(modifier: Modifier, compact: Boolean) {
 }
 
 @Composable
-private fun TableCenter(state: TableRenderState, cards: CardMetrics, onPotDetails: () -> Unit, modifier: Modifier) {
+private fun TableCenter(state: TableRenderState, cards: CardMetrics, onPotDetails: () -> Unit, anchors: ArenaAnchors, modifier: Modifier) {
     val metrics = LocalNoirMetrics.current
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
@@ -310,6 +345,7 @@ private fun TableCenter(state: TableRenderState, cards: CardMetrics, onPotDetail
             style = NoirType.style(if (metrics.compact) 11.sp else 12.sp, color = Color(0xFF9FBBB1)),
             modifier = Modifier
                 .clickable(role = Role.Button, onClick = onPotDetails)
+                .testTag("pot-details")
                 .semantics { contentDescription = state.potButtonA11y }
                 .drawBehind {
                     val y = size.height
@@ -322,7 +358,7 @@ private fun TableCenter(state: TableRenderState, cards: CardMetrics, onPotDetail
                 }
                 .padding(vertical = 2.dp),
         )
-        PotAmount(state, if (metrics.compact) 25 else 29)
+        PotAmount(state, if (metrics.compact) 25 else 29, anchors)
         Spacer(Modifier.height(if (metrics.compact) 8.dp else 12.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(cards.boardGap)) {
             state.board.forEach { slot ->
@@ -355,7 +391,7 @@ private fun TableCenter(state: TableRenderState, cards: CardMetrics, onPotDetail
 }
 
 @Composable
-private fun PotAmount(state: TableRenderState, sizeSp: Int) {
+private fun PotAmount(state: TableRenderState, sizeSp: Int, anchors: ArenaAnchors) {
     val reduced = LocalReducedMotion.current
     val bump = remember { Animatable(0f) }
     // Bump on new community cards (`potPulse`), once per state version.
@@ -373,7 +409,7 @@ private fun PotAmount(state: TableRenderState, sizeSp: Int) {
             liveRegion = LiveRegionMode.Polite
         },
     ) {
-        ChipIcon(28.dp)
+        ChipIcon(28.dp, modifier = anchors.anchor(ArenaAnchors.POT))
         Text(
             state.potText,
             style = NoirType.tabular(
@@ -406,7 +442,7 @@ fun Modifier.turnGlow(active: Boolean, shape: androidx.compose.ui.graphics.Shape
 }
 
 @Composable
-private fun SeatView(seat: SeatState, state: TableRenderState, cards: CardMetrics, onTogglePeek: (Int) -> Unit) {
+private fun SeatView(seat: SeatState, state: TableRenderState, cards: CardMetrics, onTogglePeek: (Int) -> Unit, anchors: ArenaAnchors) {
     val metrics = LocalNoirMetrics.current
     val done = state.phase == Phase.DONE
     val dense = state.playerCount >= 7
@@ -414,12 +450,24 @@ private fun SeatView(seat: SeatState, state: TableRenderState, cards: CardMetric
     val foldedLive = seat.folded && !done
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.alpha(if (foldedLive) 0.4f else 1f),
+        modifier = Modifier.testTag("seat-${seat.id}").alpha(if (foldedLive) 0.4f else 1f),
     ) {
         // Hole cards: backs (rotated ±6° around bottom center) or revealed small faces.
         Box(Modifier.offset(y = if (metrics.compact) 6.dp else 8.dp).padding(horizontal = 4.dp)) {
             if (seat.revealed && seat.cards.isNotEmpty()) {
-                Row(horizontalArrangement = Arrangement.spacedBy(if (metrics.compact) 4.dp else 5.dp)) {
+                // The eye toggle fades shown cards in from 0.2 over 180 ms (focus stays on the toggle).
+                val reduced = LocalReducedMotion.current
+                val fade = remember(state.hand, state.replayAttempt, seat.id) { Animatable(1f) }
+                LaunchedEffect(seat.revealed, seat.peek?.pressed) {
+                    if (seat.peek?.pressed == true && !reduced) {
+                        fade.snapTo(0.2f)
+                        fade.animateTo(1f, tween(180, easing = androidx.compose.animation.core.LinearOutSlowInEasing))
+                    }
+                }
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(if (metrics.compact) 4.dp else 5.dp),
+                    modifier = Modifier.testTag("seat-hand-${seat.id}").graphicsLayer { alpha = fade.value },
+                ) {
                     seat.cards.forEach { face ->
                         PlayingCardView(face.card, cards.smallW, cards.smallH, size = CardSize.SMALL, best = face.best)
                     }
@@ -450,7 +498,7 @@ private fun SeatView(seat: SeatState, state: TableRenderState, cards: CardMetric
                 }
             }
         }
-        SeatPlate(seat, showAvatar, done, onTogglePeek)
+        SeatPlate(seat, showAvatar, done, onTogglePeek, anchors.anchor(seat.id))
         seat.badge?.let {
             Spacer(Modifier.height(4.dp))
             RankBadgeView(it, metrics.compact)
@@ -465,7 +513,7 @@ private fun SeatView(seat: SeatState, state: TableRenderState, cards: CardMetric
 }
 
 @Composable
-private fun SeatPlate(seat: SeatState, showAvatar: Boolean, done: Boolean, onTogglePeek: (Int) -> Unit) {
+private fun SeatPlate(seat: SeatState, showAvatar: Boolean, done: Boolean, onTogglePeek: (Int) -> Unit, anchor: Modifier) {
     val metrics = LocalNoirMetrics.current
     val shape = RoundedCornerShape(if (metrics.compact) 8.dp else 10.dp)
     val foldedDone = seat.folded && done
@@ -476,7 +524,7 @@ private fun SeatPlate(seat: SeatState, showAvatar: Boolean, done: Boolean, onTog
         else -> Noir.PlateBorder
     }
     Row(
-        modifier = Modifier
+        modifier = anchor
             .turnGlow(seat.isActor && !done, shape)
             .then(if (seat.isWinner) Modifier.shadow(12.dp, shape, ambientColor = Noir.GoldSettled, spotColor = Noir.GoldSettled) else Modifier)
             .background(if (foldedDone) Noir.PlateFoldedBg else Noir.PlateBg, shape)
@@ -506,7 +554,7 @@ private fun SeatPlate(seat: SeatState, showAvatar: Boolean, done: Boolean, onTog
                     style = NoirType.tabular(NoirType.style(12.sp, color = Noir.SeatStack)),
                     modifier = Modifier.alpha(if (foldedDone) 0.45f else 1f),
                 )
-                seat.peek?.let { peek -> PeekButton(peek.pressed, peek.a11y) { onTogglePeek(seat.id) } }
+                seat.peek?.let { peek -> PeekButton(peek.pressed, peek.a11y, "seat-peek-${seat.id}") { onTogglePeek(seat.id) } }
             }
         }
     }
@@ -535,11 +583,12 @@ private fun Avatar(seat: SeatState, size: Dp, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun PeekButton(pressed: Boolean, a11y: String, onClick: () -> Unit) {
+private fun PeekButton(pressed: Boolean, a11y: String, tag: String, onClick: () -> Unit) {
     val shape = RoundedCornerShape(4.dp)
     Box(
         Modifier
-            .size(24.dp)
+            .testTag(tag)
+            .size(22.dp)
             .background(if (pressed) Noir.PeekPressedBg else Color.Transparent, shape)
             .border(1.dp, if (pressed) Noir.PeekPressedBorder else Noir.PeekBorder, shape)
             .clickable(role = Role.Switch, onClick = onClick)
@@ -599,7 +648,7 @@ private fun ThinkingText(label: String, size: androidx.compose.ui.unit.TextUnit)
 }
 
 @Composable
-private fun HeroArea(hero: HeroState, state: TableRenderState, cards: CardMetrics, modifier: Modifier) {
+private fun HeroArea(hero: HeroState, state: TableRenderState, cards: CardMetrics, anchors: ArenaAnchors, modifier: Modifier) {
     val metrics = LocalNoirMetrics.current
     val done = state.phase == Phase.DONE
     Column(modifier.widthIn(max = 320.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -627,14 +676,14 @@ private fun HeroArea(hero: HeroState, state: TableRenderState, cards: CardMetric
         }
         hero.rankBadge?.let {
             Spacer(Modifier.height(6.dp))
-            RankBadgeView(it, metrics.compact)
+            RankBadgeView(it, metrics.compact, Modifier.testTag("hero-hand-rank"))
         }
         Spacer(Modifier.height(6.dp))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             val avatarSize = if (metrics.compact) 30.dp else 36.dp
             val shape = CircleShape
             Box(
-                Modifier
+                anchors.anchor(0)
                     .turnGlow(hero.isActive && !done, shape)
                     .size(avatarSize)
                     .background(Color(0xFF18372F), shape)
@@ -657,6 +706,7 @@ private fun HeroArea(hero: HeroState, state: TableRenderState, cards: CardMetric
                     turn,
                     style = NoirType.style(if (metrics.compact) 10.sp else 12.sp, color = if (active) Noir.Mint else Noir.TextSubtle),
                     modifier = Modifier
+                        .testTag("hero-turn")
                         .background(if (active) Color(0x226EE7C5) else Color(0x22FFFFFF), RoundedCornerShape(5.dp))
                         .border(1.dp, if (active) Color(0x556EE7C5) else Color(0x33FFFFFF), RoundedCornerShape(5.dp))
                         .padding(horizontal = 8.dp, vertical = 3.dp)
@@ -664,9 +714,57 @@ private fun HeroArea(hero: HeroState, state: TableRenderState, cards: CardMetric
                 )
             }
         }
-        ActionLine(hero.lastAction, hero.lastActionA11y, winner = false, maxWidth = 200.dp)
+        ActionLine(hero.lastAction, hero.lastActionA11y, winner = false, maxWidth = 200.dp, modifier = Modifier.testTag("hero-last-action"))
     }
 }
 
 /** Section heading semantics helper. */
 fun Modifier.headingSemantics(): Modifier = semantics { heading() }
+
+/**
+ * Large-text companion to the arena (font scale above [ARENA_MAX_FONT_SCALE]):
+ * every opponent as a full-size row with position, style, stack, last action,
+ * hand badge and the reveal toggle, so nothing on the scaled-down diagram is
+ * only readable there.
+ */
+@Composable
+fun SeatList(state: TableRenderState, onTogglePeek: (Int) -> Unit, modifier: Modifier = Modifier) {
+    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        state.seats.forEach { seat ->
+            val shape = RoundedCornerShape(8.dp)
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .alpha(if (seat.folded && state.phase != Phase.DONE) 0.6f else 1f)
+                    .background(Noir.PlateBg, shape)
+                    .border(1.dp, if (seat.isWinner) Noir.GoldSettled else if (seat.isActor) Noir.Mint else Noir.PlateBorder, shape)
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(
+                    Modifier
+                        .weight(1f)
+                        .semantics(mergeDescendants = true) {},
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(seat.name, style = NoirType.style(14.sp, FontWeight.Medium))
+                        PositionBadgeView(seat.position, compact = false)
+                    }
+                    Text("${seat.styleShort} · ${seat.stackText}", style = NoirType.tabular(NoirType.style(13.sp, color = Noir.SeatStack)))
+                    val chip = seat.action
+                    Text(
+                        listOfNotNull(chip.label, chip.amountText).joinToString(" "),
+                        style = NoirType.style(13.sp, color = if (chip.isDeciding) Noir.Mint else if (seat.isWinner) Noir.GoldText else Noir.SeatActionAmount),
+                    )
+                    seat.badge?.let { RankBadgeView(it, compact = false) }
+                }
+                seat.peek?.let { peek ->
+                    Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+                        PeekButton(peek.pressed, peek.a11y, "seat-list-peek-${seat.id}") { onTogglePeek(seat.id) }
+                    }
+                }
+            }
+        }
+    }
+}

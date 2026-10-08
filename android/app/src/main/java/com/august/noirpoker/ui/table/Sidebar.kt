@@ -26,6 +26,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -103,7 +104,7 @@ fun SessionCard(stats: SessionStatsState, modifier: Modifier = Modifier) {
         HorizontalDivider(color = Noir.StatsDivider)
         Spacer(Modifier.height(14.dp))
         Row(Modifier.fillMaxWidth()) {
-            Stat(stats.hands.toString(), UiCopy.statHands, Modifier.weight(1f))
+            Stat(stats.hands.toString(), UiCopy.statHands, Modifier.weight(1f).testTag("stat-hands"))
             Stat(stats.wins.toString(), UiCopy.statWins, Modifier.weight(1f))
             Stat(stats.winRateText, UiCopy.statWinRate, Modifier.weight(1f), TextAlign.End)
         }
@@ -170,12 +171,31 @@ fun ActivityCard(activity: ActivityState, modifier: Modifier = Modifier) {
             Text(UiCopy.activityEmpty, style = NoirType.style(12.sp, color = Noir.TextSubtle))
             return@SideCard
         }
-        // Chronological and complete: no truncation and no inner scroll.
-        Column(
-            verticalArrangement = Arrangement.spacedBy(if (metrics.compact) 8.dp else 12.dp),
-            modifier = Modifier.semantics { contentDescription = UiCopy.activityListA11y },
-        ) {
-            activity.entries.forEach { ActivityRow(it) }
+        // Chronological and complete: no truncation and no inner scroll. Below the
+        // two-pane width the list flows into two text columns (oldest first, top to
+        // bottom, then the second column), like the reference's CSS columns.
+        val gap = if (metrics.compact) 8.dp else 12.dp
+        val split = !metrics.twoPane && !metrics.tiny && !metrics.largeText && activity.entries.size > 1
+        if (split) {
+            val half = (activity.entries.size + 1) / 2
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.testTag("activity-list").semantics(mergeDescendants = false) { contentDescription = UiCopy.activityListA11y },
+            ) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(gap)) {
+                    activity.entries.take(half).forEach { ActivityRow(it) }
+                }
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(gap)) {
+                    activity.entries.drop(half).forEach { ActivityRow(it) }
+                }
+            }
+        } else {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(gap),
+                modifier = Modifier.testTag("activity-list").semantics { contentDescription = UiCopy.activityListA11y },
+            ) {
+                activity.entries.forEach { ActivityRow(it) }
+            }
         }
     }
 }

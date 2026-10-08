@@ -228,6 +228,8 @@ data class NoirMetrics(
     val largeText: Boolean,
     /** ≤360 dp wide: the tightest phone rules. */
     val tiny: Boolean,
+    /** Two panes but under 1,150 dp (the reference's 901–1150 band): one showdown column, stacked bet controls. */
+    val narrowPane: Boolean = false,
 )
 
 val LocalNoirMetrics = staticCompositionLocalOf { NoirMetrics(compact = true, twoPane = false, largeText = false, tiny = false) }

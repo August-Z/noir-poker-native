@@ -17,6 +17,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -130,6 +136,20 @@ fun Modifier.cardEntrance(entrance: CardEntrance, delayMs: Int, key: Any?): Modi
     }
 }
 
+/** Draws the content through a saturation matrix at [alpha] (the folded hero's cards). */
+fun Modifier.desaturated(saturation: Float, alpha: Float): Modifier = drawWithContent {
+    val paint = Paint().apply {
+        colorFilter = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(saturation) })
+        this.alpha = alpha
+    }
+    drawIntoCanvas { canvas ->
+        val pad = 24.dp.toPx()
+        canvas.saveLayer(Rect(-pad, -pad, size.width + pad, size.height + pad), paint)
+        drawContent()
+        canvas.restore()
+    }
+}
+
 /**
  * A face-up card drawn natively: gradient face, inner rule, rank corners and a
  * vector suit pip (large), or rank plus suit (small).
@@ -166,12 +186,12 @@ fun PlayingCardView(
     }
     Box(
         modifier
+            .then(if (dimmed) Modifier.desaturated(saturation = 0.4f, alpha = 0.42f) else Modifier)
             .size(width, height)
             .then(outlined)
             .clip(shape)
             .background(faceBrush)
             .border(1.dp, Noir.CardEdge, shape)
-            .graphicsLayer { alpha = if (dimmed) 0.42f else 1f }
             .semantics { contentDescription = card.spokenName() },
     ) {
         Canvas(Modifier.fillMaxSize()) {

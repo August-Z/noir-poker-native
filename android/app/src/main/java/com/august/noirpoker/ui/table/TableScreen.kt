@@ -54,6 +54,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -96,6 +97,16 @@ fun NoirTableScreen(model: TableModel) {
             override fun openReview() = session.openReview()
         }
     }
+    val opponentCallbacks = remember(session) {
+        object : OpponentsCallbacks {
+            override fun preview(id: String) = session.previewProfile(id)
+            override fun assign(seat: Int, profile: String) = session.assignSeatStyle(seat, profile)
+            override fun emotion(mode: com.august.noirpoker.core.EmotionMode) = session.setEmotionMode(mode)
+            override fun mix() = session.mixLineup()
+            override fun save() { session.saveOpponentSettings() }
+            override fun discard() = session.discardOpponentSettings()
+        }
+    }
     BoxWithConstraints(
         Modifier
             .fillMaxSize()
@@ -109,6 +120,7 @@ fun NoirTableScreen(model: TableModel) {
             twoPane = maxWidth >= TWO_PANE_MIN,
             largeText = fontScale >= 1.3f,
             tiny = maxWidth <= 360.dp,
+            narrowPane = maxWidth >= TWO_PANE_MIN && maxWidth < 1150.dp,
         )
         CompositionLocalProvider(LocalNoirMetrics provides metrics) {
             Column(Modifier.fillMaxSize()) {
@@ -161,6 +173,7 @@ fun NoirTableScreen(model: TableModel) {
             if (state.potDetails.open) {
                 PotSheet(state.potDetails, onDismiss = session::closePotDetails, onToggle = session::togglePotDistribution)
             }
+            state.opponentsDialog?.let { OpponentsSheet(it, opponentCallbacks) }
             if (state.review.dialogOpen) {
                 ReviewSheet(state.review, onDismiss = session::closeReview, onRetry = session::retryReview, onSelect = session::selectReviewStep)
             }
@@ -185,10 +198,13 @@ private fun TableColumn(state: TableRenderState, model: TableModel, callbacks: A
                 .border(1.dp, Noir.SurfaceBorder, shape)
                 .padding(horizontal = if (metrics.compact) 8.dp else 20.dp, vertical = if (metrics.compact) 14.dp else 20.dp),
         ) {
-            SurfaceTopBar(state, session::setSeatCount, session::setDifficulty)
+            SurfaceTopBar(state, session::setSeatCount, session::setDifficulty, session::openOpponentSettings)
             Notes(state)
             Spacer(Modifier.height(8.dp))
-            Arena(state, onTogglePeek = { session.toggleReveal(it) }, onPotDetails = session::openPotDetails)
+            Arena(state, onTogglePeek = { session.toggleReveal(it) }, onPotDetails = session::openPotDetails, effects = model.effects)
+            if (LocalDensity.current.fontScale > ARENA_MAX_FONT_SCALE) {
+                SeatList(state, onTogglePeek = { session.toggleReveal(it) }, modifier = Modifier.padding(top = 12.dp))
+            }
             state.showdown?.let { ShowdownStage(it, Modifier.padding(top = 12.dp)) }
             HorizontalDivider(color = Noir.StripDivider, modifier = Modifier.padding(top = 12.dp))
             DecisionStrip(state.actions, Modifier.padding(horizontal = 8.dp))
@@ -220,13 +236,13 @@ private fun Header(state: TableRenderState, onToggleSound: () -> Unit, onRules: 
             }
             Spacer(Modifier.width(10.dp))
             Text(UiCopy.brandNoir, style = NoirType.style(if (metrics.compact) 18.sp else 22.sp, FontWeight.ExtraBold, tracking = if (metrics.compact) 2.sp else 3.sp))
-            if (!metrics.tiny) {
+            if (!metrics.tiny && !metrics.largeText) {
                 Spacer(Modifier.width(8.dp))
                 Text(UiCopy.brandPoker, style = NoirType.style(if (metrics.compact) 11.sp else 15.sp, color = Noir.BrandLight, tracking = if (metrics.compact) 2.sp else 4.sp))
             }
         }
         Spacer(Modifier.weight(1f))
-        if (!metrics.compact) {
+        if (!metrics.compact && !metrics.largeText) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Box(Modifier.size(6.dp).background(Noir.Mint, CircleShape))
                 Text(UiCopy.headerMode, style = NoirType.style(13.sp, color = Noir.HeaderCenter))
@@ -245,7 +261,7 @@ private fun Header(state: TableRenderState, onToggleSound: () -> Unit, onRules: 
             contentAlignment = Alignment.Center,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(UiCopy.rulesButton, style = NoirType.style(14.sp, color = Noir.Text))
+                Text(UiCopy.rulesButton, style = NoirType.style(14.sp, color = Noir.Text), maxLines = 1, softWrap = false)
                 if (!metrics.compact) {
                     Spacer(Modifier.width(8.dp))
                     Box(Modifier.size(20.dp).border(1.dp, Noir.Muted, CircleShape), contentAlignment = Alignment.Center) {
@@ -328,37 +344,98 @@ private fun TableHeading(state: TableRenderState) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun SurfaceTopBar(state: TableRenderState, onSeatCount: (Int) -> Unit, onDifficulty: (Difficulty) -> Unit) {
+private fun SurfaceTopBar(state: TableRenderState, onSeatCount: (Int) -> Unit, onDifficulty: (Difficulty) -> Unit, onOpponents: () -> Unit) {
     val metrics = LocalNoirMetrics.current
-    FlowRow(
-        Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-        itemVerticalAlignment = Alignment.CenterVertically,
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier
-                .heightIn(min = 40.dp)
-                .semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite },
-        ) {
-            Text(state.handHeading, style = NoirType.style(if (metrics.compact) 12.sp else 13.sp, FontWeight.Medium, Noir.TextSurfaceTop))
-            Text("·", style = NoirType.style(13.sp, color = Noir.TextSubtle))
-            Text(state.streetLabel, style = NoirType.style(if (metrics.compact) 12.sp else 13.sp, color = Noir.TextSurfaceTop))
-            state.replayBadge?.let {
-                Text(
-                    it,
-                    style = NoirType.style(11.sp, FontWeight.SemiBold, Noir.ReplayText),
-                    modifier = Modifier
-                        .background(Noir.ReplayBg, RoundedCornerShape(10.dp))
-                        .border(1.dp, Noir.ReplayBorder, RoundedCornerShape(10.dp))
-                        .padding(horizontal = 8.dp, vertical = 2.dp),
-                )
+    if (metrics.compact || metrics.largeText) {
+        // Phone: the hand label, then Opponent Styles + Players, then the difficulty control.
+        Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            HandLabel(state)
+            FlowRow(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                itemVerticalAlignment = Alignment.CenterVertically,
+            ) {
+                OpponentsButton(state, onOpponents)
+                Spacer(Modifier.weight(1f))
+                SeatCountPicker(state.settings, onSeatCount)
+            }
+            DifficultyPicker(state.settings, onDifficulty)
+        }
+    } else {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.Top) {
+            Box(Modifier.weight(1f).padding(top = 8.dp)) { HandLabel(state) }
+            FlowRow(
+                Modifier.weight(3f, fill = false),
+                horizontalArrangement = Arrangement.spacedBy(14.dp, Alignment.End),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                itemVerticalAlignment = Alignment.CenterVertically,
+            ) {
+                OpponentsButton(state, onOpponents)
+                SeatCountPicker(state.settings, onSeatCount)
+                DifficultyPicker(state.settings, onDifficulty)
             }
         }
-        SeatCountPicker(state.settings, onSeatCount)
-        DifficultyPicker(state.settings, onDifficulty)
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun HandLabel(state: TableRenderState) {
+    val metrics = LocalNoirMetrics.current
+    FlowRow(
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        itemVerticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .heightIn(min = 28.dp)
+            .semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite },
+    ) {
+        Text(state.handHeading, style = NoirType.style(if (metrics.compact) 12.sp else 13.sp, FontWeight.Medium, Noir.TextSurfaceTop))
+        Text("·", style = NoirType.style(13.sp, color = Noir.TextSubtle))
+        Text(state.streetLabel, style = NoirType.style(if (metrics.compact) 12.sp else 13.sp, color = Noir.TextSurfaceTop))
+        state.replayBadge?.let {
+            Text(
+                it,
+                style = NoirType.style(11.sp, FontWeight.SemiBold, Noir.ReplayText),
+                modifier = Modifier
+                    .background(Noir.ReplayBg, RoundedCornerShape(10.dp))
+                    .border(1.dp, Noir.ReplayBorder, RoundedCornerShape(10.dp))
+                    .padding(horizontal = 8.dp, vertical = 2.dp),
+            )
+        }
+    }
+}
+
+/** Opponent Styles with its summary chip (`Balanced`, `3 Styled Opponents`, `Next Hand`). */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun OpponentsButton(state: TableRenderState, onClick: () -> Unit) {
+    val summary = state.opponents
+    val shape = RoundedCornerShape(7.dp)
+    FlowRow(
+        Modifier
+            .heightIn(min = 44.dp)
+            .background(Noir.SelectBg, shape)
+            .border(1.dp, if (summary.changePending) Noir.ReplayBorder else Noir.SelectBorder, shape)
+            .clickable(role = Role.Button, onClick = onClick)
+            .testTag("opponents")
+            .padding(horizontal = 10.dp, vertical = 6.dp)
+            .semantics(mergeDescendants = true) {
+                contentDescription = UiCopy.opponentsButton
+                stateDescription = summary.text
+            },
+        itemVerticalAlignment = Alignment.CenterVertically,
+        verticalArrangement = Arrangement.Center,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(UiCopy.opponentsButton, style = NoirType.style(13.sp, FontWeight.Medium, Noir.SelectText), maxLines = 1, softWrap = false)
+        Text(
+            summary.text,
+            style = NoirType.style(11.sp, color = if (summary.changePending) Noir.GoldNote else Noir.TextSubtle),
+            maxLines = 1,
+            softWrap = false,
+        )
     }
 }
 
@@ -375,9 +452,9 @@ private fun SeatCountPicker(settings: SettingsState, onSeatCount: (Int) -> Unit)
                     .background(Noir.SelectBg, RoundedCornerShape(6.dp))
                     .border(1.dp, Noir.SelectBorder, RoundedCornerShape(6.dp))
                     .clickable(role = Role.DropdownList) { open = true }
-                    .padding(horizontal = 12.dp)
+                    .padding(horizontal = 10.dp)
                     .semantics {
-                        contentDescription = UiCopy.playersLabel
+                        contentDescription = UiCopy.playerCountA11y
                         stateDescription = current
                     },
                 verticalAlignment = Alignment.CenterVertically,
@@ -401,33 +478,22 @@ private fun SeatCountPicker(settings: SettingsState, onSeatCount: (Int) -> Unit)
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun DifficultyPicker(settings: SettingsState, onDifficulty: (Difficulty) -> Unit) {
-    val metrics = LocalNoirMetrics.current
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (!metrics.tiny) Text(UiCopy.difficultyLabel, style = NoirType.style(12.sp, color = Noir.TextSubtle))
-        Row(
-            Modifier
-                .border(1.dp, Noir.SelectBorder, RoundedCornerShape(8.dp))
-                .padding(3.dp)
-                .semantics { contentDescription = UiCopy.difficultyLabel },
-        ) {
-            settings.difficultyOptions.forEach { option ->
-                val on = option.value == settings.difficulty
-                Box(
-                    Modifier
-                        .heightIn(min = 40.dp)
-                        .widthIn(min = 52.dp)
-                        .background(if (on) Color(0xFF1F4A40) else Color.Transparent, RoundedCornerShape(6.dp))
-                        .clickable(role = Role.RadioButton) { onDifficulty(option.value) }
-                        .padding(horizontal = 10.dp)
-                        .semantics { selected = on },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(option.label, style = NoirType.style(12.sp, if (on) FontWeight.SemiBold else FontWeight.Normal, if (on) Noir.Mint else Noir.TextStrip))
-                }
-            }
-        }
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        itemVerticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(UiCopy.difficultyLabel, style = NoirType.style(12.sp, color = Noir.TextSubtle))
+        Segmented(
+            options = settings.difficultyOptions.map { it.value to it.label },
+            selected = settings.difficulty,
+            a11y = UiCopy.difficultyLabel,
+            onSelect = onDifficulty,
+            fill = false,
+        )
     }
 }
 
@@ -459,6 +525,7 @@ private fun TableFooter(onReset: () -> Unit) {
             Modifier
                 .heightIn(min = 48.dp)
                 .clickable(role = Role.Button, onClick = onReset)
+                .testTag("reset")
                 .padding(horizontal = 8.dp),
             contentAlignment = Alignment.Center,
         ) {

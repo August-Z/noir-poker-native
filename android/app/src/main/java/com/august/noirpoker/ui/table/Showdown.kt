@@ -15,7 +15,21 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
+import com.august.noirpoker.ui.theme.LocalReducedMotion
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -40,8 +54,13 @@ import com.august.noirpoker.ui.theme.NoirType
 /**
  * The showdown stage below the arena: one panel per live player with the best
  * five cards in display order, the category cards emphasized and kickers dimmed.
- * Winner motions per hand category come in a later step.
+ * Every card arrives with `rank-arrive`; in winner panels the cards that make
+ * the category (or all five, by category) play the hand's winner motion. The
+ * clock restarts only when the settled hand's `key` changes.
  */
+/** Longest winner motion (royal flush 2,000 ms + 4 × 60 ms, straight 1,600 + 4 × 140) with margin. */
+private const val END_MS = 2800f
+
 @Composable
 fun ShowdownStage(showdown: ShowdownState, modifier: Modifier = Modifier) {
     val metrics = LocalNoirMetrics.current
@@ -60,10 +79,15 @@ fun ShowdownStage(showdown: ShowdownState, modifier: Modifier = Modifier) {
             Text(UiCopy.showdownEyebrow, style = NoirType.style(10.sp, FontWeight.SemiBold, Noir.GoldEyebrow, 2.sp))
             Text(showdown.context, style = NoirType.style(12.sp, color = Noir.TextStrip))
         }
-        val columns = if (metrics.twoPane && !metrics.largeText) 2 else 1
+        val reduced = LocalReducedMotion.current
+        val clock = remember(showdown.key) { Animatable(if (reduced) END_MS else 0f) }
+        LaunchedEffect(showdown.key, reduced) {
+            if (reduced) clock.snapTo(END_MS) else clock.animateTo(END_MS, tween(END_MS.toInt(), easing = LinearEasing))
+        }
+        val columns = if (metrics.twoPane && !metrics.largeText && !metrics.narrowPane) 2 else 1
         showdown.scenes.chunked(columns).forEach { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                row.forEach { ScenePanel(it, Modifier.weight(1f)) }
+            Row(horizontalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.height(IntrinsicSize.Max)) {
+                row.forEach { ScenePanel(it, { clock.value }, Modifier.weight(1f).fillMaxHeight()) }
                 repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
             }
         }
@@ -71,7 +95,7 @@ fun ShowdownStage(showdown: ShowdownState, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun ScenePanel(scene: ShowdownSceneState, modifier: Modifier) {
+private fun ScenePanel(scene: ShowdownSceneState, clock: () -> Float, modifier: Modifier) {
     val shape = RoundedCornerShape(11.dp)
     val winner = scene.isWinner
     val metrics = LocalNoirMetrics.current
@@ -104,18 +128,49 @@ private fun ScenePanel(scene: ShowdownSceneState, modifier: Modifier) {
         val w = if (metrics.tiny) 37.dp else 43.dp
         val h = if (metrics.tiny) 54.dp else 62.dp
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp, Alignment.CenterHorizontally)) {
+            val motion = scene.scene.motion
             scene.scene.cards.forEachIndexed { i, card ->
                 val match = scene.scene.highlights.getOrElse(i) { false }
+                val anim = remember(motion, i, winner, match) {
+                    if (winner && (match || CardMotion.appliesToAll(motion))) CardMotion.winner(motion, i) else CardMotion.arrive(i)
+                }
+                val outline = if (winner) Noir.SceneMatch else Noir.SceneLoserOutline
                 PlayingCardView(
                     card,
                     w,
                     h,
                     size = CardSize.SMALL,
                     modifier = Modifier
-                        .alpha(if (match) 1f else 0.7f)
-                        .then(
-                            if (match) Modifier.border(1.dp, if (winner) Noir.SceneMatch else Noir.SceneLoserOutline, RoundedCornerShape(6.dp)) else Modifier,
-                        ),
+                        .graphicsLayer {
+                            val pose = anim.pose(clock())
+                            translationX = pose.tx * density
+                            translationY = pose.ty * density
+                            rotationZ = pose.rz
+                            rotationY = pose.ry
+                            scaleX = pose.scale
+                            scaleY = pose.scale
+                            alpha = pose.alpha * (if (match) 1f else 0.7f)
+                            cameraDistance = 7f * density
+                        }
+                        .drawWithContent {
+                            drawContent()
+                            val b = anim.pose(clock()).brightness
+                            if (b != 1f) {
+                                val tint = if (b > 1f) Color.White.copy(alpha = ((b - 1f) * 1.6f).coerceIn(0f, 0.5f)) else Color.Black.copy(alpha = (1f - b).coerceIn(0f, 0.6f))
+                                drawRoundRect(tint, cornerRadius = CornerRadius(5.dp.toPx()))
+                            }
+                            if (match) {
+                                val o = 2.dp.toPx()
+                                drawRoundRect(
+                                    outline,
+                                    topLeft = Offset(-o, -o),
+                                    size = Size(size.width + 2 * o, size.height + 2 * o),
+                                    cornerRadius = CornerRadius(7.dp.toPx()),
+                                    style = Stroke(1.dp.toPx()),
+                                )
+                            }
+                        }
+                        .then(if (match && winner) Modifier.shadow(8.dp, RoundedCornerShape(5.dp), ambientColor = Noir.SceneMatch, spotColor = Noir.SceneMatch) else Modifier),
                 )
             }
         }
