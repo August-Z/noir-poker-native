@@ -137,10 +137,12 @@ jobs:
           packages: platform-tools
       - name: Install pinned SDK
         run: sdkmanager 'platforms;android-36' 'build-tools;35.0.0'
-      - name: Test and build native Android
+      - name: Test native Kotlin domain against shared fixtures
         run: |
           chmod +x gradlew
-          ./gradlew :android:app:testDebugUnitTest :android:app:assembleDebug --stacktrace
+          ./gradlew -p android/core test --stacktrace
+      - name: Test and build native Android
+        run: ./gradlew :android:app:testDebugUnitTest :android:app:assembleDebug --stacktrace
       - uses: actions/upload-artifact@v7
         with:
           name: noir-poker-android-debug
