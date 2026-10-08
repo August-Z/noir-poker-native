@@ -45,4 +45,30 @@ final class LaunchTests: XCTestCase {
         expectation(for: secondHand, evaluatedWith: handLabel)
         waitForExpectations(timeout: 10)
     }
+
+    /// Opens Opponent Styles, applies the Mixed Lineup, saves, and checks that
+    /// the surface summary reports the change for the next hand.
+    func testSavesOpponentStylesForNextHand() {
+        let app = XCUIApplication()
+        // Start from the default all-Balanced lineup whatever an earlier run saved.
+        app.launchArguments += ["-noir-opponents-v1", "{}"]
+        app.launch()
+        let styles = app.buttons["opponent-styles"]
+        XCTAssertTrue(styles.waitForExistence(timeout: 10))
+        styles.tap()
+        let mixed = app.buttons["mixed-lineup"]
+        XCTAssertTrue(mixed.waitForExistence(timeout: 5))
+        var tries = 0
+        while !mixed.isHittable && tries < 8 { app.swipeUp(); tries += 1 }
+        mixed.tap()
+        let save = app.buttons["save-opponents"]
+        XCTAssertTrue(save.waitForExistence(timeout: 5))
+        tries = 0
+        while !save.isHittable && tries < 12 { app.swipeUp(); tries += 1 }
+        save.tap()
+        XCTAssertTrue(styles.waitForExistence(timeout: 5))
+        let pending = NSPredicate(format: "value == %@", "Next Hand")
+        expectation(for: pending, evaluatedWith: styles)
+        waitForExpectations(timeout: 5)
+    }
 }

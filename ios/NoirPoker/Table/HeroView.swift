@@ -20,11 +20,17 @@ struct HeroView: View {
             }
             .id("hero-\(dealKey)")
             .frame(minHeight: metrics.compact ? 79 : 94)
-            .accessibilityElement(children: .combine)
+            .accessibilityElement(children: .ignore)
             .accessibilityLabel("Your hole cards")
+            .accessibilityValue(hero.cards.map { CardNames.spoken($0.card) }.joined(separator: ", ")
+                                + (hero.folded ? ". Folded" : ""))
+            .accessibilityIdentifier("hero-cards")
 
             if let badge = hero.rankBadge {
-                RankBadgeView(badge: badge, compact: metrics.compact)
+                RankBadgeView(badge: badge, compact: metrics.compact, hero: true)
+                    .padding(.top, 3)
+                    .transition(.opacity)
+                    .accessibilityIdentifier("hero-rank")
             }
 
             HStack(spacing: 8) {

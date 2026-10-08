@@ -63,6 +63,8 @@ struct ChipIcon: View {
 struct PositionBadgeView: View {
     let badge: PositionBadge
     var compact = false
+    /// 7–9 seats on a phone: the badge shrinks to 9 pt.
+    var dense = false
 
     var body: some View {
         let colors: (Color, Color) = {
@@ -75,15 +77,16 @@ struct PositionBadgeView: View {
         }()
         let isButton = badge.code == "BTN"
         Text(badge.code)
-            .noirFont(compact ? 10 : 11, isButton ? .bold : .medium, relativeTo: .caption2)
+            .noirFont(dense ? 9 : (compact ? 10 : 11), isButton ? .bold : .medium, relativeTo: .caption2)
             .foregroundStyle(colors.1)
             .lineLimit(1)
             .fixedSize()
             .padding(.horizontal, isButton ? 4 : 5)
             .padding(.vertical, 1)
-            .frame(minWidth: isButton ? (compact ? 25 : 28) : nil)
+            .frame(minWidth: isButton ? (dense ? 20 : (compact ? 25 : 28)) : nil)
             .background(colors.0, in: isButton ? AnyShape(Capsule()) : AnyShape(RoundedRectangle(cornerRadius: 4)))
             .accessibilityLabel(badge.name)
+            .help(badge.name)
     }
 }
 
@@ -91,14 +94,17 @@ struct PositionBadgeView: View {
 struct RankBadgeView: View {
     let badge: RankBadge
     var compact = false
+    /// The hero's badge is larger (14 pt, 13 on phones).
+    var hero = false
 
     var body: some View {
         HStack(spacing: 4) {
             if badge.isWinner {
-                CrownShape().fill(Noir.winText).frame(width: 13, height: 10)
+                CrownShape().fill(Noir.winText).frame(width: hero ? 15 : 13, height: hero ? 12 : 10)
+                    .accessibilityHidden(true)
             }
             Text(badge.text)
-                .noirFont(compact ? 11 : 12, .semibold, relativeTo: .caption)
+                .noirFont(hero ? (compact ? 13 : 14) : (compact ? 11 : 12), .semibold, relativeTo: .caption)
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
         }
@@ -176,14 +182,16 @@ struct OutlineButtonStyle: ButtonStyle {
 /// A rounded card container for sidebar sections.
 struct SidebarCard<Content: View>: View {
     var coach = false
+    var compact = false
     @ViewBuilder var content: Content
 
     var body: some View {
+        let radius: CGFloat = compact ? 10 : 12
         VStack(alignment: .leading, spacing: 12) { content }
-            .padding(18)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(compact ? 14 : 18)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
             .background(coach ? AnyShapeStyle(NoirSurface.coach) : AnyShapeStyle(NoirSurface.sidebar),
-                        in: RoundedRectangle(cornerRadius: 12))
-            .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(coach ? Noir.coachBorder : Noir.sidebarBorder, lineWidth: 1))
+                        in: RoundedRectangle(cornerRadius: radius))
+            .overlay(RoundedRectangle(cornerRadius: radius).strokeBorder(coach ? Noir.coachBorder : Noir.sidebarBorder, lineWidth: 1))
     }
 }

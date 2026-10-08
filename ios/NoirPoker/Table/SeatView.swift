@@ -85,7 +85,8 @@ struct SeatView: View {
                 .zIndex(1)
             if let badge = seat.badge {
                 RankBadgeView(badge: badge, compact: metrics.compact)
-                    .padding(.top, 5)
+                    .padding(.top, 6)
+                    .transition(.opacity)
             }
             ActionLine(chip: seat.action, winner: seat.isWinner, compact: metrics.compact,
                        maxWidth: done ? 106 : max(metrics.plateMinWidth + 20, 100))
@@ -96,10 +97,13 @@ struct SeatView: View {
         }
         .opacity(seat.folded && !done ? 0.4 : 1)
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.4), value: seat.folded)
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.18), value: seat.revealed)
         .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("seat-\(seat.id)")
     }
 
     private var actionSpoken: String {
+        if seat.action.isDeciding { return seat.action.label }
         var parts = [seat.action.label]
         if let amount = seat.action.amountText { parts.append(amount) }
         if let meaning = seat.action.meaning { parts.append(meaning) }
@@ -115,9 +119,12 @@ struct SeatView: View {
                                  small: true, best: face.best)
                 }
             }
-            .padding(.bottom, 4)
+            .padding(.bottom, 6)
             .transition(.opacity)
             .id("faces-\(newHandKey)-\(seat.id)")
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("\(seat.name)'s hole cards")
+            .accessibilityValue(seat.cards.map { CardNames.spoken($0.card) }.joined(separator: ", "))
         } else if seat.cardBacks > 0 {
             HStack(spacing: metrics.compact ? 2 : 3) {
                 ForEach(0..<seat.cardBacks, id: \.self) { i in
@@ -129,10 +136,20 @@ struct SeatView: View {
             }
             .opacity(seat.folded ? 0.4 : 1)
             .padding(.bottom, -(metrics.compact ? 6 : 8))
+            .transition(.opacity)
             .id("backs-\(newHandKey)-\(seat.id)")
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(seat.cardBackA11y)
+            .accessibilityValue("\(seat.cardBacks)")
         }
+    }
+
+    private var plateA11yValue: String {
+        var parts = [seat.styleA11y, "\(seat.stackText) chips"]
+        if seat.mood != .steady { parts.append("Simulated mood: \(seat.moodLabel)") }
+        if seat.folded { parts.append("Folded") }
+        if seat.isActor { parts.append(seat.action.label) }
+        return parts.joined(separator: ". ")
     }
 
     private var plate: some View {
@@ -141,18 +158,19 @@ struct SeatView: View {
             : seat.isActor ? Noir.mint
             : (seat.folded && done ? Noir.plateFoldedBorder : Noir.plateBorder)
         let fadeDetails = seat.folded && done
+        let avatars = metrics.showAvatars
         return HStack(spacing: metrics.compact ? 6 : 8) {
-            if metrics.showAvatars {
+            if avatars {
                 avatar.opacity(fadeDetails ? 0.45 : 1)
             }
-            VStack(alignment: metrics.showAvatars ? .leading : .center, spacing: 3) {
+            VStack(alignment: seat.peek != nil ? .trailing : .center, spacing: 3) {
                 HStack(spacing: 4) {
                     Text(seat.name)
                         .noirFont(metrics.tiny ? 11 : (metrics.compact ? 12 : 13), .medium, relativeTo: .footnote)
                         .foregroundStyle(Noir.text)
                         .lineLimit(1)
                         .minimumScaleFactor(0.8)
-                    PositionBadgeView(badge: seat.position, compact: metrics.compact)
+                    PositionBadgeView(badge: seat.position, compact: metrics.compact, dense: metrics.dense)
                 }
                 .opacity(fadeDetails ? 0.45 : 1)
                 Text(seat.styleShort)
@@ -160,6 +178,7 @@ struct SeatView: View {
                     .foregroundStyle(Noir.styleChipText)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
                     .padding(.horizontal, 5)
                     .padding(.vertical, 1)
                     .frame(maxWidth: metrics.compact ? 72 : 120)
@@ -169,7 +188,9 @@ struct SeatView: View {
                     Text(seat.stackText)
                         .noirFont(12, relativeTo: .caption, digits: true)
                         .foregroundStyle(Noir.seatStack)
+                        .lineLimit(1)
                         .opacity(fadeDetails ? 0.45 : 1)
+                        .contentTransition(.numericText())
                     if seat.peek != nil { Color.clear.frame(width: 21, height: 21) }
                 }
             }
@@ -180,10 +201,14 @@ struct SeatView: View {
         .background(seat.folded && done ? Noir.plateFolded : Noir.plate, in: RoundedRectangle(cornerRadius: radius))
         .overlay(RoundedRectangle(cornerRadius: radius).strokeBorder(border, lineWidth: 1))
         .turnGlow(seat.isActor, cornerRadius: radius)
-        .shadow(color: seat.isWinner ? Noir.goldSeat.opacity(0.2) : .black.opacity(0.27), radius: seat.isWinner ? 10 : 7, y: seat.isWinner ? 0 : 7)
+        .shadow(color: seat.isWinner ? (done ? Noir.gold.opacity(0.21) : Noir.goldSeat.opacity(0.14)) : .black.opacity(0.27),
+                radius: seat.isWinner ? 10 : 7, y: seat.isWinner ? 0 : 7)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.4), value: seat.isWinner)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.4), value: seat.isActor)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(seat.name), \(seat.position.name)")
-        .accessibilityValue("\(seat.styleA11y). \(seat.stackText) chips\(seat.folded ? ". Folded" : "")")
+        .accessibilityValue(plateA11yValue)
+        .accessibilityHint(seat.avatarTitle)
         .overlay(alignment: .bottomTrailing) {
             if let peek = seat.peek {
                 PeekButton(peek: peek, action: onPeek)
@@ -222,11 +247,11 @@ struct PeekButton: View {
                 .frame(width: 21, height: 21)
                 .background(peek.pressed ? Noir.peekPressedBg : .clear, in: RoundedRectangle(cornerRadius: 4))
                 .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(peek.pressed ? Noir.peekPressedBorder : Noir.peekBorder, lineWidth: 1))
-                .padding(11)
+                .padding(11.5)
                 .contentShape(Rectangle())
         }
         .buttonStyle(PressScaleStyle())
-        .padding(-11)
+        .padding(-11.5)
         .accessibilityLabel(peek.a11y)
         .accessibilityAddTraits(peek.pressed ? .isSelected : [])
         .accessibilityIdentifier("peek-toggle")

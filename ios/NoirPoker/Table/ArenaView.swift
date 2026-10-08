@@ -25,7 +25,7 @@ struct ArenaView: View {
 
     var body: some View {
         let m = TableMetrics(width: width, count: state.playerCount, done: state.phase == .done,
-                             longNames: state.hasFullPlayerNames, largeText: typeSize.isAccessibilitySize)
+                             longNames: state.hasFullPlayerNames, largeText: typeSize >= .xxLarge)
         ZStack(alignment: .topLeading) {
             FeltView(metrics: m)
             CenterView(model: model, metrics: m)
@@ -33,7 +33,7 @@ struct ArenaView: View {
                 .zIndex(2)
             ForEach(state.seats) { seat in
                 SeatView(seat: seat, metrics: m, newHandKey: dealKey) { model.session.toggleReveal(seat.id) }
-                    .anchoredTopCenter(m.seatPoint(seat.layoutX, seat.layoutY))
+                    .anchoredTopCenter(m.seatAnchor(seat))
                     .zIndex(3)
             }
             HeroView(hero: state.hero, metrics: m, dealKey: dealKey)
@@ -43,6 +43,10 @@ struct ArenaView: View {
                 .zIndex(5)
         }
         .frame(width: m.width, height: m.height, alignment: .topLeading)
+        // The felt keeps fixed geometry: text inside it grows with Dynamic Type
+        // up to a cap (lower for the dense 7–9 seat phone layout), and the arena
+        // gets taller at large sizes. Controls outside the felt scale fully.
+        .dynamicTypeSize(...(m.dense ? DynamicTypeSize.xLarge : DynamicTypeSize.xxxLarge))
         .animation(.easeInOut(duration: 0.3), value: m.height)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Texas Hold'em table")
@@ -137,10 +141,10 @@ private struct CenterView: View {
                         ChipIcon(size: metrics.compact ? 24 : 28)
                         Text(state.potText)
                             .noirFont(metrics.compact ? 25 : 29, .semibold, relativeTo: .title2, digits: true, tracking: 1)
-                            .foregroundStyle(Noir.text)
                             .contentTransition(.numericText())
                             .phaseAnimator([CGFloat(1), CGFloat(1.08)], trigger: potBumpKey) { view, scale in
                                 view.scaleEffect(reduceMotion ? 1 : scale)
+                                    .foregroundStyle(scale > 1 && !reduceMotion ? Noir.mint : Noir.text)
                             } animation: { _ in .easeOut(duration: 0.2) }
                     }
                 }
@@ -249,8 +253,9 @@ private struct ChipFlightLayer: View {
     private func origin(_ seat: Int) -> CGPoint {
         if seat == 0 { return CGPoint(x: metrics.width / 2, y: metrics.heroBottom - 40) }
         guard let s = model.state.seats.first(where: { $0.id == seat }) else { return potCenter }
-        let top = metrics.seatPoint(s.layoutX, s.layoutY)
-        return CGPoint(x: top.x, y: top.y + metrics.cardBack.height + 30)
+        let top = metrics.seatAnchor(s)
+        let cards = s.revealed ? metrics.seatCard.height + 6 : metrics.cardBack.height - (metrics.compact ? 6 : 8)
+        return CGPoint(x: top.x, y: top.y + cards + 38)
     }
 }
 

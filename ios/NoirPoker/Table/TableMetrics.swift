@@ -1,4 +1,5 @@
 import SwiftUI
+import PokerCore
 
 /// Reference arena geometry (visual spec §5–7) for a given arena width, seat
 /// count and hand state. Heights are fixed per state; seat x is a percentage
@@ -66,5 +67,13 @@ struct TableMetrics {
 
     func seatPoint(_ x: Double, _ y: Double) -> CGPoint {
         CGPoint(x: width * x / 100, y: height * y / 100)
+    }
+
+    /// The seat's top-center anchor. A settled 6-max table on a phone lifts
+    /// seats 2 and 4 by 20 pt so revealed cards clear the board.
+    func seatAnchor(_ seat: SeatState) -> CGPoint {
+        var point = seatPoint(seat.layoutX, seat.layoutY)
+        if compact && done && count == 6 && (seat.id == 2 || seat.id == 4) { point.y -= 20 }
+        return point
     }
 }
