@@ -71,4 +71,54 @@ final class LaunchTests: XCTestCase {
         expectation(for: pending, evaluatedWith: styles)
         waitForExpectations(timeout: 5)
     }
+
+    /// Finishes hand 1, opens Hand Review, switches between Your Decisions and
+    /// Opponent Decisions, and returns to the table.
+    func testReviewsAFinishedHand() {
+        let app = XCUIApplication()
+        app.launch()
+        let fold = app.buttons["fold"]
+        let finish = app.buttons["finish-hand"]
+        let review = app.buttons["review-hand"]
+        let deadline = Date().addingTimeInterval(150)
+        while Date() < deadline && !(review.exists && review.isHittable) {
+            if fold.exists && fold.isEnabled && fold.isHittable {
+                fold.tap()
+            } else if finish.exists && finish.isEnabled && finish.isHittable {
+                finish.tap()
+            }
+            _ = review.waitForExistence(timeout: 1)
+        }
+        XCTAssertTrue(review.exists, "The first hand never offered Review This Hand")
+        review.tap()
+        let opponentsTab = app.buttons["review-tab-opponents"]
+        XCTAssertTrue(opponentsTab.waitForExistence(timeout: 10))
+        XCTAssertTrue(app.descendants(matching: .any)["review-status"].exists)
+        opponentsTab.tap()
+        XCTAssertTrue(app.buttons["review-opponent-filter"].waitForExistence(timeout: 5))
+        app.buttons["review-tab-hero"].tap()
+        app.buttons["Close Hand Review"].firstMatch.tap()
+        XCTAssertTrue(app.buttons["next-hand"].waitForExistence(timeout: 5))
+    }
+
+    /// Opens the Settings sheet and the Start New Session confirmation, then
+    /// dismisses both without changing anything.
+    func testOpensSettingsAndResetConfirmation() {
+        let app = XCUIApplication()
+        app.launch()
+        let settings = app.buttons["settings"]
+        XCTAssertTrue(settings.waitForExistence(timeout: 10))
+        settings.tap()
+        XCTAssertTrue(app.switches["settings-hints"].waitForExistence(timeout: 5))
+        app.buttons["Close settings"].firstMatch.tap()
+        let reset = app.buttons["start-new-session"]
+        XCTAssertTrue(reset.waitForExistence(timeout: 5))
+        var tries = 0
+        while !reset.isHittable && tries < 10 { app.swipeUp(); tries += 1 }
+        reset.tap()
+        let keep = app.buttons["reset-cancel"]
+        XCTAssertTrue(keep.waitForExistence(timeout: 5))
+        keep.tap()
+        XCTAssertTrue(reset.waitForExistence(timeout: 5))
+    }
 }

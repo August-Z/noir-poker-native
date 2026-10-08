@@ -10,6 +10,7 @@ struct TableRootView: View {
     let model: TableModel
     @State private var showRules = false
     @State private var confirmReset = false
+    @State private var showSettings = false
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.verticalSizeClass) private var verticalSizeClass
 
@@ -25,7 +26,7 @@ struct TableRootView: View {
             let gutter: CGFloat = width < 600 ? 12 : (width < 1150 ? 16 : 24)
             VStack(spacing: 0) {
                 HeaderView(state: state, width: width, toggleSound: { model.session.toggleSound() },
-                           showRules: { showRules = true })
+                           showSettings: { showSettings = true }, showRules: { showRules = true })
                 if wide {
                     HStack(alignment: .top, spacing: gap) {
                         ScrollView {
@@ -76,11 +77,17 @@ struct TableRootView: View {
             OpponentsSheet(model: model)
                 .presentationDetents([.large])
         }
-        .alert("Start a new session?", isPresented: $confirmReset) {
-            Button("Keep Practicing", role: .cancel) {}
-            Button("Start New Session") { model.session.startNewSession() }
-        } message: {
-            Text("This session will end, every player returns to 5,000 chips, and your practice stats reset to zero.")
+        .sheet(isPresented: $showSettings) {
+            SettingsSheet(model: model) { showSettings = false }
+                .presentationDetents([.medium, .large])
+        }
+        .sheet(isPresented: $confirmReset) {
+            ResetSheet(onCancel: { confirmReset = false },
+                       onConfirm: {
+                           confirmReset = false
+                           model.session.startNewSession()
+                       })
+                .presentationDetents(typeSize.isAccessibilitySize ? [.large] : [.medium, .large])
         }
     }
 
@@ -190,6 +197,7 @@ private struct HeaderView: View {
     let state: TableRenderState
     let width: CGFloat
     let toggleSound: () -> Void
+    let showSettings: () -> Void
     let showRules: () -> Void
 
     private var compact: Bool { width < 600 }
@@ -243,6 +251,17 @@ private struct HeaderView: View {
             .accessibilityValue(state.settings.soundTitle)
             .accessibilityAddTraits(state.settings.sound ? .isSelected : [])
             .accessibilityIdentifier("sound-toggle")
+            Button(action: showSettings) {
+                Image(systemName: "slider.horizontal.3")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(Noir.muted)
+                    .frame(width: compact ? 32 : 38, height: compact ? 32 : 38)
+                    .overlay(Circle().strokeBorder(Noir.line, lineWidth: 1))
+                    .minimumHitTarget()
+            }
+            .buttonStyle(PressScaleStyle())
+            .accessibilityLabel("Settings")
+            .accessibilityIdentifier("settings")
             Button(action: showRules) {
                 HStack(spacing: 6) {
                     Text("How to Play")
