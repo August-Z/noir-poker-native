@@ -7,20 +7,28 @@ import PokerCore
 final class MainScheduler: SessionScheduler {
     private let clock = ContinuousClock()
     private let origin: ContinuousClock.Instant
+    /// Session milliseconds per real millisecond. 1 in the app; UI tests may
+    /// run the clock faster so bots and streets advance quickly.
+    private let speed: Double
 
-    init() { origin = clock.now }
+    init(speed: Double = 1) {
+        origin = clock.now
+        self.speed = max(1, speed)
+    }
 
     var nowMs: Int {
         let elapsed = clock.now - origin
         let parts = elapsed.components
-        return Int(parts.seconds) * 1000 + Int(parts.attoseconds / 1_000_000_000_000_000)
+        let realMs = Double(parts.seconds) * 1000 + Double(parts.attoseconds) / 1e15
+        return Int(realMs * speed)
     }
 
     func schedule(delayMs: Int, _ action: @escaping () -> Void) -> SessionCancellable {
         let work = MainWork(action)
+        let speed = self.speed
         let task = Task { @MainActor in
             if delayMs > 0 {
-                do { try await Task.sleep(nanoseconds: UInt64(delayMs) * 1_000_000) } catch { return }
+                do { try await Task.sleep(nanoseconds: UInt64(Double(delayMs) * 1_000_000 / speed)) } catch { return }
             } else {
                 await Task.yield()
             }

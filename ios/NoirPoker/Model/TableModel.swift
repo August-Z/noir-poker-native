@@ -23,11 +23,28 @@ final class TableModel {
         let seat: Int
     }
 
-    init(storage: KeyValueStorage = UserDefaultsStorage(),
-         scheduler: SessionScheduler = MainScheduler(),
-         reviewRunner: ReviewRunner? = DetachedReviewRunner()) {
+    /// Whether the UI-test probe is shown (debug UI-test launches only).
+    let showsTestProbe: Bool
+
+    /// The app's model: system randomness, real time and `UserDefaults`,
+    /// unless a debug UI-test launch asks for a seed or a faster clock.
+    convenience init(options: LaunchOptions = .current) {
+        options.prepareStorage()
+        self.init(storage: UserDefaultsStorage(),
+                  scheduler: MainScheduler(speed: options.speed),
+                  random: options.makeRandom(),
+                  reviewRunner: DetachedReviewRunner(),
+                  showsTestProbe: options.uiTesting)
+    }
+
+    init(storage: KeyValueStorage,
+         scheduler: SessionScheduler,
+         random: RandomSource,
+         reviewRunner: ReviewRunner?,
+         showsTestProbe: Bool = false) {
+        self.showsTestProbe = showsTestProbe
         let session = TableSession(scheduler: scheduler, storage: storage,
-                                   random: SystemRandom.shared, reviewRunner: reviewRunner)
+                                   random: random, reviewRunner: reviewRunner)
         self.session = session
         state = session.state
         session.effectListener = { [weak self] effect in
@@ -66,6 +83,13 @@ final class TableModel {
         case .revealToggled:
             break
         }
+    }
+
+    /// The public table snapshot as one line for UI tests. Reads `state` so
+    /// SwiftUI refreshes it after every change.
+    var probeText: String {
+        _ = state.version
+        return session.publicSnapshot().probeText
     }
 
     func finishFlight(_ id: Int) {

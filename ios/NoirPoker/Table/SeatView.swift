@@ -211,7 +211,7 @@ struct SeatView: View {
         .accessibilityHint(seat.avatarTitle)
         .overlay(alignment: .bottomTrailing) {
             if let peek = seat.peek {
-                PeekButton(peek: peek, action: onPeek)
+                PeekButton(peek: peek, seat: seat.id, action: onPeek)
                     .padding(.trailing, metrics.dense ? 4 : (metrics.compact ? 7 : 10))
                     .padding(.bottom, 7)
             }
@@ -237,6 +237,7 @@ struct SeatView: View {
 /// The post-settlement eye toggle (21×21 visual, 44×44 hit area).
 struct PeekButton: View {
     let peek: PeekToggle
+    let seat: Int
     let action: () -> Void
 
     var body: some View {
@@ -254,6 +255,6 @@ struct PeekButton: View {
         .padding(-11.5)
         .accessibilityLabel(peek.a11y)
         .accessibilityAddTraits(peek.pressed ? .isSelected : [])
-        .accessibilityIdentifier("peek-toggle")
+        .accessibilityIdentifier("peek-toggle-\(seat)")
     }
 }

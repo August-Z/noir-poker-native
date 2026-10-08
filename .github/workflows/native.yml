@@ -215,7 +215,16 @@ jobs:
           xcodebuild -project ios/NoirPoker.xcodeproj -scheme NoirPoker -destination "id=$device_id" -derivedDataPath .build/ios -resultBundlePath .build/ios-ui-results CODE_SIGNING_ALLOWED=NO test
           xcrun simctl launch "$device_id" com.august.noirpoker
           xcrun simctl io "$device_id" screenshot .build/ios-simulator.png
+          xcrun simctl shutdown "$device_id" || true
           ditto -c -k --keepParent .build/ios/Build/Products/Debug-iphonesimulator/NoirPoker.app .build/NoirPoker-simulator.zip
+      - name: Run the tablet layout UI test on an iPad simulator
+        run: |
+          ipad_id=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; data=json.load(sys.stdin)["devices"]; pads=[d for runtime,devices in data.items() if "iOS" in runtime for d in devices if "iPad" in d["name"]]; pads.sort(key=lambda d: 0 if "iPad Pro" in d["name"] else 1); print(pads[0]["udid"])')
+          xcrun simctl boot "$ipad_id" || true
+          xcrun simctl bootstatus "$ipad_id" -b
+          xcodebuild -project ios/NoirPoker.xcodeproj -scheme NoirPoker -destination "id=$ipad_id" -derivedDataPath .build/ios -resultBundlePath .build/ios-ipad-ui-results CODE_SIGNING_ALLOWED=NO -only-testing:NoirPokerUITests/TabletLayoutTests test
+          xcrun simctl launch "$ipad_id" com.august.noirpoker
+          xcrun simctl io "$ipad_id" screenshot .build/ios-ipad-simulator.png
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -223,5 +232,7 @@ jobs:
           path: |
             .build/NoirPoker-simulator.zip
             .build/ios-simulator.png
+            .build/ios-ipad-simulator.png
             .build/ios-ui-results
+            .build/ios-ipad-ui-results
           if-no-files-found: warn

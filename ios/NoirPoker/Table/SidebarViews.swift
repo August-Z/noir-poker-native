@@ -34,22 +34,22 @@ struct SessionStatsCard: View {
             Rectangle().fill(Noir.statsDivider).frame(height: 1)
             ViewThatFits(in: .horizontal) {
                 HStack(alignment: .top) {
-                    stat("\(stats.hands)", "Hands Played")
+                    stat("\(stats.hands)", "Hands Played", id: "stat-hands")
                     Spacer(minLength: 6)
-                    stat("\(stats.wins)", "Hands Won")
+                    stat("\(stats.wins)", "Hands Won", id: "stat-wins")
                     Spacer(minLength: 6)
-                    stat(stats.winRateText, "Win Rate")
+                    stat(stats.winRateText, "Win Rate", id: "stat-win-rate")
                 }
                 VStack(alignment: .leading, spacing: 10) {
-                    stat("\(stats.hands)", "Hands Played")
-                    stat("\(stats.wins)", "Hands Won")
-                    stat(stats.winRateText, "Win Rate")
+                    stat("\(stats.hands)", "Hands Played", id: "stat-hands")
+                    stat("\(stats.wins)", "Hands Won", id: "stat-wins")
+                    stat(stats.winRateText, "Win Rate", id: "stat-win-rate")
                 }
             }
         }
     }
 
-    private func stat(_ value: String, _ caption: String) -> some View {
+    private func stat(_ value: String, _ caption: String, id: String) -> some View {
         VStack(alignment: .leading, spacing: 3) {
             Text(value).noirFont(18, .medium, relativeTo: .headline, digits: true).foregroundStyle(Noir.text)
             Text(caption).noirFont(compact ? 10 : 12, relativeTo: .caption2).foregroundStyle(Noir.subtle)
@@ -59,6 +59,7 @@ struct SessionStatsCard: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(caption)
         .accessibilityValue(value)
+        .accessibilityIdentifier(id)
     }
 }
 

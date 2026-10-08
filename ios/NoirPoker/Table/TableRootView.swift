@@ -59,6 +59,9 @@ struct TableRootView: View {
         }
         .background(Noir.bg.ignoresSafeArea())
         .foregroundStyle(Noir.text)
+        .overlay(alignment: .topLeading) {
+            if model.showsTestProbe { TestProbe(text: model.probeText) }
+        }
         .sheet(isPresented: $showRules) {
             RulesSheet { showRules = false }
                 .presentationDetents([.medium, .large])
@@ -188,6 +191,22 @@ struct TableRootView: View {
                 .accessibilityElement(children: .combine)
             }
         }
+    }
+}
+
+/// The public table snapshot for UI tests (debug UI-test launches only).
+private struct TestProbe: View {
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .font(.system(size: 1))
+            .frame(width: 1, height: 1)
+            .clipped()
+            .opacity(0.02)
+            .allowsHitTesting(false)
+            .accessibilityLabel(text)
+            .accessibilityIdentifier("qa-state")
     }
 }
 
