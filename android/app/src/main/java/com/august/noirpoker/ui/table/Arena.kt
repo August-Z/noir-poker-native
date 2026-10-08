@@ -598,7 +598,7 @@ private fun PeekButton(pressed: Boolean, a11y: String, tag: String, onClick: () 
             },
         contentAlignment = Alignment.Center,
     ) {
-        EyeIcon(15.dp, if (pressed) Noir.Mint else Noir.SeatActionLabel, crossed = pressed)
+        EyeIcon(15.dp, if (pressed) Noir.Mint else Noir.SeatActionLabel, crossed = false)
     }
 }
 
