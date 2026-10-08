@@ -1,0 +1,8 @@
+{
+  "name": "NOIR Poker Native",
+  "build": { "dockerfile": "Dockerfile" },
+  "features": { "ghcr.io/devcontainers/features/node:1": { "version": "22" } },
+  "postCreateCommand": "bash scripts/setup.sh",
+  "customizations": { "vscode": { "extensions": ["fwcd.kotlin", "vscjava.vscode-gradle"] } },
+  "remoteUser": "vscode"
+}

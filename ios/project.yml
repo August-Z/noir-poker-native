@@ -1,0 +1,44 @@
+name: NoirPoker
+options:
+  bundleIdPrefix: com.august
+  deploymentTarget:
+    iOS: "17.0"
+packages:
+  PokerCore:
+    path: Packages/PokerCore
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+    CODE_SIGN_STYLE: Automatic
+    GENERATE_INFOPLIST_FILE: YES
+targets:
+  NoirPoker:
+    type: application
+    platform: iOS
+    sources: [NoirPoker]
+    dependencies:
+      - package: PokerCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.august.noirpoker
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: 1
+        INFOPLIST_KEY_CFBundleDisplayName: NOIR Poker
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+        TARGETED_DEVICE_FAMILY: "1,2"
+  NoirPokerUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [NoirPokerUITests]
+    dependencies:
+      - target: NoirPoker
+schemes:
+  NoirPoker:
+    build:
+      targets:
+        NoirPoker: all
+    test:
+      targets: [NoirPokerUITests]

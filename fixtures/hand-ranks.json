@@ -1,0 +1,277 @@
+{
+  "referenceCommit": "03c78233f9454de54e378c5c81ba1dd25fa9b14e",
+  "cases": [
+    {
+      "name": "ace_low_straight",
+      "cards": [
+        {
+          "rank": 14,
+          "suit": 0
+        },
+        {
+          "rank": 2,
+          "suit": 1
+        },
+        {
+          "rank": 3,
+          "suit": 2
+        },
+        {
+          "rank": 4,
+          "suit": 3
+        },
+        {
+          "rank": 5,
+          "suit": 0
+        },
+        {
+          "rank": 13,
+          "suit": 1
+        },
+        {
+          "rank": 12,
+          "suit": 2
+        }
+      ],
+      "score": [
+        4,
+        5
+      ],
+      "bestCardKeys": [
+        "0-14",
+        "1-2",
+        "2-3",
+        "3-4",
+        "0-5"
+      ]
+    },
+    {
+      "name": "royal_flush",
+      "cards": [
+        {
+          "rank": 10,
+          "suit": 0
+        },
+        {
+          "rank": 11,
+          "suit": 0
+        },
+        {
+          "rank": 12,
+          "suit": 0
+        },
+        {
+          "rank": 13,
+          "suit": 0
+        },
+        {
+          "rank": 14,
+          "suit": 0
+        },
+        {
+          "rank": 2,
+          "suit": 1
+        },
+        {
+          "rank": 3,
+          "suit": 2
+        }
+      ],
+      "score": [
+        8,
+        14
+      ],
+      "bestCardKeys": [
+        "0-10",
+        "0-11",
+        "0-12",
+        "0-13",
+        "0-14"
+      ]
+    },
+    {
+      "name": "full_house_uses_higher_trips",
+      "cards": [
+        {
+          "rank": 14,
+          "suit": 0
+        },
+        {
+          "rank": 14,
+          "suit": 1
+        },
+        {
+          "rank": 14,
+          "suit": 2
+        },
+        {
+          "rank": 13,
+          "suit": 0
+        },
+        {
+          "rank": 13,
+          "suit": 1
+        },
+        {
+          "rank": 13,
+          "suit": 2
+        },
+        {
+          "rank": 2,
+          "suit": 3
+        }
+      ],
+      "score": [
+        6,
+        14,
+        13
+      ],
+      "bestCardKeys": [
+        "0-14",
+        "1-14",
+        "2-14",
+        "0-13",
+        "1-13"
+      ]
+    },
+    {
+      "name": "four_of_a_kind_kicker",
+      "cards": [
+        {
+          "rank": 9,
+          "suit": 0
+        },
+        {
+          "rank": 9,
+          "suit": 1
+        },
+        {
+          "rank": 9,
+          "suit": 2
+        },
+        {
+          "rank": 9,
+          "suit": 3
+        },
+        {
+          "rank": 14,
+          "suit": 0
+        },
+        {
+          "rank": 13,
+          "suit": 1
+        },
+        {
+          "rank": 12,
+          "suit": 2
+        }
+      ],
+      "score": [
+        7,
+        9,
+        14
+      ],
+      "bestCardKeys": [
+        "0-9",
+        "1-9",
+        "2-9",
+        "3-9",
+        "0-14"
+      ]
+    },
+    {
+      "name": "two_pair_kicker",
+      "cards": [
+        {
+          "rank": 14,
+          "suit": 0
+        },
+        {
+          "rank": 14,
+          "suit": 1
+        },
+        {
+          "rank": 13,
+          "suit": 0
+        },
+        {
+          "rank": 13,
+          "suit": 1
+        },
+        {
+          "rank": 12,
+          "suit": 0
+        },
+        {
+          "rank": 11,
+          "suit": 1
+        },
+        {
+          "rank": 2,
+          "suit": 2
+        }
+      ],
+      "score": [
+        2,
+        14,
+        13,
+        12
+      ],
+      "bestCardKeys": [
+        "0-14",
+        "1-14",
+        "0-13",
+        "1-13",
+        "0-12"
+      ]
+    },
+    {
+      "name": "flush_takes_best_five",
+      "cards": [
+        {
+          "rank": 14,
+          "suit": 1
+        },
+        {
+          "rank": 12,
+          "suit": 1
+        },
+        {
+          "rank": 9,
+          "suit": 1
+        },
+        {
+          "rank": 7,
+          "suit": 1
+        },
+        {
+          "rank": 4,
+          "suit": 1
+        },
+        {
+          "rank": 2,
+          "suit": 1
+        },
+        {
+          "rank": 13,
+          "suit": 2
+        }
+      ],
+      "score": [
+        5,
+        14,
+        12,
+        9,
+        7,
+        4
+      ],
+      "bestCardKeys": [
+        "1-14",
+        "1-12",
+        "1-9",
+        "1-7",
+        "1-4"
+      ]
+    }
+  ]
+}
