@@ -87,5 +87,32 @@ object UiCopy {
     const val resetCancel = "Keep Practicing"
     const val resetConfirm = "Start New Session"
 
+    // Opponent Styles (copy catalog section 6.1).
+    const val oppEyebrow = "OPPONENT LAB"
+    const val oppCloseA11y = "Close opponent settings"
+    const val oppTitle = "Give every opponent a style of their own"
+    const val oppIntro =
+        "Training archetypes distilled from publicly reported hands, not replicas of the real players. The 0–100 values are strategy-tendency indices, not anyone's actual VPIP or PFR; highlight hands don't represent long-run frequencies."
+    const val oppResearchA11y = "Player archetype research"
+    const val oppAssignA11y = "Assign opponent styles"
+    const val oppRosterHeading = "Assign by Seat"
+    const val oppMixButton = "Mixed Lineup"
+    const val oppEmotionLabel = "Human-like emotion simulation"
+    const val oppEmotionA11y = "Emotion simulation strength"
+    const val oppEmotionHelp =
+        "Losing a big pot, a winning streak, or being pushed off hands repeatedly by the same opponent can trigger a brief urge to chase losses, tighten up, or fight back. The effect fades after two hands and has a cooldown. Every archetype uses the same synthetic mechanism; it does not represent anyone's real personality."
+    const val oppCompareSummary = "Compare all parameters and stat definitions"
+    const val oppCompareCaption = "Training parameters for all archetypes (0–100)"
+    const val oppCompareArchetype = "Archetype"
+    const val oppCompareSizing = "Bet / Pot"
+    const val oppCompareNoteAxes =
+        "Range Width shapes starting-hand ranges; Aggression and Bluffing set raise probability in suitable spots; Calling Down affects marginal calls; Trapping raises the slow-play tendency only on safe boards. Position, player count, hand strength, and legal actions take priority over style."
+    const val oppCompareNoteStats =
+        "The VPIP / PFR shown for each seat are actual stats from hands completed this session: hands with money voluntarily put in / total hands, and hands raised preflop / total hands. Forced blinds don't count; switching a style restarts the count, and relaunching the app or starting a new session resets it to zero. Bet ranges are typical postflop sizes and don't limit special raises, short stacks, or all-ins."
+    const val oppSaveButton = "Save · Applies Next Hand"
+    const val playerCountA11y = "Table size"
+    const val expanded = "Expanded"
+    const val collapsed = "Collapsed"
+
     fun playersOption(n: Int) = "$n players"
 }

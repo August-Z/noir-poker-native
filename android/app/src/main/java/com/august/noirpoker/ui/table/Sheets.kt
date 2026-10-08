@@ -35,6 +35,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -60,6 +61,7 @@ fun NoirSheet(
     onDismiss: () -> Unit,
     eyebrowColor: Color = Noir.TextEyebrow,
     maxWidth: androidx.compose.ui.unit.Dp = 640.dp,
+    closeA11y: String = UiCopy.closeA11y,
     footer: (@Composable ColumnScope.() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
@@ -78,7 +80,7 @@ fun NoirSheet(
         Column(Modifier.fillMaxWidth().navigationBarsPadding()) {
             Row(Modifier.fillMaxWidth().padding(horizontal = pad), verticalAlignment = Alignment.CenterVertically) {
                 Text(eyebrow, style = NoirType.style(if (metrics.compact) 10.sp else 12.sp, FontWeight.SemiBold, eyebrowColor, if (metrics.compact) 2.sp else 3.sp), modifier = Modifier.weight(1f))
-                CloseButton(onDismiss)
+                CloseButton(onDismiss, closeA11y)
             }
             Column(
                 Modifier
@@ -95,12 +97,12 @@ fun NoirSheet(
 }
 
 @Composable
-private fun CloseButton(onClick: () -> Unit) {
+private fun CloseButton(onClick: () -> Unit, a11y: String) {
     Box(
         Modifier
             .size(48.dp)
             .clickable(role = Role.Button, onClick = onClick)
-            .semantics { contentDescription = UiCopy.closeA11y },
+            .semantics { contentDescription = a11y },
         contentAlignment = Alignment.Center,
     ) {
         Box(Modifier.size(32.dp).border(1.dp, Noir.Line, CircleShape), contentAlignment = Alignment.Center) {
@@ -180,7 +182,7 @@ fun ResetSheet(onDismiss: () -> Unit, onConfirm: () -> Unit) {
         footer = {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 NoirButton(UiCopy.resetCancel, onDismiss, Modifier.weight(1f), bg = Color.Transparent, fg = Noir.TextDialogBody, border = Noir.SelectBorder)
-                NoirButton(UiCopy.resetConfirm, onConfirm, Modifier.weight(1f))
+                NoirButton(UiCopy.resetConfirm, onConfirm, Modifier.weight(1f).testTag("confirm-reset"))
             }
         },
     ) {
