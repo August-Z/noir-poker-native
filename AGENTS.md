@@ -11,3 +11,5 @@
 - Add meaningful native rule regression tests and verify chip conservation. Use the same deterministic fixtures on both platforms.
 - Validate native UI at compact and tablet sizes, six and nine seats, and large accessibility text. Preserve the NOIR palette and table hierarchy.
 - Keep .github/workflows/native.yml and the Codespaces setup working. Never commit signing keys, provisioning profiles, access tokens, or local.properties.
+
+- Use `zoushicheng0911@gmail.com` for every new commit. Set repository-local Git identity before committing and verify author and committer emails. Do not use a noreply address or bot identity.

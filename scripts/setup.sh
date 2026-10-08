@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
+git config user.name August-Z
+git config user.email zoushicheng0911@gmail.com
 chmod +x gradlew scripts/*.sh
 bash scripts/fetch-reference.sh
 bash scripts/doctor.sh
