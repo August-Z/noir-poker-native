@@ -198,11 +198,18 @@ object Noir {
 
 /**
  * Type scale (visual spec section 3.1). Sizes are in `sp`, so they follow the
- * system font scale. Manrope is not bundled yet; the platform sans serif stands in.
+ * system font scale. The app installs the bundled Manrope family (SIL OFL) at
+ * startup; the platform sans serif stands in until then (and in previews).
  */
 @Suppress("ConstPropertyName")
 object NoirType {
-    val family: FontFamily = FontFamily.SansSerif
+    var family: FontFamily = FontFamily.SansSerif
+        private set
+
+    /** Installs the brand family; call once before the first composition. */
+    fun install(family: FontFamily) {
+        this.family = family
+    }
 
     fun style(size: TextUnit, weight: FontWeight = FontWeight.Normal, color: Color = Noir.Text, tracking: TextUnit = 0.sp) =
         TextStyle(fontFamily = family, fontSize = size, fontWeight = weight, color = color, letterSpacing = tracking)

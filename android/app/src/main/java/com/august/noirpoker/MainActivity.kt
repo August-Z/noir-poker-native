@@ -9,13 +9,16 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import com.august.noirpoker.platform.TableViewModel
 import com.august.noirpoker.ui.table.NoirTableScreen
+import com.august.noirpoker.ui.theme.ManropeFamily
 import com.august.noirpoker.ui.theme.NoirTheme
+import com.august.noirpoker.ui.theme.NoirType
 
 class MainActivity : ComponentActivity() {
     private val table: TableViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        NoirType.install(ManropeFamily)
         // NOIR is dark-only: light status and navigation icons on the navy page.
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
