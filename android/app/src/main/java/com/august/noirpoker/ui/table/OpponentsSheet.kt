@@ -210,6 +210,7 @@ private fun ProfileDetail(dialog: OpponentsDialogState) {
                 modifier = Modifier
                     .heightIn(min = 44.dp)
                     .clickable(role = Role.Button) { runCatching { uri.openUri(source.url) } }
+                    .semantics { stateDescription = UiCopy.opensInBrowser }
                     .padding(vertical = 12.dp),
             )
         }

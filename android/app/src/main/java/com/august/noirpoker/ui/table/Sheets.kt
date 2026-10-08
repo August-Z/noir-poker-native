@@ -40,11 +40,6 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.august.noirpoker.core.formatChips
-import com.august.noirpoker.core.review.HeroReviewAnalysis
-import com.august.noirpoker.core.review.ReviewStatus as StepStatus
-import com.august.noirpoker.core.session.ReviewState
-import com.august.noirpoker.core.session.ReviewStatus
 import com.august.noirpoker.ui.UiCopy
 import com.august.noirpoker.ui.theme.LocalNoirMetrics
 import com.august.noirpoker.ui.theme.Noir
@@ -188,116 +183,6 @@ fun ResetSheet(onDismiss: () -> Unit, onConfirm: () -> Unit) {
     ) {
         SheetTitle(UiCopy.resetTitle)
         SheetBody(UiCopy.resetBody)
-    }
-}
-
-/** Review copy used by this first review sheet (copy catalog section 10). */
-private object ReviewSheetCopy {
-    const val eyebrow = "HAND REVIEW"
-    fun title(hand: Int) = "Hand $hand · Hand Review"
-    fun progress(done: Int, total: Int) = "Analyzing decision $done / $total…"
-    const val preparing = "Preparing this hand's decision snapshots…"
-    const val error = "Analysis didn't finish. You can try again."
-    const val retry = "Analyze Again"
-    const val analyzing = "Analyzing"
-    const val pending = "Pending"
-    fun status(s: StepStatus) = when (s) {
-        StepStatus.ATTENTION -> "Needs Work"
-        StepStatus.CONSIDER -> "Worth Discussing"
-        StepStatus.SOUND -> "Well Reasoned"
-    }
-    fun change(profit: Int) = (if (profit > 0) "+" else "") + formatChips(profit) + " chips"
-}
-
-/**
- * A first Hand Review sheet: status, progress, the summary and every step's
- * verdict. The full timeline, routes and simulation views come in a later step.
- */
-@Composable
-fun ReviewSheet(review: ReviewState, onDismiss: () -> Unit, onRetry: () -> Unit, onSelect: (Int) -> Unit) {
-    val input = review.input ?: return
-    NoirSheet(
-        eyebrow = ReviewSheetCopy.eyebrow,
-        eyebrowColor = Noir.ReviewEyebrow,
-        onDismiss = onDismiss,
-        maxWidth = 980.dp,
-        footer = { NoirButton(UiCopy.backToTable, onDismiss, Modifier.fillMaxWidth()) },
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.weight(1f)) { SheetTitle(ReviewSheetCopy.title(input.hand)) }
-            Text(ReviewSheetCopy.change(input.outcome.profit), style = NoirType.style(20.sp, FontWeight.Medium, Color(0xFFE69BAB)))
-        }
-        val total = input.decisions.size
-        val statusText = when (review.status) {
-            ReviewStatus.RUNNING -> if (review.progress == 0) ReviewSheetCopy.preparing else ReviewSheetCopy.progress(review.progress, total)
-            ReviewStatus.ERROR -> ReviewSheetCopy.error
-            else -> null
-        }
-        val analysis = review.analysis as? HeroReviewAnalysis
-        val boxShape = RoundedCornerShape(10.dp)
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .background(Color(0x77362E47), boxShape)
-                .border(1.dp, Color(0xFF5C4C71), boxShape)
-                .padding(16.dp)
-                .semantics { liveRegion = LiveRegionMode.Polite },
-        ) {
-            if (analysis != null) {
-                Text(analysis.summary.title, style = NoirType.style(15.sp, FontWeight.Medium, Color(0xFFEADBF9)))
-                Spacer(Modifier.height(6.dp))
-                SheetBody(analysis.summary.summary)
-            }
-            if (statusText != null) SheetBody(statusText)
-            if (review.status == ReviewStatus.ERROR) {
-                Text(
-                    ReviewSheetCopy.retry,
-                    style = NoirType.style(14.sp, FontWeight.Medium, Noir.ReviewText),
-                    modifier = Modifier.clickable(role = Role.Button, onClick = onRetry).padding(vertical = 12.dp),
-                )
-            }
-        }
-        Spacer(Modifier.height(14.dp))
-        input.decisions.forEachIndexed { i, d ->
-            val step = analysis?.summary?.steps?.getOrNull(i)
-            val selected = i == review.selected
-            val shape = RoundedCornerShape(9.dp)
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 8.dp)
-                    .background(if (selected) Color(0x5541374E) else Color.Transparent, shape)
-                    .border(1.dp, if (selected) Color(0xFFA690C1) else Noir.SelectBorder, shape)
-                    .clickable(role = Role.Tab) { onSelect(i) }
-                    .padding(12.dp)
-                    .semantics(mergeDescendants = true) {},
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("${i + 1}", style = NoirType.style(12.sp, FontWeight.SemiBold, Noir.ReviewText), modifier = Modifier.width(22.dp))
-                    Text(
-                        "${com.august.noirpoker.core.session.SessionCopy.street(d.street) ?: ""} · ${d.position}",
-                        style = NoirType.style(12.sp, color = Noir.TextSubtle),
-                        modifier = Modifier.weight(1f),
-                    )
-                    Text(
-                        when {
-                            step != null -> ReviewSheetCopy.status(step.status)
-                            review.status == ReviewStatus.RUNNING -> ReviewSheetCopy.analyzing
-                            else -> ReviewSheetCopy.pending
-                        },
-                        style = NoirType.style(11.sp, FontWeight.Medium, Noir.TextStrip),
-                    )
-                }
-                if (step != null && selected) {
-                    Spacer(Modifier.height(8.dp))
-                    Text(step.title, style = NoirType.style(14.sp, FontWeight.Medium))
-                    Spacer(Modifier.height(4.dp))
-                    SheetBody(step.reason)
-                    Spacer(Modifier.height(4.dp))
-                    Text(step.recommendation, style = NoirType.style(13.sp, color = Noir.Mint))
-                }
-            }
-        }
     }
 }
 

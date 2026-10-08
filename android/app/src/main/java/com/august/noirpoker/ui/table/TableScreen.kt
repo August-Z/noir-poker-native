@@ -83,6 +83,7 @@ fun NoirTableScreen(model: TableModel) {
     val session = model.session
     var showRules by rememberSaveable { mutableStateOf(false) }
     var showReset by rememberSaveable { mutableStateOf(false) }
+    var showSettings by rememberSaveable { mutableStateOf(false) }
     val callbacks = remember(session) {
         object : ActionPanelCallbacks {
             override fun fold() { session.fold() }
@@ -107,6 +108,29 @@ fun NoirTableScreen(model: TableModel) {
             override fun discard() = session.discardOpponentSettings()
         }
     }
+    val reviewCallbacks = remember(session) {
+        object : ReviewCallbacks {
+            override fun close() = session.closeReview()
+            override fun retry() = session.retryReview()
+            override fun select(index: Int) = session.selectReviewStep(index)
+            override fun previous() = session.previousReviewStep()
+            override fun next() = session.nextReviewStep()
+            override fun perspective(perspective: com.august.noirpoker.core.session.ReviewPerspective) = session.setReviewPerspective(perspective)
+            override fun opponentFilter(seat: Int?) = session.setOpponentReviewFilter(seat)
+            override fun selectOpponent(index: Int) = session.selectOpponentReviewRecord(index)
+        }
+    }
+    val settingsCallbacks = object : SettingsCallbacks {
+        override fun seatCount(n: Int) { session.setSeatCount(n) }
+        override fun difficulty(d: Difficulty) { session.setDifficulty(d) }
+        override fun toggleHints() { session.toggleHints() }
+        override fun toggleSound() { session.toggleSound() }
+        override fun openOpponents() {
+            showSettings = false
+            session.openOpponentSettings()
+        }
+        override fun close() { showSettings = false }
+    }
     BoxWithConstraints(
         Modifier
             .fillMaxSize()
@@ -124,7 +148,7 @@ fun NoirTableScreen(model: TableModel) {
         )
         CompositionLocalProvider(LocalNoirMetrics provides metrics) {
             Column(Modifier.fillMaxSize()) {
-                Header(state, onToggleSound = session::toggleSound, onRules = { showRules = true })
+                Header(state, onToggleSound = session::toggleSound, onSettings = { showSettings = true }, onRules = { showRules = true })
                 if (metrics.twoPane) {
                     Row(
                         Modifier
@@ -174,9 +198,8 @@ fun NoirTableScreen(model: TableModel) {
                 PotSheet(state.potDetails, onDismiss = session::closePotDetails, onToggle = session::togglePotDistribution)
             }
             state.opponentsDialog?.let { OpponentsSheet(it, opponentCallbacks) }
-            if (state.review.dialogOpen) {
-                ReviewSheet(state.review, onDismiss = session::closeReview, onRetry = session::retryReview, onSelect = session::selectReviewStep)
-            }
+            if (state.review.dialogOpen) ReviewSheet(state.review, reviewCallbacks)
+            if (showSettings) SettingsSheet(state.settings, state.coach, state.opponents, settingsCallbacks)
         }
     }
 }
@@ -215,7 +238,7 @@ private fun TableColumn(state: TableRenderState, model: TableModel, callbacks: A
 }
 
 @Composable
-private fun Header(state: TableRenderState, onToggleSound: () -> Unit, onRules: () -> Unit) {
+private fun Header(state: TableRenderState, onToggleSound: () -> Unit, onSettings: () -> Unit, onRules: () -> Unit) {
     val metrics = LocalNoirMetrics.current
     Row(
         Modifier
@@ -252,7 +275,8 @@ private fun Header(state: TableRenderState, onToggleSound: () -> Unit, onRules: 
             Spacer(Modifier.weight(1f))
         }
         SoundButton(state.settings, onToggleSound)
-        Spacer(Modifier.width(8.dp))
+        SettingsButton(onSettings)
+        Spacer(Modifier.width(4.dp))
         Box(
             Modifier
                 .heightIn(min = 48.dp)

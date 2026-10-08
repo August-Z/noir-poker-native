@@ -49,6 +49,8 @@ object UiCopy {
 
     // Dialog common.
     const val closeA11y = "Close"
+    /** Accessibility state of external links (native addition). */
+    const val opensInBrowser = "Opens in your browser"
     const val backToTable = "Back to Table"
 
     // How to Play.
@@ -111,6 +113,12 @@ object UiCopy {
         "The VPIP / PFR shown for each seat are actual stats from hands completed this session: hands with money voluntarily put in / total hands, and hands raised preflop / total hands. Forced blinds don't count; switching a style restarts the count, and relaunching the app or starting a new session resets it to zero. Bet ranges are typical postflop sizes and don't limit special raises, short stacks, or all-ins."
     const val oppSaveButton = "Save · Applies Next Hand"
     const val playerCountA11y = "Table size"
+
+    // Settings sheet (native grouping of the surface controls, tips and sound).
+    const val settingsEyebrow = "TABLE SETTINGS"
+    const val settingsTitle = "Settings"
+    const val settingsHints = "Table Tips"
+    const val settingsSound = "Sound"
     const val expanded = "Expanded"
     const val collapsed = "Collapsed"
 
