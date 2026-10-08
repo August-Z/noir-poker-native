@@ -7,12 +7,16 @@
 // seeded Mulberry32 stream (identical to src/review/equity.js seedRandom)
 // installed as Math.random. Between fixture cases Math.random throws, so no
 // unseeded randomness can leak into a fixture. Engine copy is translated into
-// English by scripts/reference-copy.mjs, which throws on any untranslated text.
+// English by scripts/reference-copy.mjs and review copy by
+// scripts/review-copy.mjs; both throw on any untranslated text. The review
+// fixtures run the expensive reference review calls on a worker pool
+// (scripts/review-fixture-worker.mjs), so a full run takes a few minutes.
 // The schema of every file is documented in fixtures/README.md.
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { writeFileSync, readFileSync, mkdirSync, existsSync } from 'node:fs';
 import { translate, translateDeep } from './reference-copy.mjs';
+import { translateReview, translateReviewDeep, reviewErrorCode, REVIEW_ERRORS, untranslated, usedCopy, copySources } from './review-copy.mjs';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const referenceRoot = resolve(process.env.NOIR_REFERENCE_DIR || resolve(root, '.reference/noir-poker'));
 const { evaluate } = await import(pathToFileURL(resolve(referenceRoot, 'src/engine/poker.js')));
@@ -1742,6 +1746,732 @@ const viewOut = (v) => {
     sims.push({ name: `simulation ${k + 1}: ${n} seats, ${settings.emotionMode}, ${difficulty}`, seed, playerCount: n, settings, difficulty, ...(stacks ? { stacks } : {}), hands });
   }
   outputs.set('simulations.json', compactList(header('All-bot multi-hand simulations on one seeded stream.'), 'cases', translateDeep(plain(sims))));
+}
+
+// ---------------------------------------------------------------------------
+// Review fixtures (src/review/*.js)
+// ---------------------------------------------------------------------------
+// Inputs are hero decision snapshots (g.decisions) and review inputs
+// (createReviewInput) captured from seeded hands, plus the snapshots built by
+// the reference review unit tests. Every review call is deterministic: the
+// review modules draw only from seedRandom streams derived from snapshotSeed,
+// so Math.random stays forbidden while they run. Review copy is translated by
+// scripts/review-copy.mjs, which throws on any untranslated text. The schema is
+// documented in fixtures/README.md (Review section).
+{
+  const A = await load('src/review/analysis.js'),
+    C = await load('src/review/context.js'),
+    E = await load('src/review/equity.js'),
+    P = await load('src/review/preflop.js'),
+    RT = await load('src/review/routes.js'),
+    CF = await load('src/review/counterfactual.js'),
+    O = await load('src/review/opponents.js');
+  // Expensive deterministic calls run on a worker pool; results are identical
+  // to calling them here (each call seeds itself from the snapshot).
+  const { Worker } = await import('node:worker_threads');
+  const { availableParallelism } = await import('node:os');
+  const workers = Array.from({ length: Math.max(1, Math.min(8, availableParallelism())) }, () =>
+    new Worker(new URL('./review-fixture-worker.mjs', import.meta.url), { workerData: { referenceRoot } }),
+  );
+  const waiting = new Map(),
+    queue = [];
+  let nextId = 0;
+  const idle = [...workers];
+  const pump = () => {
+    while (idle.length && queue.length) {
+      const w = idle.pop(),
+        job = queue.shift();
+      w.job = job;
+      w.postMessage({ id: job.id, fn: job.fn, args: job.args });
+    }
+  };
+  for (const w of workers)
+    w.on('message', ({ id, result, error }) => {
+      const job = waiting.get(id);
+      waiting.delete(id);
+      idle.push(w);
+      pump();
+      if (error) job.reject(Error(error));
+      else job.resolve(result);
+    });
+  const remote = (fn, ...args) =>
+    new Promise((resolve, reject) => {
+      const job = { id: nextId++, fn, args, resolve, reject };
+      waiting.set(job.id, job);
+      queue.push(job);
+      pump();
+    });
+  const REDUCED = { trials: 60 }; // analyzeDecision reduced variant (rolloutTrials 12)
+  const SAMPLE_TRIALS = [600, 25];
+  const COMPARE_REDUCED_TRIALS = 4;
+  const ROUTE_CODES = [
+    'late-open',
+    'late-isolation',
+    'early-suited-entry',
+    'squeeze-candidate',
+    'weak-threebet-defense',
+    'weak-fourbet-defense',
+    'weak-entry',
+    'pressure-bet',
+    'value-bet',
+    'priced-call',
+  ];
+  const out = (v) => translateReviewDeep(plain(v));
+  const finite = (v, path = '') => {
+    if (typeof v === 'number' && !Number.isFinite(v)) throw Error(`Non-finite number in review fixture at ${path}`);
+    if (Array.isArray(v)) v.forEach((x, i) => finite(x, `${path}[${i}]`));
+    else if (v && typeof v === 'object') for (const [k, x] of Object.entries(v)) finite(x, `${path}.${k}`);
+    return v;
+  };
+  const same = (a, b, what) => {
+    if (JSON.stringify(a) !== JSON.stringify(b)) throw Error(`Review fixture mismatch: ${what}`);
+  };
+  const withoutDealer = (s) => {
+    const copy = jsonCopy(s);
+    delete copy.dealer;
+    return copy;
+  };
+
+  // rangeWeight samples: four fixed starting-hand classes plus four seeded
+  // random pairs from the cards the hero cannot see, for each live opponent.
+  function rangeSamples(s, r) {
+    const known = new Set([...s.hole, ...s.board].map((c) => c.key)),
+      available = DECK.filter((c) => !known.has(c.key));
+    const pairs = [];
+    for (const [hi, lo, suited] of [
+      [14, 14, false],
+      [14, 13, true],
+      [12, 11, true],
+      [7, 2, false],
+    ]) {
+      const a = available.find((c) => c.rank === hi);
+      const b = a && available.find((c) => c !== a && c.rank === lo && (suited ? c.suit === a.suit : c.suit !== a.suit));
+      if (a && b) pairs.push([a, b]);
+    }
+    for (let k = 0; k < 4; k++) {
+      const i = Math.floor(r() * available.length);
+      let j = Math.floor(r() * (available.length - 1));
+      if (j >= i) j++;
+      pairs.push([available[i], available[j]]);
+    }
+    const rows = [];
+    for (const p of s.players.filter((p) => p.id !== 0 && !p.folded))
+      for (const pair of pairs) rows.push({ opponent: p.id, pair: keysOf(pair), weight: E.rangeWeight(pair, s, p) });
+    return rows;
+  }
+
+  const decisionCases = [];
+  let compareDefaultCount = 0;
+  // Builds one decision case. `extra` adds reference-test specific calls.
+  const pendingWork = [];
+  function decisionCase(name, s, options = {}) {
+    const slot = decisionCases.length;
+    decisionCases.push(null);
+    const work = buildDecisionCase(slot, name, s, options).then((row) => (decisionCases[slot] = row.row) && row);
+    pendingWork.push(work);
+    return work;
+  }
+  async function buildDecisionCase(slot, name, s, { hand = null, testOptions, rangeWeights = [], fullCompare = false, extraCandidates = [] } = {}) {
+    const saved = JSON.stringify(s);
+    const r = scriptStream(E.snapshotSeed(s));
+    const ctx = C.decisionContext(s);
+    const price = E.callPrice(s);
+    const sampleValue = [];
+    for (const trials of SAMPLE_TRIALS)
+      for (const weighted of [false, true])
+        sampleValue.push({ trials, weighted, result: E.sampleValue(s, price, trials, weighted) });
+    const [full, reduced, noSim] = await Promise.all([
+      remote('analyzeDecision', s, undefined),
+      remote('analyzeDecision', s, REDUCED),
+      remote('analyzeDecision', withoutDealer(s), undefined),
+    ]);
+    if (noSim.simulation !== null) throw Error('noSimulation variant ran a simulation');
+    const pre = s.street === 0 ? P.preflopContext(s) : null;
+    const routes = [];
+    const routeArgs = { code: noSim.code, status: noSim.status, alternative: noSim.alternative };
+    const actual = RT.comparisonRoutes(s, ctx, { ...routeArgs, pre });
+    same(actual, noSim.routes, `${name} comparisonRoutes`);
+    routes.push({ args: { ...routeArgs, withPreflopContext: !!pre }, result: actual });
+    if (slot % 3 === 0) {
+      const preAlways = P.preflopContext(s);
+      for (const code of ROUTE_CODES)
+        for (const alternative of CF.candidateActions(s).slice(0, 4)) {
+          const args = { code, status: 'sound', alternative };
+          routes.push({ args: { ...args, withPreflopContext: true }, result: RT.comparisonRoutes(s, ctx, { ...args, pre: preAlways }) });
+        }
+    }
+    const alternatives = [full.alternative, full.routes.secondary];
+    const compare = [];
+    const simulates = Number.isInteger(s.dealer) && s.players.every((p) => 'actedTo' in p);
+    if (fullCompare && simulates) {
+      compare.push({ alternatives: [], trials: 40, result: await remote('compareCandidateActions', s, [], undefined) });
+      compareDefaultCount++;
+    }
+    if (simulates)
+      compare.push({
+      alternatives: [noSim.alternative, noSim.routes.secondary],
+      trials: COMPARE_REDUCED_TRIALS,
+      result: await remote('compareCandidateActions', s, [noSim.alternative, noSim.routes.secondary], { trials: COMPARE_REDUCED_TRIALS }),
+    });
+    const tests = testOptions ? { options: testOptions, result: await remote('analyzeDecision', s, testOptions) } : undefined;
+    if (JSON.stringify(s) !== saved) throw Error(`${name}: review mutated the snapshot`);
+    const row = {
+      name,
+      hand,
+      snapshot: s,
+      startingTier: C.startingTier(s.hole),
+      drawInfo: C.drawInfo(s.hole, s.board),
+      boardTexture: C.boardTexture(s.board),
+      decisionContext: ctx,
+      preflopContext: P.preflopContext(s),
+      snapshotSeed: E.snapshotSeed(s),
+      callPrice: price,
+      rangeWeight: [...rangeWeights.map(([pair, opponent]) => ({ opponent: opponent.id, pair: keysOf(pair), weight: E.rangeWeight(pair, s, opponent) })), ...rangeSamples(s, r)],
+      sampleValue,
+      candidateActions: [
+        { alternatives: [], result: CF.candidateActions(s) },
+        { alternatives, result: CF.candidateActions(s, alternatives) },
+        ...extraCandidates.map((alts) => ({ alternatives: alts, result: CF.candidateActions(s, alts) })),
+      ],
+      comparisonRoutes: routes,
+      compareCandidateActions: compare,
+      analyzeDecision: { default: full, reduced: { options: REDUCED, result: reduced }, noSimulation: noSim, ...(tests ? { test: tests } : {}) },
+    };
+    return { row: finite(out(row)), index: slot, full, reduced };
+  }
+
+  // --- Seeded hands ----------------------------------------------------------
+  const HOLES = ['Ac 7h', 'Qs 7s', 'As Ah', 'Qs Qh', 'Kd 2c', '8s 9s', 'Ah Kh', '5c 5d', 'Jh Th', 'Ac 4c', '7s 2h', 'Kc Qd', 'Ad 9d', '3h 3s'];
+  const BOARDS = ['As Ks Qs Js Ts', 'Kd Ks 4c 9h 2s', 'Ah 7h 2h 9c 3d', '6c 7d Kc 8h 2d', 'Qd Jd 4s 4h Qc', '9s 8s 2d Td 5c', 'Jc 7d 2s 2c 7h', '4h 5h 6h 7c Ks'];
+  const MOOD_REASON_ZH = {
+    frustrated: '单手净损失至少 25 BB',
+    cautious: '连续三手各净损失至少 5 BB',
+    confident: '连续两手盈利，本手净赢至少 10 BB',
+    reactive: '连续三手面对同一对手加注后弃牌',
+  };
+  // Moves the wanted card keys into the given slots ([array, index] pairs),
+  // swapping with wherever they are now, so the 52 cards stay unique.
+  function placeCards(g, wanted, slots) {
+    const all = [...g.players.flatMap((p) => p.hole.map((_, i) => [p.hole, i])), ...g.deck.map((_, i) => [g.deck, i])];
+    wanted.forEach((key, k) => {
+      const [ta, ti] = slots[k];
+      const from = all.find(([a, i]) => a[i].key === key);
+      if (!from) throw Error(`placeCards: ${key} not available`);
+      const [fa, fi] = from;
+      [ta[ti], fa[fi]] = [fa[fi], ta[ti]];
+    });
+  }
+  const boardSlots = (g) => {
+    const L = g.deck.length;
+    // Pop order: burn, flop x3, burn, turn, burn, river.
+    return [L - 2, L - 3, L - 4, L - 6, L - 8].map((i) => [g.deck, i]);
+  };
+  function heroChoice(g, r, style) {
+    const l = poker.legalActions(g, 0),
+      x = r();
+    const raiseTo = () => {
+      const k = r();
+      const target =
+        k < 0.3 ? l.minRaiseTo : k < 0.55 ? Math.round((g.currentBet ? g.currentBet * 3 : poker.potSize(g) * 0.66) / 25) * 25 : k < 0.75 ? l.maxRaiseTo : intBetween(r, l.minRaiseTo, l.maxRaiseTo);
+      return Math.min(l.maxRaiseTo, Math.max(l.minRaiseTo, target));
+    };
+    const pFold = { call: 0.08, raise: 0.12, tight: 0.45, mixed: 0.22, shove: 0.2 }[style],
+      pRaise = { call: 0.1, raise: 0.55, tight: 0.15, mixed: 0.3, shove: 0.5 }[style];
+    if (l.canCheck && x < (style === 'tight' ? 0.12 : 0.03)) return { action: 'fold' };
+    if (!l.canCheck && x < pFold) return { action: 'fold' };
+    if (l.canRaise && x < pFold + pRaise) return { action: 'raise', amount: style === 'shove' && r() < 0.6 ? l.maxRaiseTo : raiseTo() };
+    return { action: l.canCheck && r() < 0.85 ? 'check' : 'call' };
+  }
+  function opponentChoice(g, r) {
+    const l = poker.legalActions(g),
+      raises = g.history.filter((a) => a.street === g.street && a.action === 'raise').length,
+      x = r();
+    if (!l.canCheck && x < 0.2) return { action: 'fold' };
+    if (l.canRaise && raises < 4 && x < 0.5) {
+      const k = r();
+      return { action: 'raise', amount: k < 0.2 ? l.maxRaiseTo : k < 0.6 ? l.minRaiseTo : intBetween(r, l.minRaiseTo, Math.min(l.maxRaiseTo, l.minRaiseTo + 900)) };
+    }
+    return { action: l.canCheck ? 'check' : 'call' };
+  }
+  // Plays one hand; returns the game and the executed action list.
+  function playReviewHand(cfg) {
+    const stream = useSeed(cfg.seed),
+      r = scriptStream(cfg.seed);
+    const g = poker.newGame(cfg.n);
+    poker.applyBotSettings(g, cfg.settings);
+    g.difficulty = cfg.difficulty;
+    g.dealer = cfg.dealer;
+    cfg.stacks.forEach((stack, i) => (g.players[i].stack = stack));
+    poker.startHand(g);
+    if (cfg.hole) placeCards(g, parseKeys(cfg.hole), g.players[0].hole.map((_, i) => [g.players[0].hole, i]));
+    if (cfg.board) placeCards(g, parseKeys(cfg.board), boardSlots(g));
+    if (cfg.hidden) cfg.hidden(g);
+    for (const [id, kind] of cfg.moods ?? []) {
+      Object.assign(g.players[id].botMood, { kind, reason: MOOD_REASON_ZH[kind], remaining: 2, cooldown: 3 });
+    }
+    const actions = [];
+    let guard = 0;
+    while (g.phase !== 'done') {
+      if (++guard > 500) throw Error('review hand stalled');
+      if (g.phase === 'between') {
+        poker.advanceStreet(g);
+        continue;
+      }
+      const id = g.actor;
+      if (cfg.replay) {
+        const a = cfg.replay[actions.length];
+        if (!a || a.id !== id) throw Error('privacy replay diverged');
+        poker.act(g, id, a.action, a.amount);
+        actions.push(a);
+        continue;
+      }
+      let choice;
+      if (id === 0) choice = cfg.heroScript?.[g.decisions.length] ?? heroChoice(g, r, cfg.style);
+      else if (cfg.opponents === 'bots' || (cfg.opponents === 'mixed' && id % 2 === 1)) {
+        const plan = poker.planBotTurn(g);
+        const d = poker.executeBotTurn(g, plan);
+        actions.push({ id, action: d.action, ...(d.amount === undefined ? {} : { amount: d.amount }) });
+        continue;
+      } else choice = opponentChoice(g, r);
+      poker.act(g, id, choice.action, choice.amount);
+      actions.push({ id, action: choice.action, ...(choice.amount === undefined ? {} : { amount: choice.amount }) });
+    }
+    Math.random = forbiddenRandom;
+    return { g, actions, draws: stream.draws };
+  }
+  function handConfig(i) {
+    const seed = 61000 + i,
+      r = scriptStream(seed ^ 0x2f6b),
+      n = 5 + (i % 5);
+    const stacks = Array.from({ length: n }, (_, id) => {
+      if (i % 3 === 0 && id > 0 && r() < 0.45) return intBetween(r, 60, 1400);
+      if (i % 7 === 3 && id === 0) return intBetween(r, 90, 420);
+      return r() < 0.15 ? intBetween(r, 2000, 9000) : 5000;
+    });
+    const emotionMode = ['lively', 'subtle', 'off'][i % 3];
+    return {
+      seed,
+      n,
+      dealer: intBetween(r, 0, n - 1),
+      stacks,
+      settings: { emotionMode, assignments: Object.fromEntries(Array.from({ length: 8 }, (_, k) => [k + 1, pick(r, bots.BOT_PROFILES).id])) },
+      difficulty: ['normal', 'hard', 'easy'][Math.floor(i / 3) % 3],
+      opponents: ['bots', 'mixed', 'scripted', 'bots'][i % 4],
+      style: ['call', 'raise', 'tight', 'mixed', 'shove', 'call'][Math.floor(i / 2) % 6],
+      hole: i % 2 === 0 ? HOLES[(i / 2) % HOLES.length] : null,
+      board: i % 5 === 1 ? BOARDS[Math.floor(i / 5) % BOARDS.length] : null,
+      moods: emotionMode === 'off' ? [] : [[1 + (i % (n - 1)), ['frustrated', 'cautious', 'confident', 'reactive'][i % 4]]],
+    };
+  }
+  const handCases = [];
+  const explainCases = [];
+  function reviewHand(name, cfg, played = playReviewHand(cfg)) {
+    const slot = handCases.length;
+    handCases.push(null);
+    pendingWork.push(buildHandCase(slot, name, cfg, played).then((row) => (handCases[slot] = row)));
+  }
+  async function buildHandCase(slot, name, cfg, { g }) {
+    const input = A.createReviewInput(g);
+    const decisionRefs = [],
+      work = [];
+    for (const s of input.decisions) {
+      decisionRefs.push(decisionCases.length);
+      work.push(decisionCase(`${name} · decision ${s.index + 1}`, s, { hand: slot, fullCompare: decisionCases.length % 2 === 0 }));
+    }
+    const done = await Promise.all(work);
+    const steps = done.map((d) => d.full),
+      reducedSteps = done.map((d) => d.reduced);
+    const summary = A.summarizeReview(input, steps);
+    const reduced = A.summarizeReview(input, reducedSteps);
+    const strip = ({ steps, ...rest }) => rest;
+    const explanations = input.opponents.map((record) => O.explainOpponent(record));
+    return finite(
+        out({
+          name,
+          seed: cfg.seed,
+          playerCount: cfg.n,
+          input,
+          decisions: decisionRefs,
+          analyzeReview: { options: {}, summary: strip(summary) },
+          analyzeReviewReduced: { options: REDUCED, summary: strip(reduced) },
+          explainOpponent: explanations,
+        }),
+      );
+  }
+  for (let i = 0; i < 44; i++) {
+    const cfg = handConfig(i);
+    reviewHand(`review hand ${i + 1}: ${cfg.n} seats, ${cfg.opponents} opponents, hero ${cfg.style}`, cfg);
+  }
+
+  // --- Reference unit-test scenarios ---------------------------------------
+  const cardsOf = (s) => (s ? parseKeys(s).map(card) : []);
+  // review-context.test.js decision() helper.
+  function contextDecision({ hole = 'Qs Qh', board = 'Js 7h 2c', street = 1, action = 'check', amount = 0, stack = 5000, currentBet = 0, pot = 300 } = {}) {
+    return {
+      index: 0, hand: 1, hole: cardsOf(hole), board: cardsOf(board), street, action, amount, position: 'BTN', stack, bet: 0, total: pot / 2, pot, currentBet, minRaise: 50, pending: [0],
+      players: [
+        { id: 0, name: '你', position: 'BTN', total: pot / 2, bet: 0, stack, folded: false, allin: false },
+        { id: 1, name: 'Mia', position: 'BB', total: pot / 2, bet: currentBet, stack, folded: false, allin: false },
+      ],
+      history: [],
+      legal: { enabled: true, canCheck: currentBet === 0, canRaise: true, toCall: currentBet, callAmount: currentBet, minRaiseTo: currentBet + 50, maxRaiseTo: stack },
+    };
+  }
+  const ctxOpt = { trials: 120 };
+  decisionCase('review-context: overpair', contextDecision(), { testOptions: ctxOpt });
+  decisionCase('review-context: top pair with ace kicker', contextDecision({ hole: 'As Jh' }), { testOptions: ctxOpt });
+  decisionCase('review-context: public pair is not a value check', contextDecision({ hole: 'As Kh', board: '7s 7h 2c' }), { testOptions: ctxOpt });
+  decisionCase('review-context: deep pocket queens shove', contextDecision({ street: 0, board: '', action: 'raise', amount: 5000, pot: 75, currentBet: 50 }), { testOptions: ctxOpt });
+  decisionCase('review-context: short aces shove', contextDecision({ hole: 'As Ah', street: 0, board: '', stack: 1000, action: 'raise', amount: 1000, currentBet: 50, pot: 75 }), { testOptions: ctxOpt });
+  decisionCase('review-context: four-suit board without a flush', contextDecision({ hole: 'Kh Kc', board: 'Ks 7s 2s 4s', street: 2 }), { testOptions: ctxOpt });
+  decisionCase('review-context: river heads-up enumeration on a royal board', contextDecision({ hole: '2h 3h', board: 'As Ks Qs Js Ts', street: 3 }), { testOptions: ctxOpt });
+  decisionCase('review-context: sampling band with an all-win sample', contextDecision({ hole: 'As Ah', board: 'Ac Ad 2s', street: 1 }), { testOptions: { trials: 10 } });
+  // review-check.test.js snapshot() helper.
+  function checkSnapshot({ hole = '7s 2h', board = '2s 6h 9c Jd Qs', street = 3, action = 'call', amount = 100, position = 'BTN', totals = [100, 200, 0, 0, 0, 0], stacks = [1000, 1000, 0, 0, 0, 0], allins = [], pending = [0], currentBet = 200, canCheck = false, canRaise = true } = {}) {
+    const players = totals.map((total, id) => ({
+      id, name: ['你', 'Mia', 'Alex', 'River', 'Kai', 'Luna'][id], position, stack: stacks[id], total, bet: total, folded: id > 1 && total === 0, allin: allins.includes(id), action: id === 1 ? '下注 ' + currentBet : '',
+    }));
+    return {
+      index: 0, hand: 1, street, position, hole: cardsOf(hole), board: board ? cardsOf(board) : [], stack: stacks[0], bet: totals[0], total: totals[0], pot: totals.reduce((a, b) => a + b, 0), currentBet, minRaise: 50,
+      legal: { enabled: true, canCheck, canRaise, raiseReopened: canRaise, toCall: canCheck ? 0 : amount, callAmount: canCheck ? 0 : amount, minRaiseTo: currentBet + 50, maxRaiseTo: totals[0] + stacks[0] },
+      pending, action, amount, players, history: [{ id: 1, street, action: 'raise', amount: currentBet }],
+    };
+  }
+  const chkOpt = { trials: 100 };
+  decisionCase('review-check: default river call', checkSnapshot(), { testOptions: chkOpt });
+  decisionCase('review-check: free fold', checkSnapshot({ action: 'fold', canCheck: true, amount: 0, currentBet: 0, totals: [50, 50, 0, 0, 0, 0] }), { testOptions: chkOpt });
+  decisionCase('review-check: weak early-position entry', checkSnapshot({ street: 0, board: '', position: 'UTG', totals: [0, 50, 25, 0, 0, 0], stacks: [1000, 1000, 1000, 1000, 1000, 1000], currentBet: 50, amount: 50 }), { testOptions: chkOpt });
+  const strongAllIn = checkSnapshot({ hole: 'As Ah', street: 0, board: '', action: 'raise', amount: 1000, totals: [0, 50, 25, 0, 0, 0], stacks: [1000, 1000, 1000, 0, 0, 0], currentBet: 50 });
+  decisionCase('review-check: strong all-in losing to a later runout', strongAllIn, { testOptions: chkOpt });
+  const flopCall = checkSnapshot({ street: 1, board: '2s 6h 9c' });
+  decisionCase('review-check: flop call graded without the outcome', flopCall, { testOptions: chkOpt });
+  decisionCase('review-check: closed raise is never recommended', checkSnapshot({ hole: 'As Ah', street: 0, board: '', canRaise: false }), { testOptions: chkOpt });
+  decisionCase('review-check: recommended raise is legal', checkSnapshot({ hole: 'As Ah', street: 0, board: '', currentBet: 50, totals: [0, 50, 25, 0, 0, 0], amount: 50 }), { testOptions: chkOpt });
+  {
+    const s = checkSnapshot({ totals: [50, 300, 300, 0, 0, 0], stacks: [50, 1000, 1000, 0, 0, 0], amount: 50, currentBet: 300, pending: [0] });
+    s.players[2].folded = false;
+    decisionCase('review-check: short-stack call price excludes unreachable side pots', s, { testOptions: chkOpt });
+  }
+  {
+    const s = checkSnapshot({ totals: [100, 100, 300, 300, 0, 0], stacks: [200, 0, 1000, 1000, 0, 0], amount: 200, currentBet: 300, allins: [1] });
+    s.players[2].folded = false;
+    s.players[3].folded = false;
+    decisionCase('review-check: main and side pots have distinct eligible opponents', s, { testOptions: chkOpt });
+  }
+  decisionCase('review-check: uncalled refunds', checkSnapshot({ totals: [25, 20, 0, 0, 0, 0], stacks: [1000, 0, 0, 0, 0, 0], allins: [1], amount: 25, currentBet: 50, canRaise: false }), { testOptions: chkOpt });
+  {
+    const s = checkSnapshot({ totals: [100, 200, 200, 0, 0, 0], stacks: [1000, 1000, 0, 0, 0, 0], amount: 100 });
+    s.players[2].folded = true;
+    decisionCase('review-check: folded contributions stay in the call price', s, { testOptions: chkOpt });
+  }
+  decisionCase('review-check: royal flush board ties', checkSnapshot({ hole: '2h 3h', board: 'As Ks Qs Js Ts', totals: [100, 200, 0, 0, 0, 0], amount: 100 }), { testOptions: chkOpt });
+  {
+    const s = checkSnapshot({ action: 'raise', amount: 125, totals: [100, 100, 0, 0, 0, 0], stacks: [25, 1000, 0, 0, 0, 0], currentBet: 100 });
+    decisionCase('review-check: short all-in raise', s, { testOptions: chkOpt });
+    const c = jsonCopy(s);
+    c.action = 'call';
+    c.legal.callAmount = 25;
+    decisionCase('review-check: all-in call', c, { testOptions: chkOpt });
+  }
+  // Review inputs from the review-check tests (outcome never grades decisions).
+  const syntheticInputs = [];
+  const synth = (name, input, options) => {
+    const result = A.analyzeReview(input, options);
+    syntheticInputs.push(finite(out({ name, input, options, result })));
+  };
+  synth('review-check: strong all-in losing to a later runout', { hand: 1, decisions: [strongAllIn], outcome: { profit: -1000, folded: false, board: cardsOf('Ks Kh Kc Qd 2s') } }, chkOpt);
+  synth('review-check: outcome A (Mia wins)', { hand: 1, decisions: [flopCall], outcome: { profit: -200, folded: false, board: cardsOf('2s 6h 9c As Ah'), result: 'Mia wins' } }, chkOpt);
+  synth('review-check: outcome B (hero wins)', { hand: 1, decisions: [flopCall], outcome: { profit: 500, folded: false, board: cardsOf('2s 6h 9c 7h 7c'), result: 'You win' } }, chkOpt);
+  synth('review-check: blind-only loss', { hand: 1, decisions: [], outcome: { profit: -25, folded: false } }, chkOpt);
+  synth('review-check: blind-only loss (default options)', { hand: 1, decisions: [], outcome: { profit: -25, folded: false } }, {});
+  // review-lines.test.js button flows (startHand shuffles with a seeded stream).
+  const btnGame = (seed, hole = 'Ac 7h', limp = false) => {
+    useSeed(seed);
+    const g = poker.newGame();
+    g.dealer = 5;
+    poker.startHand(g);
+    Math.random = forbiddenRandom;
+    placeCards(g, parseKeys(hole), g.players[0].hole.map((_, i) => [g.players[0].hole, i]));
+    while (g.actor !== 0) poker.act(g, g.actor, limp && g.actor === 5 ? 'call' : 'fold');
+    return g;
+  };
+  const lineOpt = { trials: 120 };
+  {
+    const g = btnGame(71001);
+    poker.act(g, 0, 'raise', 150);
+    decisionCase('review-lines: A7 offsuit BTN open', g.decisions[0], { testOptions: lineOpt });
+  }
+  {
+    const g = btnGame(71002, 'Ac 7h', true);
+    poker.act(g, 0, 'raise', 200);
+    decisionCase('review-lines: BTN isolation of a limper', g.decisions[0], { testOptions: lineOpt });
+  }
+  {
+    const g = btnGame(71003);
+    poker.act(g, 0, 'raise', 150);
+    poker.act(g, 1, 'call');
+    poker.act(g, 2, 'raise', 650);
+    poker.act(g, 0, 'call');
+    poker.act(g, 1, 'raise', 1800);
+    poker.act(g, 2, 'call');
+    poker.act(g, 0, 'call');
+    g.decisions.forEach((s, k) => decisionCase(`review-lines: A7 open, 3-bet and 4-bet calls (decision ${k + 1})`, s, { testOptions: lineOpt }));
+    poker.advanceStreet(g);
+    while (g.actor !== 0) poker.act(g, g.actor, 'check');
+    poker.act(g, 0, 'check');
+    decisionCase('review-lines: same-street repeated calls count once', g.decisions.at(-1), { testOptions: lineOpt });
+  }
+  for (const [k, h] of ['Ac 7h', 'Ac 7c'].entries()) {
+    const g = btnGame(71004 + k, h);
+    poker.act(g, 0, 'raise', 150);
+    poker.act(g, 1, 'raise', 350);
+    poker.act(g, 2, 'fold');
+    poker.act(g, 0, 'call');
+    decisionCase(`review-lines: ${h === 'Ac 7h' ? 'offsuit' : 'suited'} weak ace 3-bet defense`, g.decisions[1], { testOptions: lineOpt });
+  }
+  {
+    const g = btnGame(71006);
+    poker.act(g, 0, 'raise', 150);
+    g.players[1].stack = 850;
+    poker.act(g, 1, 'raise', 875);
+    poker.act(g, 2, 'fold');
+    poker.act(g, 0, 'call');
+    decisionCase('review-lines: calling a sole all-in closes the action', g.decisions.at(-1), { testOptions: lineOpt });
+  }
+  {
+    const g = btnGame(71007);
+    poker.act(g, 0, 'raise', 150);
+    g.players[1].stack = 850;
+    poker.act(g, 1, 'raise', 875);
+    poker.act(g, 2, 'call');
+    poker.act(g, 0, 'call');
+    decisionCase('review-lines: all-in with another live opponent does not close', g.decisions.at(-1), { testOptions: lineOpt });
+  }
+  {
+    useSeed(71008);
+    const g = poker.newGame();
+    g.dealer = 2;
+    poker.startHand(g);
+    Math.random = forbiddenRandom;
+    placeCards(g, parseKeys('Qs 7s'), g.players[0].hole.map((_, i) => [g.players[0].hole, i]));
+    poker.act(g, 0, 'raise', 150);
+    decisionCase('review-lines: Q7 suited UTG open', g.decisions[0], { testOptions: lineOpt, fullCompare: true });
+  }
+  // Additional preflop lines that the reference tests do not reach:
+  // late-position limp and fold (late-passive-entry) and a squeeze.
+  for (const [k, action] of ['call', 'fold'].entries()) {
+    const g = btnGame(71020 + k);
+    poker.act(g, 0, action);
+    decisionCase(`preflop line: BTN A7 offsuit ${action === 'call' ? 'limps' : 'folds'} when folded to`, g.decisions[0]);
+  }
+  {
+    useSeed(71022);
+    const g = poker.newGame();
+    g.dealer = 5;
+    poker.startHand(g);
+    Math.random = forbiddenRandom;
+    placeCards(g, parseKeys('Ac 5h'), g.players[0].hole.map((_, i) => [g.players[0].hole, i]));
+    let seen = 0;
+    while (g.actor !== 0) poker.act(g, g.actor, seen++ === 0 ? 'raise' : seen === 2 ? 'call' : 'fold', seen === 1 ? 150 : undefined);
+    poker.act(g, 0, 'raise', 600);
+    decisionCase('preflop line: BTN weak-ace squeeze over an open and a call', g.decisions[0], { fullCompare: true });
+  }
+  // review-lines: settled bot traces (LCG stream from the test) are separate from hero grading.
+  {
+    const lcg = (seed) => {
+      let n = seed;
+      return () => (n = (Math.imul(n, 1664525) + 1013904223) >>> 0) / 4294967296;
+    };
+    useSeed(71009);
+    const g = poker.newGame();
+    g.dealer = 2;
+    poker.startHand(g);
+    const rng = lcg(91);
+    // Bot decisions use the test's LCG; thinking time uses the seeded stream.
+    while (g.phase !== 'done') {
+      if (g.phase === 'between') poker.advanceStreet(g);
+      else if (g.actor === 0) poker.act(g, 0, poker.legalActions(g).canCheck ? 'check' : 'call');
+      else poker.playBotTurn(g, rng);
+    }
+    Math.random = forbiddenRandom;
+    reviewHand('review-lines: settled bot traces are separate from hero grading', { seed: 71009, n: 6 }, { g });
+  }
+  // counterfactual.test.js
+  const cfSnap = (seed) => {
+    useSeed(seed);
+    const g = poker.newGame();
+    g.dealer = 2;
+    poker.startHand(g);
+    Math.random = forbiddenRandom;
+    poker.act(g, 0, 'call');
+    return g.decisions[0];
+  };
+  {
+    const s = cfSnap(72001);
+    decisionCase('counterfactual: UTG limp', s, { fullCompare: true });
+    const capped = jsonCopy(s);
+    capped.legal.canRaise = false;
+    capped.legal.callAmount = 25;
+    capped.stack = 25;
+    decisionCase('counterfactual: closed raising and a capped short-stack call', capped, { extraCandidates: [[{ action: 'raise', amount: 5000 }]] });
+    const h = cardsOf('Qs 7s');
+    const flat = jsonCopy(s);
+    flat.history = [
+      { id: 2, street: 0, action: 'raise', amount: 150 },
+      { id: 1, street: 0, action: 'call', amount: 125 },
+    ];
+    const pairOf = (snap) => [[h, snap.players[1]]];
+    decisionCase('counterfactual: flat caller before an unanswered 3-bet (step 1)', flat, { rangeWeights: pairOf(flat) });
+    const flat2 = jsonCopy(flat);
+    flat2.history.push({ id: 3, street: 0, action: 'raise', amount: 650 });
+    decisionCase('counterfactual: flat caller before an unanswered 3-bet (step 2)', flat2, { rangeWeights: pairOf(flat2) });
+    const flat3 = jsonCopy(flat2);
+    flat3.history.push({ id: 1, street: 0, action: 'call', amount: 500 });
+    decisionCase('counterfactual: flat caller who calls the 3-bet', flat3, { rangeWeights: pairOf(flat3) });
+    const opener = jsonCopy(s);
+    opener.history = [{ id: 1, street: 0, action: 'raise', amount: 150 }];
+    decisionCase('counterfactual: opener before a 3-bet', opener, { rangeWeights: pairOf(opener) });
+    const opener2 = jsonCopy(opener);
+    opener2.history.push({ id: 2, street: 0, action: 'raise', amount: 650 }, { id: 1, street: 0, action: 'call', amount: 500 });
+    decisionCase('counterfactual: opener who calls a 3-bet', opener2, { rangeWeights: pairOf(opener2) });
+  }
+  {
+    useSeed(72002);
+    const g = poker.newGame();
+    g.dealer = 2;
+    poker.startHand(g);
+    while (g.street < 3) {
+      if (g.phase === 'between') poker.advanceStreet(g);
+      else poker.act(g, g.actor, 'call');
+    }
+    Math.random = forbiddenRandom;
+    g.board = cardsOf('As Ks Qs Js Ts');
+    placeCards(g, parseKeys('2h 3h'), g.players[0].hole.map((_, i) => [g.players[0].hole, i]));
+    while (g.actor !== 0) poker.act(g, g.actor, 'check');
+    poker.act(g, 0, 'check');
+    decisionCase('counterfactual: river royal board splits exactly', g.decisions.at(-1), { fullCompare: true });
+  }
+
+  // --- explainOpponent on the reference-test record --------------------------
+  {
+    const v = {
+      id: 1, hole: cardsOf('7s 2h'), board: [], street: 0, position: 'UTG', count: 6, stack: 5000, bet: 0, pot: 5000, currentBet: 5000, difficulty: 'normal', rivals: 1, equity: 0.07, contestable: 10000,
+      history: [{ id: 0, street: 0, action: 'raise', amount: 5000 }], features: { draw: false, wet: false }, playsBoard: false,
+      legal: { enabled: true, canCheck: false, canRaise: false, toCall: 5000, callAmount: 5000, minRaiseTo: 10000, maxRaiseTo: 5000 },
+    };
+    const d = bots.chooseBotAction(v, bots.BOT_PROFILES[0], bots.freshBotMood(), 'off', () => 0);
+    const record = { id: 1, name: 'Mia', ...d, trace: { ...d.trace, view: v } };
+    explainCases.push(finite(out({ name: 'review-lines: weak all-in call from a randomized exception', record, result: O.explainOpponent(record) })));
+  }
+
+  // --- Privacy: same public decisions, different hidden cards/deck/winners ----
+  const privacyCases = [];
+  for (const [k, base] of [
+    { seed: 73001, n: 6, style: 'call', hole: 'Jh Th', board: null },
+    { seed: 73002, n: 9, style: 'tight', hole: 'Ac 7h', board: null },
+    { seed: 73003, n: 7, style: 'shove', hole: 'Qs Qh', board: null },
+  ].entries()) {
+    const cfg = {
+      ...base,
+      dealer: k,
+      stacks: Array.from({ length: base.n }, (_, id) => (id === 2 ? 700 : 5000)),
+      settings: { emotionMode: 'subtle', assignments: Object.fromEntries(Array.from({ length: 8 }, (_, i) => [i + 1, bots.BOT_PROFILES[(i + k) % bots.BOT_PROFILES.length].id])) },
+      difficulty: 'normal',
+      opponents: 'bots',
+    };
+    const a = playReviewHand(cfg);
+    const inputA = A.createReviewInput(a.g);
+    const lastBoard = new Set((inputA.decisions.at(-1)?.board ?? []).map((c) => c.key));
+    const heroKeys = new Set(inputA.hole.map((c) => c.key));
+    let variants = null;
+    for (let attempt = 0; attempt < 20 && !variants; attempt++) {
+      const shuffleR = mulberry32(74000 + k * 100 + attempt);
+      const hidden = (g) => {
+        // Permute every card the hero has not seen by the last decision.
+        const slots = [...g.players.slice(1).flatMap((p) => p.hole.map((_, i) => [p.hole, i])), ...g.deck.map((_, i) => [g.deck, i])].filter(([arr, i]) => {
+          const key = arr[i].key;
+          return !heroKeys.has(key) && !lastBoard.has(key);
+        });
+        const keys = slots.map(([arr, i]) => arr[i]);
+        for (let i = keys.length - 1; i > 0; i--) {
+          const j = Math.floor(shuffleR() * (i + 1));
+          [keys[i], keys[j]] = [keys[j], keys[i]];
+        }
+        slots.forEach(([arr, i], n) => (arr[i] = keys[n]));
+      };
+      const b = playReviewHand({ ...cfg, hidden, replay: a.actions });
+      const inputB = A.createReviewInput(b.g);
+      same(inputA.decisions, inputB.decisions, 'privacy decisions');
+      if (JSON.stringify(inputA.outcome) !== JSON.stringify(inputB.outcome)) variants = [inputA, inputB];
+    }
+    if (!variants) throw Error('privacy case did not change the outcome');
+    const results = [];
+    for (const input of variants)
+      results.push(A.summarizeReview(input, await Promise.all(input.decisions.map((s) => remote('analyzeDecision', s, REDUCED)))));
+    same(results[0], results[1], 'privacy review output');
+    privacyCases.push(finite(out({ name: `privacy ${k + 1}: ${base.n} seats, hero ${base.style}`, options: REDUCED, variants, result: results[0] })));
+  }
+
+  await Promise.all(pendingWork);
+  await Promise.all(workers.map((w) => w.terminate()));
+  // --- Errors -------------------------------------------------------------------
+  const errors = [];
+  const expectReviewError = (name, fn) => {
+    let code = null;
+    try {
+      fn();
+    } catch (e) {
+      code = reviewErrorCode(e);
+    }
+    if (!code) throw Error(`${name}: expected a review error`);
+    errors.push({ name, error: code });
+  };
+  {
+    useSeed(75001);
+    const g = poker.newGame();
+    poker.startHand(g);
+    Math.random = forbiddenRandom;
+    expectReviewError('createReviewInput while the hand is playing', () => A.createReviewInput(g));
+    errors.at(-1).fn = 'createReviewInput';
+  }
+  // Errors on review-decisions.json case 0 (the first decision of review hand 1).
+  const raw = playReviewHand(handConfig(0)).g.decisions[0];
+  same(out(raw), decisionCases[0].snapshot, 'error case snapshot');
+  for (const [fn, list, call] of [
+    ['analyzeDecision', [0, -5, 1.5], (trials) => A.analyzeDecision(raw, { trials })],
+    ['compareCandidateActions', [1, 0, 2.5], (trials) => CF.compareCandidateActions(raw, [], { trials })],
+  ])
+    for (const trials of list) {
+      expectReviewError(`${fn} trials ${trials}`, () => call(trials));
+      Object.assign(errors.at(-1), { fn, decision: 0, options: { trials } });
+    }
+  const reviewErrorsEnglish = Object.fromEntries(Object.values(REVIEW_ERRORS).map(({ code, message }) => [code, message]));
+  const tables = {
+    streetNames: A.STREET_NAMES.map(translateReview),
+    botReasonNames: Object.fromEntries(Object.entries(O.BOT_REASON_NAMES).map(([k, v]) => [k, translateReview(v)])),
+    botCheckNames: Object.fromEntries(Object.entries(O.BOT_CHECK_NAMES).map(([k, v]) => [k, translateReview(v)])),
+  };
+  outputs.set(
+    'review-decisions.json',
+    compactList(
+      header('Review functions on hero decision snapshots: context, equity, routes, counterfactual simulation and analyzeDecision.'),
+      'cases',
+      decisionCases,
+    ),
+  );
+  outputs.set(
+    'review-hands.json',
+    compactList(
+      { ...header('Review inputs per hand: analyzeReview summaries, explainOpponent for every bot record, privacy invariance and errors.'), errors: reviewErrorsEnglish, tables },
+      'hands',
+      handCases,
+      { privacy: privacyCases, reviewInputs: syntheticInputs, explainOpponent: explainCases, errorCases: errors },
+    ),
+  );
+  if (process.env.REVIEW_COPY_COVERAGE)
+    for (const source of copySources()) if (!usedCopy.has(source) && !usedCopy.has(source.replace(/\\/g, ''))) console.error(`unused review copy: ${source}`);
+  if (untranslated.size) throw Error(`Untranslated review copy:\n${[...untranslated].join('\n')}`);
+  console.error(`review: ${decisionCases.length} decisions, ${handCases.length} hands, ${compareDefaultCount} default comparisons`);
 }
 
 Math.random = nativeRandom;

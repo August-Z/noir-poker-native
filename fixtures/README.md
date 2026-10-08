@@ -332,3 +332,143 @@ bot seats only, `draws` = cumulative draws after that action), `showdown`,
 decision snapshots), `thinkingMs` (per bot action), `logs` (newest first),
 `drawsAfterHand`. The generator asserts chip conservation after every action
 and at settlement.
+
+## Review
+
+Two files cover `src/review/*.js`: `review-decisions.json` (one case per hero
+decision snapshot) and `review-hands.json` (one case per hand, plus privacy,
+synthetic inputs, standalone explanations and errors). They are split because
+together they exceed 7 MB. The expensive reference calls run on a worker pool
+(`scripts/review-fixture-worker.mjs`); every review call is deterministic, so
+the output does not depend on scheduling, and `Math.random` stays forbidden
+while review code runs.
+
+### Review copy
+
+Review strings were produced by the reference in Chinese and translated by
+`scripts/review-copy.mjs`, the authority for review copy (its header documents
+the rules; the English baseline is the review copy catalog). Summary:
+
+- The source concatenates sentence fragments; English joins the translated
+  fragments with one space. Numbers are copied verbatim from the reference
+  output, so they keep the reference formatters: grouped integers (`1,800`),
+  integer percents (`34%`, `Math.round(x*100)+'%'`), one-decimal percents
+  (`12.3%`, `-0.0%`, signed `+1.5%`, `toFixed(1)`), `toFixed(1)` ratios and
+  SPR, `Math.round(x/50)` big blinds, ungrouped counts, and raw JS numbers for
+  mood axes (`String(x)`).
+- Counts use English singular for exactly 1, plural otherwise
+  (`1 opponent`, `2 opponents`, `0 players`).
+- Hand labels (`decisionContext.handLabel`) have a mid-sentence form and a
+  start form. Start form (sentence start, after `": "`, and every standalone
+  field value): engine hand names unchanged (`Two Pair`); templates
+  capitalized (`Pocket Queens`, `A/7 suited`, `Q/7 offsuit`,
+  `A hand that plays the board (hole cards add nothing)`, `A set of Nines`,
+  `An overpair (Kings)` + optional `, on a paired board`,
+  `Pocket Fives with an overcard on board`,
+  `A board pair of Sevens, hole cards as kickers`,
+  `Top pair (K) with an 8 kicker`, `Second-or-lower pair (9) with a Q kicker`).
+  Mid form: the same with a lowercase first letter, and engine names as
+  `high card`, `one pair`, `two pair`, `three of a kind`, `a straight`,
+  `a flush`, `a full house`, `four of a kind`, `a straight flush`,
+  `a royal flush`. Plural rank words: Twos … Tens, Jacks, Queens, Kings, Aces;
+  `an` before 8 and A kickers.
+- Board texture labels (`boardTexture.label`): tags `trips on board`,
+  `paired`, `four to a flush`, `three to a flush`, `two-tone`,
+  `four to a straight`, `clearly straight-connected`, joined with `", "`, or
+  `rainbow and disconnected`. Preflop labels (`preflopContext.label`):
+  `unopened pot`, `unraised, with limpers`, `facing an open`,
+  `open with callers`, `facing a 3-bet`, `facing a 4-bet or more`. Both are
+  lowercase mid-sentence and capitalized at a sentence start, after `": "`,
+  and as standalone field values (`"Paired, three to a flush"`).
+- The reference quirk `公共牌公共牌有对子` ("board" + "paired board") is
+  rendered once: `on a board that's paired`. The preflop check fallback says
+  `on a board that's rainbow and disconnected`, as in the source.
+- Action labels inside review copy (`label`, `alternativeLabel`, summaries,
+  `Simulation pick: …`) use the engine action copy (`Fold`, `Check`,
+  `Call 125`, `All-In Call 25`, `2-bet open to 150`, `1-bet bet to 575`).
+- Caveats are kept: candidate sizes are practice lines, not GTO; equities are
+  estimates under assumed ranges with sampling error; completion cards are
+  not guaranteed winners; outcomes never grade decisions; bot explanations
+  describe the simulator, not real player psychology.
+
+`review-hands.json` → `tables`: `streetNames` (`STREET_NAMES`),
+`botReasonNames` and `botCheckNames` (code → English, `BOT_REASON_NAMES` /
+`BOT_CHECK_NAMES`). `errors`: review error code → English message.
+
+| Code | Thrown by |
+| --- | --- |
+| `review-not-ready` | `createReviewInput` before `done` |
+| `invalid-review-trials` | `analyzeDecision` with a non-positive or non-integer `trials` |
+| `invalid-simulation-trials` | `compareCandidateActions` with `trials` < 2 or non-integer |
+| `simulation-runaway` | `compareCandidateActions` after more than 400 actions (never reached) |
+
+### Snapshots
+
+`snapshot` is a hero decision snapshot (shape above, cards as keys, copy in
+English). Snapshots from seeded hands are complete. Snapshots built by the
+reference unit tests are partial, exactly as the tests build them: they may
+lack `dealer`, `emotionMode`, `players[].actedTo/checked/botProfile/...`, may
+have 2 players, and `players[].action` may be `Bet 200`. A snapshot without an
+integer `dealer`, or with any player lacking `actedTo`, runs no simulation
+(`simulation: null`); native code must accept these partial snapshots.
+Absent keys in any output mean `undefined` in the reference (for example
+`decisionContext.facingRaise`, `preflopContext.lastRaiser`).
+
+### `review-decisions.json`
+
+`cases[]`, one per decision:
+
+| Field | Meaning |
+| --- | --- |
+| `name` | Case name; hand decisions are `"{hand name} · decision k"`, others name the reference test. |
+| `hand` | Index into `review-hands.json` → `hands`, or `null` for standalone snapshots. |
+| `snapshot` | The decision snapshot `s`. |
+| `startingTier` | `startingTier(s.hole)`. |
+| `drawInfo` | `drawInfo(s.hole, s.board)` = `{flush, straight, flushOuts, straightOuts, outs, nextChance}`. |
+| `boardTexture` | `boardTexture(s.board)` = `{paired, trips, maxSuit, connected, wet, label}`. |
+| `decisionContext` | `decisionContext(s)` = `{made: {score, cards, label}, texture, draw, opponents, handClass, handLabel, inPosition, pendingOthers, effective, spr, extra, betRatio, preflopRaises, facingRaise?, pastCalls, pastCallActions, nutFlushBlocker, missedDraw, tier}` (`made.cards` as keys, `facingRaise` a history entry). |
+| `preflopContext` | `preflopContext(s)` on every snapshot (the reference uses it preflop only; it is defined on any street): `{raises, limpers, callersAfterOpen, late, unopened, ace, kicker, suited, weakAce, ownOpen, lastRaiser?, openTo, ratio, openingCandidate, label}`. |
+| `snapshotSeed` | `snapshotSeed(s)` (unsigned 32-bit). |
+| `callPrice` | `callPrice(s)` = `{pots, contestable, cost, refundBefore, refundAfter, required, closing}`; `pots` are the projected partition pots the hero is eligible for, in the Pot shape above (`awards` empty). |
+| `rangeWeight[]` | `{opponent, pair, weight}`: `rangeWeight(pair, s, s.players[opponent])` for every live opponent and eight pairs (AA, AKs, QJs, 72o resolved to unseen cards, plus four seeded random unseen pairs); reference-test cases first list the test's own pair. |
+| `sampleValue[]` | `{trials, weighted, result}`: `sampleValue(s, callPrice(s), trials, weighted)` for trials 600 (the analyze default) and 25, unweighted and weighted. `result` = `{equity, margin, ev, method?, samples?}` (`{equity:0, margin:0, ev:0}` when nothing is contestable; `method` is `enumeration` on a heads-up river, else `sampling`). |
+| `candidateActions[]` | `{alternatives, result}`: `candidateActions(s, alternatives)` with `[]`, with `[analyzeDecision(s).alternative, analyzeDecision(s).routes.secondary]` (`null` allowed), and for one reference-test case `[{raise 5000}]`. |
+| `comparisonRoutes[]` | `{args: {code, status, alternative, withPreflopContext}, result}`: `comparisonRoutes(s, decisionContext(s), {code, status, alternative, pre})` with `pre = withPreflopContext ? preflopContext(s) : null`. The first entry uses the pre-simulation arguments of `analyzeDecision` (equal to `analyzeDecision.noSimulation.routes`); every third case adds a matrix of route codes × the first four candidate actions with `status: "sound"`. |
+| `compareCandidateActions[]` | `{alternatives, trials, result}`: `compareCandidateActions(s, alternatives, {trials})`. Only for snapshots that simulate. Every other hand decision (and a few test cases) has the default (`alternatives: []`, `trials: 40`); every simulating case has `trials: 4` with the no-simulation alternative and secondary. `result` = `{rows: [{action: {action, amount}, scenarios: [{name, ev, margin, immediateFoldWin}]}], trials, policyTrials, best, stable, method, note}`; scenario names `Random range`, `Public-action-weighted range`. |
+| `analyzeDecision.default` | `analyzeDecision(s)` (trials 600, rolloutTrials 40), full output: `{index, status, code, title, reason, lesson, plan, confidence, evidence, alternative, alternativeLabel, routes: {primary, secondary}, recommendation, simulation, metrics, draw, context}`. |
+| `analyzeDecision.reduced` | `{options: {trials: 60}, result}` (rolloutTrials 12). |
+| `analyzeDecision.noSimulation` | `analyzeDecision(s without dealer)`: the legacy-snapshot path, `simulation: null`. |
+| `analyzeDecision.test` | Reference-test cases only: `{options, result}` with the trials the test uses (120, 100 or 10). |
+
+### `review-hands.json`
+
+`hands[]`: 44 seeded hands (5–9 seats; bots, scripted, or mixed opponents;
+3-bets, 4-bets, short all-ins, multiway side pots, free checks and folds on
+every street) plus the reference `settled bot traces` hand.
+
+| Field | Meaning |
+| --- | --- |
+| `name`, `seed`, `playerCount` | Description only; natives need not replay the hand. |
+| `input` | `createReviewInput(g)` after settlement: `{hand, hole, decisions, opponents, outcome: {profit, paid, returned, folded, wonPot, board, pots: [{label, amount, eligible: [name], awards: [{name, amount, label}]}], result}}`. `opponents` are the executed bot records (`g.botDecisions`, shape above). |
+| `decisions` | Indices into `review-decisions.json` → `cases`, one per `input.decisions[i]` (same snapshot). |
+| `analyzeReview` | `{options: {}, summary}`: `analyzeReview(input)` without `steps`; `steps[i]` is `cases[decisions[i]].analyzeDecision.default`. `summary` = `{priorityIndex, attention, consider, themes, title, summary}`. |
+| `analyzeReviewReduced` | Same with `{trials: 60}`; steps are the `reduced` results. |
+| `explainOpponent[]` | `explainOpponent(input.opponents[i])` = `{title, detail, reasons, made, warning}` for every bot record. |
+
+`privacy[]`: `{name, options, variants: [inputA, inputB], result}`. Both
+variants have identical `decisions` (the same public snapshots) but different
+hidden opponent cards, future deck, bot records, winners and outcome
+(variant B replays A's actions with every card the hero had not seen
+permuted). `analyzeReview(variant, options)` must equal `result` (full output
+including `steps`) for both variants.
+
+`reviewInputs[]`: `{name, input, options, result}` from the reference review
+tests (outcome-independence and the blind-only loss): `analyzeReview(input,
+options)` must equal `result` (full output).
+
+`explainOpponent[]`: `{name, record, result}` for the reference test's
+synthetic record (a partial `view`).
+
+`errorCases[]`: `{name, fn, decision?, options?, error}`. `createReviewInput`
+on a game in `playing` phase; `analyzeDecision` / `compareCandidateActions`
+with `options` on `review-decisions.json` case `decision`.
