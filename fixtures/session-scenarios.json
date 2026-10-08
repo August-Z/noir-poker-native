@@ -1,0 +1,2806 @@
+{
+  "referenceCommit": "03c78233f9454de54e378c5c81ba1dd25fa9b14e",
+  "generator": "hand-authored (see fixtures/README.md, session-scenarios.json)",
+  "description": "Table session scenarios: scripted TableSession commands on a virtual clock with one seeded Mulberry32 stream, and partial render-state excerpts after each expect step. The reference table controller is DOM-bound and cannot run headlessly, so this file is authored from the UI behavior spec and verified by both native suites.",
+  "scenarios": [
+    {
+      "name": "startup: deal hand 1, bot thinking, hero bet controls, play out, next hand",
+      "seed": 7,
+      "steps": [
+        {
+          "expect": {
+            "state": {
+              "hand": 0,
+              "handNumber": "00",
+              "handHeading": "Hand 00",
+              "phase": "idle",
+              "streetLabel": "Ready to Deal",
+              "activity": {"badge": "LIVE", "texts": [], "entries": []},
+              "actions": {"decisionStripVisible": true, "decisionText": "An opponent is thinking…"},
+              "settings": {
+                "requestedSeatCount": 6,
+                "tableChangeNote": null,
+                "difficulty": "normal",
+                "hints": true,
+                "sound": false,
+                "soundA11y": "Turn sound on",
+                "soundTitle": "Sound off",
+                "seatCountOptions": ["5 players", "6 players", "7 players", "8 players", "9 players"],
+                "difficultyOptions": ["Easy", "Standard", "Advanced"],
+                "emotionOptions": ["Off", "Subtle", "Pronounced"]
+              },
+              "opponents": {"text": "Balanced", "changePending": false, "changeNote": null},
+              "coach": {"visible": true, "toggleLabel": "On"}
+            },
+            "clock": 0,
+            "pending": 0,
+            "draws": 0,
+            "thinking": null,
+            "storage": {},
+            "effects": []
+          }
+        },
+        {"do": "start"},
+        {
+          "expect": {
+            "state": {
+              "hand": 1,
+              "handNumber": "01",
+              "handHeading": "Hand 01",
+              "playerCount": 6,
+              "tableTag": "6-MAX",
+              "tableSize": "6-Handed No-Limit",
+              "phase": "playing",
+              "street": 0,
+              "streetLabel": "Preflop",
+              "dealer": 0,
+              "pot": 75,
+              "potText": "75",
+              "potButtonLabel": "Pot · Details",
+              "boardCaption": "Waiting for the flop",
+              "board": [
+                {"card": null, "a11y": "Undealt community card"},
+                {"card": null, "a11y": "Undealt community card"},
+                {"card": null, "a11y": "Undealt community card"},
+                {"card": null, "a11y": "Undealt community card"},
+                {"card": null, "a11y": "Undealt community card"}
+              ],
+              "seats": [
+                {
+                  "name": "Mia",
+                  "position": "SB",
+                  "positionName": "Small Blind",
+                  "isActor": false,
+                  "action": {
+                    "label": "SB",
+                    "amount": 25,
+                    "amountText": "25",
+                    "meaning": "SB 25 · 25 in this round",
+                    "isDeciding": false
+                  },
+                  "stackText": "4,975",
+                  "cardBacks": 2,
+                  "cardBackDelaysMs": [65, 205],
+                  "dealAnimation": true,
+                  "layoutX": 14.0,
+                  "layoutY": 60.0,
+                  "avatarTitle": "Mia · Balanced (training archetype) · Simulated mood: Steady"
+                },
+                {
+                  "name": "Alex",
+                  "position": "BB",
+                  "positionName": "Big Blind",
+                  "isActor": false,
+                  "action": {
+                    "label": "BB",
+                    "amount": 50,
+                    "amountText": "50",
+                    "meaning": "BB 50 · 50 in this round",
+                    "isDeciding": false
+                  },
+                  "stackText": "4,950",
+                  "cardBacks": 2,
+                  "cardBackDelaysMs": [130, 270],
+                  "dealAnimation": true,
+                  "layoutX": 17.0,
+                  "layoutY": 14.0,
+                  "avatarTitle": "Alex · Balanced (training archetype) · Simulated mood: Steady"
+                },
+                {
+                  "name": "River",
+                  "position": "UTG",
+                  "positionName": "Under the Gun",
+                  "isActor": true,
+                  "action": {
+                    "label": "Thinking",
+                    "amount": null,
+                    "amountText": null,
+                    "meaning": null,
+                    "isDeciding": true
+                  },
+                  "stackText": "5,000",
+                  "cardBacks": 2,
+                  "cardBackDelaysMs": [195, 335],
+                  "dealAnimation": true,
+                  "layoutX": 50.0,
+                  "layoutY": 0.0,
+                  "avatarTitle": "River · Balanced (training archetype) · Simulated mood: Steady"
+                },
+                {
+                  "name": "Kai",
+                  "position": "HJ",
+                  "positionName": "Hijack",
+                  "isActor": false,
+                  "action": {
+                    "label": "Waiting",
+                    "amount": null,
+                    "amountText": null,
+                    "meaning": null,
+                    "isDeciding": false
+                  },
+                  "stackText": "5,000",
+                  "cardBacks": 2,
+                  "cardBackDelaysMs": [260, 400],
+                  "dealAnimation": true,
+                  "layoutX": 83.0,
+                  "layoutY": 14.0,
+                  "avatarTitle": "Kai · Balanced (training archetype) · Simulated mood: Steady"
+                },
+                {
+                  "name": "Luna",
+                  "position": "CO",
+                  "positionName": "Cutoff",
+                  "isActor": false,
+                  "action": {
+                    "label": "Waiting",
+                    "amount": null,
+                    "amountText": null,
+                    "meaning": null,
+                    "isDeciding": false
+                  },
+                  "stackText": "5,000",
+                  "cardBacks": 2,
+                  "cardBackDelaysMs": [325, 465],
+                  "dealAnimation": true,
+                  "layoutX": 86.0,
+                  "layoutY": 60.0,
+                  "avatarTitle": "Luna · Balanced (training archetype) · Simulated mood: Steady"
+                }
+              ],
+              "hero": {
+                "name": "You",
+                "cards": [
+                  {"card": "1-8", "best": false, "animate": true, "delayMs": 420},
+                  {"card": "0-8", "best": false, "animate": true, "delayMs": 550}
+                ],
+                "rankBadge": null,
+                "folded": false,
+                "isActive": false,
+                "stack": 5000,
+                "stackText": "5,000",
+                "position": "BTN",
+                "positionName": "Button (Dealer)",
+                "turnText": "Waiting",
+                "lastAction": null
+              },
+              "actions": {"decisionText": "River is thinking…", "controlsVisible": true, "foldEnabled": false},
+              "coach": {
+                "stage": "Preflop Strategy",
+                "tip": "A pocket pair can flop a set. With a small pair facing a big raise, weigh the cost of calling."
+              },
+              "activity": {
+                "texts": ["Hand 1 begins · Button: You", "Mia: SB 25 · Alex: BB 50"],
+                "badge": "LIVE"
+              }
+            },
+            "thinking": {"actor": 3, "delayMs": 3212, "startedAt": 0, "deadline": 3212},
+            "clock": 0,
+            "pending": 1,
+            "nextDueAt": 3212,
+            "draws": 1430,
+            "effects": [],
+            "wealth": 30000,
+            "epoch": 1,
+            "viewToken": 1
+          }
+        },
+        {"do": "runBots"},
+        {
+          "expect": {
+            "clock": 10541,
+            "draws": 4185,
+            "pending": 0,
+            "thinking": null,
+            "state": {
+              "activity": {
+                "texts": [
+                  "Hand 1 begins · Button: You",
+                  "Mia: SB 25 · Alex: BB 50",
+                  "River: 2-bet open to 125",
+                  "Kai: Call 125",
+                  "Luna: Call 125"
+                ]
+              },
+              "actions": {
+                "decisionStripVisible": true,
+                "decisionText": "Your turn. 125 chips to call.",
+                "controlsVisible": true,
+                "foldEnabled": true,
+                "callEnabled": true,
+                "callLabel": "Call",
+                "callAmount": 125,
+                "callA11y": "Call 125",
+                "raiseEnabled": true,
+                "raiseCaption": "3-bet raise to",
+                "bet": 200,
+                "betText": "200",
+                "raiseA11y": "3-bet raise to 200",
+                "sliderMin": 200,
+                "sliderMax": 5000,
+                "presets": [
+                  {"preset": "min", "label": "Min", "amount": 200, "enabled": true},
+                  {"preset": "half", "label": "½ Pot", "amount": 350, "enabled": true},
+                  {"preset": "pot", "label": "Pot", "amount": 575, "enabled": true},
+                  {"preset": "all", "label": "All-In", "amount": 5000, "enabled": true}
+                ],
+                "nextHandVisible": false,
+                "nextHandLabel": "Next Hand",
+                "finishHandVisible": false,
+                "finishHandEnabled": false,
+                "finishHandLabel": "Finish Hand",
+                "replayVisible": false,
+                "replayLabel": "↺ Replay Hand",
+                "reviewVisible": false,
+                "reviewLabel": "Review This Hand"
+              },
+              "hero": {"turnText": "Your Turn", "isActive": true},
+              "seats": [
+                {
+                  "action": {
+                    "label": "SB",
+                    "amount": 25,
+                    "amountText": "25",
+                    "meaning": "SB 25 · 25 in this round",
+                    "isDeciding": false
+                  },
+                  "isActor": false
+                },
+                {
+                  "action": {
+                    "label": "BB",
+                    "amount": 50,
+                    "amountText": "50",
+                    "meaning": "BB 50 · 50 in this round",
+                    "isDeciding": false
+                  },
+                  "isActor": false
+                },
+                {
+                  "action": {
+                    "label": "2-bet",
+                    "amount": 125,
+                    "amountText": "125",
+                    "meaning": "2-bet open to 125 · 125 in this round",
+                    "isDeciding": false
+                  },
+                  "isActor": false
+                },
+                {
+                  "action": {
+                    "label": "Call",
+                    "amount": 125,
+                    "amountText": "125",
+                    "meaning": "Added 125 · 125 in this round",
+                    "isDeciding": false
+                  },
+                  "isActor": false
+                },
+                {
+                  "action": {
+                    "label": "Call",
+                    "amount": 125,
+                    "amountText": "125",
+                    "meaning": "Added 125 · 125 in this round",
+                    "isDeciding": false
+                  },
+                  "isActor": false
+                }
+              ],
+              "coach": {
+                "tip": "A pocket pair can flop a set. With a small pair facing a big raise, weigh the cost of calling. This call is about 22% of the pot you can win."
+              },
+              "pot": 450
+            }
+          }
+        },
+        {"do": "preset", "preset": "half", "returns": true},
+        {
+          "expect": {
+            "state": {
+              "actions": {
+                "bet": 350,
+                "betText": "350",
+                "raiseCaption": "3-bet raise to",
+                "raiseA11y": "3-bet raise to 350"
+              }
+            }
+          }
+        },
+        {"do": "preset", "preset": "pot", "returns": true},
+        {"expect": {"state": {"actions": {"bet": 575}}}},
+        {"do": "preset", "preset": "all", "returns": true},
+        {"expect": {"state": {"actions": {"bet": 5000, "raiseCaption": "3-bet all-in to"}}}},
+        {"do": "setBet", "value": 337},
+        {"expect": {"state": {"actions": {"bet": 325}}}},
+        {"do": "setBet", "value": 1},
+        {"expect": {"state": {"actions": {"bet": 200}}}},
+        {"do": "nudgeBet", "steps": 3},
+        {"expect": {"state": {"actions": {"bet": 275, "raiseCaption": "3-bet raise to"}}}},
+        {"do": "raise", "returns": true},
+        {
+          "expect": {
+            "effects": ["chipFlight:0"],
+            "state": {
+              "hero": {
+                "lastAction": {
+                  "label": "3-bet Raise",
+                  "amount": 275,
+                  "amountText": "275",
+                  "meaning": "Preflop · 3-bet raise to 275 · 275 in this round",
+                  "isDeciding": false
+                },
+                "turnText": "Waiting"
+              },
+              "actions": {"decisionText": "Mia is thinking…", "controlsVisible": true, "foldEnabled": false},
+              "pot": 725,
+              "activity": {
+                "texts": [
+                  "Hand 1 begins · Button: You",
+                  "Mia: SB 25 · Alex: BB 50",
+                  "River: 2-bet open to 125",
+                  "Kai: Call 125",
+                  "Luna: Call 125",
+                  "You: 3-bet raise to 275"
+                ]
+              }
+            },
+            "thinking": {"actor": 1, "delayMs": 2539, "startedAt": 10541, "deadline": 13080},
+            "clock": 10541,
+            "pending": 1,
+            "nextDueAt": 13080,
+            "draws": 5563
+          }
+        },
+        {"do": "fold", "returns": false},
+        {"do": "playOut", "hero": "callOrCheck"},
+        {
+          "expect": {
+            "state": {
+              "phase": "done",
+              "streetLabel": "Hand Over",
+              "street": 3,
+              "pot": 1975,
+              "potText": "1,975",
+              "board": [
+                {"card": "1-9", "best": true},
+                {"card": "0-9", "best": true},
+                {"card": "1-2", "best": false},
+                {"card": "1-7", "best": false},
+                {"card": "2-8", "best": true}
+              ],
+              "boardCaption": "Showdown · Highlighted cards make your best hand",
+              "seats": [
+                {
+                  "revealed": false,
+                  "badge": null,
+                  "peek": {"pressed": false, "title": "Show Hole Cards", "a11y": "Show Mia's hole cards"},
+                  "action": {
+                    "label": "Fold",
+                    "amount": null,
+                    "amountText": null,
+                    "meaning": null,
+                    "isDeciding": false
+                  },
+                  "isWinner": false
+                },
+                {
+                  "revealed": false,
+                  "badge": null,
+                  "peek": {"pressed": false, "title": "Show Hole Cards", "a11y": "Show Alex's hole cards"},
+                  "action": {
+                    "label": "Fold",
+                    "amount": null,
+                    "amountText": null,
+                    "meaning": null,
+                    "isDeciding": false
+                  },
+                  "isWinner": false
+                },
+                {
+                  "revealed": false,
+                  "badge": null,
+                  "peek": {"pressed": false, "title": "Show Hole Cards", "a11y": "Show River's hole cards"},
+                  "action": {
+                    "label": "Fold",
+                    "amount": null,
+                    "amountText": null,
+                    "meaning": null,
+                    "isDeciding": false
+                  },
+                  "isWinner": false
+                },
+                {
+                  "revealed": false,
+                  "badge": null,
+                  "peek": {"pressed": false, "title": "Show Hole Cards", "a11y": "Show Kai's hole cards"},
+                  "action": {
+                    "label": "Fold",
+                    "amount": null,
+                    "amountText": null,
+                    "meaning": null,
+                    "isDeciding": false
+                  },
+                  "isWinner": false
+                },
+                {
+                  "revealed": true,
+                  "badge": {"text": "Two Pair", "isWinner": false, "a11y": null, "title": null},
+                  "peek": {"pressed": true, "title": "Hide Hole Cards", "a11y": "Hide Luna's hole cards"},
+                  "action": {
+                    "label": "Check",
+                    "amount": null,
+                    "amountText": null,
+                    "meaning": null,
+                    "isDeciding": false
+                  },
+                  "isWinner": false
+                }
+              ],
+              "hero": {
+                "name": "You",
+                "cards": [
+                  {"card": "1-8", "best": true, "animate": false, "delayMs": 420},
+                  {"card": "0-8", "best": true, "animate": false, "delayMs": 550}
+                ],
+                "rankBadge": {
+                  "text": "Full House",
+                  "isWinner": true,
+                  "a11y": "You win 1,975 chips",
+                  "title": "Full House · Won 1,975 chips"
+                },
+                "folded": false,
+                "isActive": false,
+                "stack": 6150,
+                "stackText": "6,150",
+                "position": "BTN",
+                "positionName": "Button (Dealer)",
+                "turnText": null,
+                "lastAction": {
+                  "label": "Check",
+                  "amount": null,
+                  "amountText": null,
+                  "meaning": null,
+                  "isDeciding": false
+                }
+              },
+              "session": {
+                "stack": 6150,
+                "stackText": "6,150",
+                "changeText": "+1,150 chips · Net this session",
+                "negative": false,
+                "hands": 1,
+                "wins": 1,
+                "winRateText": "100%"
+              },
+              "activity": {
+                "badge": "FINISHED",
+                "texts": [
+                  "Hand 1 begins · Button: You",
+                  "Mia: SB 25 · Alex: BB 50",
+                  "River: 2-bet open to 125",
+                  "Kai: Call 125",
+                  "Luna: Call 125",
+                  "You: 3-bet raise to 275",
+                  "Mia: Fold",
+                  "Alex: Fold",
+                  "River: Fold",
+                  "Kai: Fold",
+                  "Luna: Call 150",
+                  "Flop · 9♥ 9♠ 2♥",
+                  "Luna: Check",
+                  "You: Check",
+                  "Turn · 7♥",
+                  "Luna: 1-bet bet to 550",
+                  "You: Call 550",
+                  "River · 8♣",
+                  "Luna: Check",
+                  "You: Check",
+                  "Main Pot 1,975 → You 1,975",
+                  "You win 1,975 chips · Full House"
+                ]
+              },
+              "actions": {
+                "decisionStripVisible": false,
+                "decisionText": "",
+                "controlsVisible": false,
+                "foldEnabled": false,
+                "callEnabled": false,
+                "callLabel": "Call",
+                "callAmount": null,
+                "callA11y": "Call",
+                "raiseEnabled": false,
+                "raiseCaption": "1-bet bet to",
+                "bet": 1100,
+                "betText": "1,100",
+                "raiseA11y": "1-bet bet to 1,100",
+                "sliderMin": null,
+                "sliderMax": null,
+                "presets": [
+                  {"preset": "min", "label": "Min", "amount": null, "enabled": false},
+                  {"preset": "half", "label": "½ Pot", "amount": null, "enabled": false},
+                  {"preset": "pot", "label": "Pot", "amount": null, "enabled": false},
+                  {"preset": "all", "label": "All-In", "amount": null, "enabled": false}
+                ],
+                "nextHandVisible": true,
+                "nextHandLabel": "Next Hand",
+                "finishHandVisible": false,
+                "finishHandEnabled": false,
+                "finishHandLabel": "Finish Hand",
+                "replayVisible": true,
+                "replayLabel": "↺ Replay Hand",
+                "reviewVisible": true,
+                "reviewLabel": "Review This Hand"
+              },
+              "showdown": {
+                "key": "1:1",
+                "context": "2 players at showdown",
+                "scenes": [
+                  {
+                    "id": 0,
+                    "name": "You",
+                    "label": "Full House",
+                    "motion": "full-house",
+                    "cards": ["1-8", "0-8", "2-8", "1-9", "0-9"],
+                    "highlights": [true, true, true, true, true],
+                    "explanation": "Eights full of Nines",
+                    "amount": 1975,
+                    "isWinner": true,
+                    "statusText": "Won +1,975",
+                    "footerText": "Main Pot +1,975",
+                    "a11y": "You · Full House"
+                  },
+                  {
+                    "id": 5,
+                    "name": "Luna",
+                    "label": "Two Pair",
+                    "motion": "two-pair",
+                    "cards": ["1-9", "0-9", "3-7", "1-7", "1-14"],
+                    "highlights": [true, true, true, true, false],
+                    "explanation": "Nines and Sevens",
+                    "amount": 0,
+                    "isWinner": false,
+                    "statusText": "No pot won",
+                    "footerText": "Best five cards",
+                    "a11y": "Luna · Two Pair"
+                  }
+                ]
+              },
+              "potDetails": {
+                "open": false,
+                "settled": true,
+                "title": "Hand Settlement",
+                "note": null,
+                "pots": [
+                  {
+                    "index": 0,
+                    "label": "Main Pot",
+                    "amount": 1975,
+                    "amountText": "1,975",
+                    "eligibilityLabel": "You're eligible",
+                    "heroEligible": true,
+                    "contributions": [
+                      {"playerId": 0, "text": "You", "amount": 825},
+                      {"playerId": 1, "text": "Mia · Folded", "amount": 25},
+                      {"playerId": 2, "text": "Alex · Folded", "amount": 50},
+                      {"playerId": 3, "text": "River · Folded", "amount": 125},
+                      {"playerId": 4, "text": "Kai · Folded", "amount": 125},
+                      {"playerId": 5, "text": "Luna", "amount": 825}
+                    ],
+                    "splitTotalText": null,
+                    "awards": [
+                      {
+                        "playerId": 0,
+                        "name": "You",
+                        "winnerText": "You wins",
+                        "label": "Full House",
+                        "amountText": "+1,975"
+                      }
+                    ],
+                    "distributionEligibility": "You're eligible · Eligible at settlement: You, Luna",
+                    "oddChipNote": null,
+                    "expanded": false,
+                    "playerCountText": " · 2 players",
+                    "participantsText": "Eligible: You, Luna"
+                  }
+                ],
+                "refunds": []
+              },
+              "coach": {
+                "stage": "Hand Recap",
+                "tip": "Your best hand was a full house. As you review, ask: on which street did opponents start raising? Did the community cards change how strong your hand was?"
+              },
+              "review": {"buttonVisible": true}
+            },
+            "wealth": 30000,
+            "clock": 37242,
+            "draws": 14877,
+            "pending": 0,
+            "canFinishHand": false
+          }
+        },
+        {"do": "nextHand", "returns": true},
+        {
+          "expect": {
+            "state": {
+              "hand": 2,
+              "dealer": 1,
+              "handHeading": "Hand 02",
+              "seats": [
+                {"position": "BTN"},
+                {"position": "SB"},
+                {"position": "BB"},
+                {"position": "UTG"},
+                {"position": "HJ"}
+              ],
+              "session": {
+                "stack": 6150,
+                "stackText": "6,150",
+                "changeText": "+1,150 chips · Net this session",
+                "negative": false,
+                "hands": 1,
+                "wins": 1,
+                "winRateText": "100%"
+              },
+              "review": {"buttonVisible": false},
+              "showdown": null
+            },
+            "draws": 16306,
+            "clock": 37242,
+            "thinking": {"actor": 4, "delayMs": 2899, "startedAt": 37242, "deadline": 40141},
+            "epoch": 2,
+            "viewToken": 2,
+            "wealth": 30000
+          }
+        },
+        {"do": "nextHand", "returns": false},
+        {"expect": {"state": {"hand": 2}, "draws": 16306, "epoch": 2}}
+      ]
+    },
+    {
+      "name": "decision strip, raise captions and presets in the reference QA betting fixtures",
+      "seed": 11,
+      "steps": [
+        {"do": "qa", "fixture": "bettingTurn", "level": 2, "street": 0},
+        {
+          "expect": {
+            "state": {
+              "actions": {
+                "decisionStripVisible": true,
+                "decisionText": "Your turn. 50 chips to call.",
+                "controlsVisible": true,
+                "foldEnabled": true,
+                "callEnabled": true,
+                "callLabel": "Call",
+                "callAmount": 50,
+                "callA11y": "Call 50",
+                "raiseEnabled": true,
+                "raiseCaption": "2-bet open to",
+                "bet": 150,
+                "betText": "150",
+                "raiseA11y": "2-bet open to 150",
+                "sliderMin": 100,
+                "sliderMax": 5000,
+                "presets": [
+                  {"preset": "min", "label": "Min", "amount": 100, "enabled": true},
+                  {"preset": "half", "label": "½ Pot", "amount": 100, "enabled": true},
+                  {"preset": "pot", "label": "Pot", "amount": 125, "enabled": true},
+                  {"preset": "all", "label": "All-In", "amount": 5000, "enabled": true}
+                ],
+                "nextHandVisible": false,
+                "nextHandLabel": "Next Hand",
+                "finishHandVisible": false,
+                "finishHandEnabled": false,
+                "finishHandLabel": "Finish Hand",
+                "replayVisible": false,
+                "replayLabel": "↺ Replay Hand",
+                "reviewVisible": false,
+                "reviewLabel": "Review This Hand"
+              },
+              "coach": {
+                "tip": "You don't have to play every hand. The earlier you act, the more selective you should be; later positions let you use more information. This call is about 40% of the pot you can win."
+              },
+              "seats": [
+                {
+                  "action": {
+                    "label": "SB",
+                    "amount": 25,
+                    "amountText": "25",
+                    "meaning": "SB 25 · 25 in this round",
+                    "isDeciding": false
+                  }
+                },
+                {
+                  "action": {
+                    "label": "BB",
+                    "amount": 50,
+                    "amountText": "50",
+                    "meaning": "BB 50 · 50 in this round",
+                    "isDeciding": false
+                  }
+                },
+                {
+                  "action": {
+                    "label": "Fold",
+                    "amount": null,
+                    "amountText": null,
+                    "meaning": null,
+                    "isDeciding": false
+                  }
+                },
+                {
+                  "action": {
+                    "label": "Fold",
+                    "amount": null,
+                    "amountText": null,
+                    "meaning": null,
+                    "isDeciding": false
+                  }
+                },
+                {
+                  "action": {
+                    "label": "Fold",
+                    "amount": null,
+                    "amountText": null,
+                    "meaning": null,
+                    "isDeciding": false
+                  }
+                }
+              ],
+              "hero": {"position": "BTN"},
+              "pot": 75
+            },
+            "pending": 0
+          }
+        },
+        {"do": "setBet", "value": 237},
+        {"expect": {"state": {"actions": {"bet": 225, "raiseCaption": "2-bet open to"}}}},
+        {"do": "qa", "fixture": "bettingTurn", "level": 3, "street": 0},
+        {
+          "expect": {
+            "state": {
+              "actions": {
+                "decisionText": "Your turn. 150 chips to call.",
+                "callLabel": "Call",
+                "callAmount": 150,
+                "raiseCaption": "3-bet raise to",
+                "bet": 250,
+                "sliderMin": 250,
+                "sliderMax": 5000,
+                "presets": [
+                  {"preset": "min", "label": "Min", "amount": 250, "enabled": true},
+                  {"preset": "half", "label": "½ Pot", "amount": 275, "enabled": true},
+                  {"preset": "pot", "label": "Pot", "amount": 375, "enabled": true},
+                  {"preset": "all", "label": "All-In", "amount": 5000, "enabled": true}
+                ]
+              },
+              "seats": [
+                {
+                  "action": {
+                    "label": "SB",
+                    "amount": 25,
+                    "amountText": "25",
+                    "meaning": "SB 25 · 25 in this round",
+                    "isDeciding": false
+                  }
+                },
+                {
+                  "action": {
+                    "label": "BB",
+                    "amount": 50,
+                    "amountText": "50",
+                    "meaning": "BB 50 · 50 in this round",
+                    "isDeciding": false
+                  }
+                },
+                {
+                  "action": {
+                    "label": "2-bet",
+                    "amount": 150,
+                    "amountText": "150",
+                    "meaning": "2-bet open to 150 · 150 in this round",
+                    "isDeciding": false
+                  }
+                },
+                {
+                  "action": {
+                    "label": "Fold",
+                    "amount": null,
+                    "amountText": null,
+                    "meaning": null,
+                    "isDeciding": false
+                  }
+                },
+                {
+                  "action": {
+                    "label": "Fold",
+                    "amount": null,
+                    "amountText": null,
+                    "meaning": null,
+                    "isDeciding": false
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {"do": "qa", "fixture": "bettingTurn", "level": 4, "street": 0},
+        {
+          "expect": {
+            "state": {
+              "actions": {
+                "decisionText": "Your turn. 350 chips to call.",
+                "callLabel": "Call",
+                "callAmount": 350,
+                "raiseCaption": "4-bet raise to",
+                "presets": [
+                  {"preset": "min", "label": "Min", "amount": 550, "enabled": true},
+                  {"preset": "half", "label": "½ Pot", "amount": 650, "enabled": true},
+                  {"preset": "pot", "label": "Pot", "amount": 925, "enabled": true},
+                  {"preset": "all", "label": "All-In", "amount": 5000, "enabled": true}
+                ]
+              },
+              "seats": [
+                {"action": {"label": "SB"}},
+                {"action": {"label": "BB"}},
+                {"action": {"label": "2-bet"}},
+                {"action": {"label": "3-bet"}},
+                {"action": {"label": "Fold"}}
+              ]
+            }
+          }
+        },
+        {"do": "qa", "fixture": "bettingTurn", "level": 4, "street": 0, "short": true},
+        {
+          "expect": {
+            "state": {
+              "actions": {
+                "decisionText": "Your turn. 175 chips to call.",
+                "callLabel": "Call All-In",
+                "callAmount": 175,
+                "callA11y": "Call All-In 175",
+                "raiseEnabled": false,
+                "presets": [
+                  {"preset": "min", "label": "Min", "amount": null, "enabled": false},
+                  {"preset": "half", "label": "½ Pot", "amount": null, "enabled": false},
+                  {"preset": "pot", "label": "Pot", "amount": null, "enabled": false},
+                  {"preset": "all", "label": "All-In", "amount": null, "enabled": false}
+                ]
+              },
+              "hero": {"stackText": "175"}
+            }
+          }
+        },
+        {"do": "preset", "preset": "min", "returns": false},
+        {"do": "qa", "fixture": "bettingTurn", "level": 2, "street": 1},
+        {
+          "expect": {
+            "state": {
+              "actions": {
+                "decisionText": "Your turn. 100 chips to call.",
+                "raiseCaption": "2-bet raise to",
+                "presets": [
+                  {"preset": "min", "label": "Min", "amount": 200, "enabled": true},
+                  {"preset": "half", "label": "½ Pot", "amount": 300, "enabled": true},
+                  {"preset": "pot", "label": "Pot", "amount": 500, "enabled": true},
+                  {"preset": "all", "label": "All-In", "amount": 4950, "enabled": true}
+                ]
+              },
+              "boardCaption": "FLOP · Three community cards",
+              "streetLabel": "Flop",
+              "coach": {
+                "stage": "Flop Strategy",
+                "tip": "No pair yet. Don't just ask whether you might hit; consider the price to call and how strongly opponents are betting. This call is about 20% of the pot you can win."
+              },
+              "seats": [
+                {
+                  "action": {
+                    "label": "1-bet",
+                    "amount": 100,
+                    "amountText": "100",
+                    "meaning": "1-bet bet to 100 · 100 in this round",
+                    "isDeciding": false
+                  }
+                },
+                {
+                  "action": {
+                    "label": "Fold",
+                    "amount": null,
+                    "amountText": null,
+                    "meaning": null,
+                    "isDeciding": false
+                  }
+                },
+                {
+                  "action": {
+                    "label": "Fold",
+                    "amount": null,
+                    "amountText": null,
+                    "meaning": null,
+                    "isDeciding": false
+                  }
+                },
+                {
+                  "action": {
+                    "label": "Fold",
+                    "amount": null,
+                    "amountText": null,
+                    "meaning": null,
+                    "isDeciding": false
+                  }
+                },
+                {
+                  "action": {
+                    "label": "Fold",
+                    "amount": null,
+                    "amountText": null,
+                    "meaning": null,
+                    "isDeciding": false
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {"do": "qa", "fixture": "bettingTurn", "level": 3, "street": 2},
+        {
+          "expect": {
+            "state": {
+              "actions": {
+                "decisionText": "Your turn. 300 chips to call.",
+                "raiseCaption": "3-bet raise to",
+                "presets": [
+                  {"preset": "min", "label": "Min", "amount": 500, "enabled": true},
+                  {"preset": "half", "label": "½ Pot", "amount": 650, "enabled": true},
+                  {"preset": "pot", "label": "Pot", "amount": 1000, "enabled": true},
+                  {"preset": "all", "label": "All-In", "amount": 4950, "enabled": true}
+                ]
+              },
+              "boardCaption": "TURN · The fourth community card",
+              "seats": [
+                {
+                  "action": {
+                    "label": "1-bet",
+                    "amount": 100,
+                    "amountText": "100",
+                    "meaning": "1-bet bet to 100 · 100 in this round",
+                    "isDeciding": false
+                  }
+                },
+                {
+                  "action": {
+                    "label": "2-bet",
+                    "amount": 300,
+                    "amountText": "300",
+                    "meaning": "2-bet raise to 300 · 300 in this round",
+                    "isDeciding": false
+                  }
+                },
+                {
+                  "action": {
+                    "label": "Fold",
+                    "amount": null,
+                    "amountText": null,
+                    "meaning": null,
+                    "isDeciding": false
+                  }
+                },
+                {
+                  "action": {
+                    "label": "Fold",
+                    "amount": null,
+                    "amountText": null,
+                    "meaning": null,
+                    "isDeciding": false
+                  }
+                },
+                {
+                  "action": {
+                    "label": "Fold",
+                    "amount": null,
+                    "amountText": null,
+                    "meaning": null,
+                    "isDeciding": false
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {"do": "qa", "fixture": "bettingTurn", "level": 1, "street": 3},
+        {
+          "expect": {
+            "state": {
+              "actions": {
+                "decisionText": "Your turn. You can check or bet.",
+                "callLabel": "Check",
+                "callAmount": null,
+                "callA11y": "Check",
+                "raiseCaption": "1-bet bet to",
+                "presets": [
+                  {"preset": "min", "label": "Min", "amount": 50, "enabled": true},
+                  {"preset": "half", "label": "½ Pot", "amount": 150, "enabled": true},
+                  {"preset": "pot", "label": "Pot", "amount": 300, "enabled": true},
+                  {"preset": "all", "label": "All-In", "amount": 4950, "enabled": true}
+                ]
+              },
+              "boardCaption": "RIVER · Final decision",
+              "coach": {
+                "tip": "You have two pair. Against several opponents, be careful facing repeated big raises; one pair doesn't always hold up."
+              }
+            }
+          }
+        },
+        {"do": "qa", "fixture": "heroTurn", "unequal": true},
+        {
+          "expect": {
+            "state": {
+              "actions": {
+                "decisionText": "Your turn. 50 chips to call.",
+                "presets": [
+                  {"preset": "min", "label": "Min", "amount": 100, "enabled": true},
+                  {"preset": "half", "label": "½ Pot", "amount": 100, "enabled": true},
+                  {"preset": "pot", "label": "Pot", "amount": 125, "enabled": true},
+                  {"preset": "all", "label": "All-In", "amount": 5000, "enabled": true}
+                ]
+              },
+              "hero": {"position": "UTG"},
+              "seats": [
+                {"stackText": "200", "position": "HJ"},
+                {"stackText": "300", "position": "CO"},
+                {"stackText": "400", "position": "BTN"},
+                {"stackText": "475", "position": "SB"},
+                {"stackText": "550", "position": "BB"}
+              ]
+            }
+          }
+        },
+        {"do": "callOrCheck", "returns": true},
+        {
+          "expect": {
+            "effects": ["chipFlight:0"],
+            "state": {
+              "hero": {
+                "lastAction": {
+                  "label": "Call",
+                  "amount": 50,
+                  "amountText": "50",
+                  "meaning": "Preflop · Added 50 · 50 in this round",
+                  "isDeciding": false
+                }
+              }
+            },
+            "thinking": {"actor": 1, "delayMs": 4461, "startedAt": 0, "deadline": 4461},
+            "pending": 1,
+            "nextDueAt": 4461,
+            "clock": 0,
+            "draws": 1786
+          }
+        }
+      ]
+    },
+    {
+      "name": "street advance and showdown delays after an all-in, then showdown and reveal toggles",
+      "seed": 5,
+      "storage": {"noir-sound": "true"},
+      "steps": [
+        {"do": "qa", "fixture": "heroTurn"},
+        {"do": "qa", "fixture": "allinRest"},
+        {
+          "expect": {
+            "state": {
+              "phase": "between",
+              "board": [{"card": null}, {"card": null}, {"card": null}, {"card": null}, {"card": null}],
+              "actions": {
+                "decisionText": "All-in action complete · Cards are face up; waiting for the remaining community cards…"
+              },
+              "seats": [
+                {
+                  "revealed": true,
+                  "action": {
+                    "label": "All-In",
+                    "amount": 5000,
+                    "amountText": "5,000",
+                    "meaning": "All-In 5,000 · 5,000 in this round",
+                    "isDeciding": false
+                  }
+                },
+                {
+                  "revealed": true,
+                  "action": {
+                    "label": "All-In",
+                    "amount": 5000,
+                    "amountText": "5,000",
+                    "meaning": "All-In 5,000 · 5,000 in this round",
+                    "isDeciding": false
+                  }
+                },
+                {
+                  "revealed": true,
+                  "action": {
+                    "label": "All-In",
+                    "amount": 5000,
+                    "amountText": "5,000",
+                    "meaning": "All-In 5,000 · 5,000 in this round",
+                    "isDeciding": false
+                  }
+                },
+                {
+                  "revealed": true,
+                  "action": {
+                    "label": "All-In",
+                    "amount": 5000,
+                    "amountText": "5,000",
+                    "meaning": "All-In 5,000 · 5,000 in this round",
+                    "isDeciding": false
+                  }
+                },
+                {
+                  "revealed": true,
+                  "action": {
+                    "label": "All-In",
+                    "amount": 5000,
+                    "amountText": "5,000",
+                    "meaning": "All-In 5,000 · 5,000 in this round",
+                    "isDeciding": false
+                  }
+                }
+              ],
+              "hero": {"turnText": "All-In"},
+              "potButtonLabel": "Pot · Details",
+              "boardCaption": "Waiting for the flop"
+            },
+            "pending": 0,
+            "clock": 0,
+            "effects": []
+          }
+        },
+        {"do": "resumeBots"},
+        {"expect": {"pending": 1, "nextDueAt": 1000, "thinking": null, "clock": 0}},
+        {"do": "advance", "ms": 999},
+        {
+          "expect": {
+            "state": {
+              "board": [{"card": null}, {"card": null}, {"card": null}, {"card": null}, {"card": null}]
+            },
+            "effects": [],
+            "pending": 1
+          }
+        },
+        {"do": "advance", "ms": 1},
+        {
+          "expect": {
+            "state": {
+              "board": [
+                {"card": "0-2", "best": false, "animate": true, "delayMs": 0, "a11y": "2♠"},
+                {"card": "1-6", "best": false, "animate": true, "delayMs": 140, "a11y": "6♥"},
+                {"card": "0-13", "best": false, "animate": true, "delayMs": 280, "a11y": "K♠"},
+                {
+                  "card": null,
+                  "best": false,
+                  "animate": false,
+                  "delayMs": 0,
+                  "a11y": "Undealt community card"
+                },
+                {
+                  "card": null,
+                  "best": false,
+                  "animate": false,
+                  "delayMs": 0,
+                  "a11y": "Undealt community card"
+                }
+              ],
+              "street": 1,
+              "streetLabel": "Flop",
+              "potPulse": true
+            },
+            "effects": ["sound:deal"],
+            "pending": 1,
+            "nextDueAt": 2000,
+            "clock": 1000
+          }
+        },
+        {"do": "advance", "ms": 1000},
+        {
+          "expect": {
+            "state": {
+              "board": [
+                {"card": "0-2", "animate": false, "delayMs": -420},
+                {"card": "1-6", "animate": false, "delayMs": -280},
+                {"card": "0-13", "animate": false, "delayMs": -140},
+                {"card": "3-12", "animate": true, "delayMs": 0},
+                {"card": null, "animate": false, "delayMs": 0}
+              ]
+            },
+            "nextDueAt": 3000,
+            "clock": 2000,
+            "effects": ["sound:deal"]
+          }
+        },
+        {"do": "advance", "ms": 1000},
+        {
+          "expect": {
+            "state": {
+              "board": [
+                {"card": "0-2"},
+                {"card": "1-6"},
+                {"card": "0-13"},
+                {"card": "3-12"},
+                {"card": "1-12"}
+              ],
+              "actions": {"decisionText": "Showdown · Cards are face up; settling each pot…"},
+              "hero": {"rankBadge": {"text": "Full House", "isWinner": false, "a11y": null, "title": null}},
+              "seats": [
+                {"badge": {"text": "Two Pair", "isWinner": false, "a11y": null, "title": null}},
+                {"badge": {"text": "Two Pair", "isWinner": false, "a11y": null, "title": null}},
+                {"badge": {"text": "One Pair", "isWinner": false, "a11y": null, "title": null}},
+                {"badge": {"text": "One Pair", "isWinner": false, "a11y": null, "title": null}},
+                {"badge": {"text": "Two Pair", "isWinner": false, "a11y": null, "title": null}}
+              ]
+            },
+            "nextDueAt": 3850,
+            "clock": 3000,
+            "effects": ["sound:deal"]
+          }
+        },
+        {"do": "advance", "ms": 849},
+        {"expect": {"state": {"phase": "between"}, "pending": 1}},
+        {"do": "advance", "ms": 1},
+        {
+          "expect": {
+            "state": {
+              "phase": "done",
+              "streetLabel": "Hand Over",
+              "showdown": {
+                "key": "1:1",
+                "context": "6 players at showdown",
+                "scenes": [
+                  {
+                    "id": 0,
+                    "name": "You",
+                    "label": "Full House",
+                    "motion": "full-house",
+                    "cards": ["0-12", "3-12", "1-12", "3-13", "0-13"],
+                    "highlights": [true, true, true, true, true],
+                    "explanation": "Queens full of Kings",
+                    "amount": 30000,
+                    "isWinner": true,
+                    "statusText": "Won +30,000",
+                    "footerText": "Main Pot +30,000",
+                    "a11y": "You · Full House"
+                  },
+                  {
+                    "id": 1,
+                    "name": "Mia",
+                    "label": "Two Pair",
+                    "motion": "two-pair",
+                    "cards": ["3-12", "1-12", "2-6", "1-6", "0-13"],
+                    "highlights": [true, true, true, true, false],
+                    "explanation": "Queens and Sixes",
+                    "amount": 0,
+                    "isWinner": false,
+                    "statusText": "No pot won",
+                    "footerText": "Best five cards",
+                    "a11y": "Mia · Two Pair"
+                  },
+                  {
+                    "id": 2,
+                    "name": "Alex",
+                    "label": "Two Pair",
+                    "motion": "two-pair",
+                    "cards": ["3-12", "1-12", "0-6", "1-6", "0-13"],
+                    "highlights": [true, true, true, true, false],
+                    "explanation": "Queens and Sixes",
+                    "amount": 0,
+                    "isWinner": false,
+                    "statusText": "No pot won",
+                    "footerText": "Best five cards",
+                    "a11y": "Alex · Two Pair"
+                  },
+                  {
+                    "id": 3,
+                    "name": "River",
+                    "label": "One Pair",
+                    "motion": "pair",
+                    "cards": ["3-12", "1-12", "0-13", "3-11", "1-6"],
+                    "highlights": [true, true, false, false, false],
+                    "explanation": "Pair of Queens",
+                    "amount": 0,
+                    "isWinner": false,
+                    "statusText": "No pot won",
+                    "footerText": "Best five cards",
+                    "a11y": "River · One Pair"
+                  },
+                  {
+                    "id": 4,
+                    "name": "Kai",
+                    "label": "One Pair",
+                    "motion": "pair",
+                    "cards": ["3-12", "1-12", "0-13", "2-11", "2-9"],
+                    "highlights": [true, true, false, false, false],
+                    "explanation": "Pair of Queens",
+                    "amount": 0,
+                    "isWinner": false,
+                    "statusText": "No pot won",
+                    "footerText": "Best five cards",
+                    "a11y": "Kai · One Pair"
+                  },
+                  {
+                    "id": 5,
+                    "name": "Luna",
+                    "label": "Two Pair",
+                    "motion": "two-pair",
+                    "cards": ["3-12", "1-12", "3-2", "0-2", "0-13"],
+                    "highlights": [true, true, true, true, false],
+                    "explanation": "Queens and Twos",
+                    "amount": 0,
+                    "isWinner": false,
+                    "statusText": "No pot won",
+                    "footerText": "Best five cards",
+                    "a11y": "Luna · Two Pair"
+                  }
+                ]
+              },
+              "boardCaption": "Showdown · Highlighted cards make your best hand",
+              "board": [{"best": false}, {"best": false}, {"best": true}, {"best": true}, {"best": true}],
+              "seats": [
+                {
+                  "badge": {"text": "Two Pair", "isWinner": false, "a11y": null, "title": null},
+                  "peek": {"pressed": true, "title": "Hide Hole Cards", "a11y": "Hide Mia's hole cards"},
+                  "isWinner": false
+                },
+                {
+                  "badge": {"text": "Two Pair", "isWinner": false, "a11y": null, "title": null},
+                  "peek": {"pressed": true, "title": "Hide Hole Cards", "a11y": "Hide Alex's hole cards"},
+                  "isWinner": false
+                },
+                {
+                  "badge": {"text": "One Pair", "isWinner": false, "a11y": null, "title": null},
+                  "peek": {"pressed": true, "title": "Hide Hole Cards", "a11y": "Hide River's hole cards"},
+                  "isWinner": false
+                },
+                {
+                  "badge": {"text": "One Pair", "isWinner": false, "a11y": null, "title": null},
+                  "peek": {"pressed": true, "title": "Hide Hole Cards", "a11y": "Hide Kai's hole cards"},
+                  "isWinner": false
+                },
+                {
+                  "badge": {"text": "Two Pair", "isWinner": false, "a11y": null, "title": null},
+                  "peek": {"pressed": true, "title": "Hide Hole Cards", "a11y": "Hide Luna's hole cards"},
+                  "isWinner": false
+                }
+              ],
+              "hero": {
+                "rankBadge": {
+                  "text": "Full House",
+                  "isWinner": true,
+                  "a11y": "You win 30,000 chips",
+                  "title": "Full House · Won 30,000 chips"
+                },
+                "turnText": null
+              },
+              "potDetails": {
+                "open": false,
+                "settled": true,
+                "title": "Hand Settlement",
+                "note": null,
+                "pots": [
+                  {
+                    "index": 0,
+                    "label": "Main Pot",
+                    "amount": 30000,
+                    "amountText": "30,000",
+                    "eligibilityLabel": "You're eligible",
+                    "heroEligible": true,
+                    "contributions": [
+                      {"playerId": 0, "text": "You · All-In", "amount": 5000},
+                      {"playerId": 1, "text": "Mia · All-In", "amount": 5000},
+                      {"playerId": 2, "text": "Alex · All-In", "amount": 5000},
+                      {"playerId": 3, "text": "River · All-In", "amount": 5000},
+                      {"playerId": 4, "text": "Kai · All-In", "amount": 5000},
+                      {"playerId": 5, "text": "Luna · All-In", "amount": 5000}
+                    ],
+                    "splitTotalText": null,
+                    "awards": [
+                      {
+                        "playerId": 0,
+                        "name": "You",
+                        "winnerText": "You wins",
+                        "label": "Full House",
+                        "amountText": "+30,000"
+                      }
+                    ],
+                    "distributionEligibility": "You're eligible · Eligible at settlement: You, Mia, Alex, River, Kai, Luna",
+                    "oddChipNote": null,
+                    "expanded": false,
+                    "playerCountText": " · 6 players",
+                    "participantsText": "Eligible: You, Mia, Alex, River, Kai, Luna"
+                  }
+                ],
+                "refunds": []
+              },
+              "potButtonLabel": "Pot · Details",
+              "activity": {
+                "texts": [
+                  "Hand 1 begins · Button: River",
+                  "Kai: SB 25 · Luna: BB 50",
+                  "You: 2-bet all-in to 5,000",
+                  "Mia: All-In 5,000",
+                  "Alex: All-In 5,000",
+                  "River: All-In 5,000",
+                  "Kai: All-In 5,000",
+                  "Luna: All-In 5,000",
+                  "Flop · 2♠ 6♥ K♠",
+                  "Turn · Q♦",
+                  "River · Q♥",
+                  "Main Pot 30,000 → You 30,000",
+                  "You win 30,000 chips · Full House",
+                  "Mia simulated mood: Chasing Losses · Lost at least 25 BB net in a single hand",
+                  "Alex simulated mood: Playing Safe · Lost at least 25 BB net in a single hand",
+                  "River simulated mood: Chasing Losses · Lost at least 25 BB net in a single hand",
+                  "Kai simulated mood: Playing Safe · Lost at least 25 BB net in a single hand",
+                  "Luna simulated mood: Chasing Losses · Lost at least 25 BB net in a single hand"
+                ]
+              }
+            },
+            "effects": ["sound:win"],
+            "pending": 0,
+            "wealth": 30000
+          }
+        },
+        {"do": "toggleReveal", "seat": 2, "returns": true},
+        {
+          "expect": {
+            "effects": ["revealToggled:2:false"],
+            "state": {
+              "seats": [
+                {},
+                {
+                  "revealed": false,
+                  "cards": [],
+                  "peek": {"pressed": false, "title": "Show Hole Cards", "a11y": "Show Alex's hole cards"},
+                  "badge": null
+                },
+                {},
+                {},
+                {}
+              ],
+              "showdown": {"key": "1:1"}
+            }
+          }
+        },
+        {"do": "toggleReveal", "seat": 0, "returns": false},
+        {"do": "toggleReveal", "seat": 2, "returns": true},
+        {
+          "expect": {
+            "effects": ["revealToggled:2:true"],
+            "state": {
+              "seats": [
+                {},
+                {
+                  "revealed": true,
+                  "peek": {"pressed": true, "title": "Hide Hole Cards", "a11y": "Hide Alex's hole cards"}
+                },
+                {},
+                {},
+                {}
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Finish Hand: practice runout after a fold-win and fast-forward after the hero folds",
+      "seed": 3,
+      "steps": [
+        {"do": "qa", "fixture": "foldFinished", "street": 0},
+        {
+          "expect": {
+            "state": {
+              "phase": "done",
+              "board": [{"card": null}, {"card": null}, {"card": null}, {"card": null}, {"card": null}],
+              "boardCaption": "Waiting for the flop",
+              "actions": {
+                "finishHandVisible": true,
+                "finishHandEnabled": true,
+                "finishHandLabel": "Finish Hand",
+                "nextHandVisible": true
+              },
+              "activity": {
+                "texts": [
+                  "Hand 1 begins · Button: River",
+                  "Kai: SB 25 · Luna: BB 50",
+                  "You: Fold",
+                  "Mia: Fold",
+                  "Alex: Fold",
+                  "River: Fold",
+                  "Kai: Fold",
+                  "Main Pot 50 → Luna 50",
+                  "Uncalled 25 chips returned to Luna",
+                  "Luna wins 50 chips"
+                ]
+              },
+              "hero": {
+                "lastAction": {
+                  "label": "Fold",
+                  "amount": null,
+                  "amountText": null,
+                  "meaning": null,
+                  "isDeciding": false
+                }
+              },
+              "coach": {
+                "tip": "Folding is part of good decision-making too. Look at the cards opponents showed and think back over the betting in this hand."
+              }
+            },
+            "canFinishHand": true
+          }
+        },
+        {"do": "finishHand", "returns": true},
+        {
+          "expect": {
+            "state": {
+              "practiceRunout": true,
+              "boardCaption": "Practice runout · Five community cards; settlement unchanged",
+              "board": [{"card": "1-7"}, {"card": "2-6"}, {"card": "2-8"}, {"card": "1-13"}, {"card": "3-8"}],
+              "actions": {"finishHandVisible": false},
+              "finishing": false,
+              "activity": {
+                "texts": [
+                  "Hand 1 begins · Button: River",
+                  "Kai: SB 25 · Luna: BB 50",
+                  "You: Fold",
+                  "Mia: Fold",
+                  "Alex: Fold",
+                  "River: Fold",
+                  "Kai: Fold",
+                  "Main Pot 50 → Luna 50",
+                  "Uncalled 25 chips returned to Luna",
+                  "Luna wins 50 chips",
+                  "Practice runout · all five community cards shown; the fold-win result is unchanged"
+                ]
+              },
+              "potText": "50"
+            },
+            "canFinishHand": false,
+            "pending": 0,
+            "epoch": 2,
+            "viewToken": 2,
+            "clock": 0,
+            "draws": 51
+          }
+        },
+        {"do": "finishHand", "returns": false},
+        {"do": "qa", "fixture": "heroTurn"},
+        {"do": "fold", "returns": true},
+        {
+          "expect": {
+            "state": {
+              "hero": {"turnText": "Folded"},
+              "actions": {
+                "decisionText": "Mia is acting. You can watch the rest of this hand.",
+                "controlsVisible": false,
+                "finishHandVisible": true,
+                "finishHandEnabled": true
+              }
+            },
+            "canFinishHand": true,
+            "thinking": {"actor": 1, "delayMs": 2093, "startedAt": 0, "deadline": 2093},
+            "pending": 1,
+            "nextDueAt": 2093,
+            "draws": 1479,
+            "clock": 0
+          }
+        },
+        {"do": "finishHand", "returns": true},
+        {
+          "expect": {
+            "state": {
+              "finishing": true,
+              "actions": {
+                "finishHandVisible": true,
+                "finishHandEnabled": false,
+                "finishHandLabel": "Dealing…"
+              }
+            },
+            "thinking": null,
+            "pending": 1,
+            "nextDueAt": 0,
+            "clock": 0,
+            "draws": 1479
+          }
+        },
+        {"do": "runCurrent"},
+        {
+          "expect": {
+            "state": {
+              "phase": "done",
+              "finishing": false,
+              "board": [{"card": "3-14"}, {"card": "1-9"}, {"card": "2-8"}, {"card": "3-12"}, {"card": "1-4"}],
+              "practiceRunout": false,
+              "activity": {
+                "texts": [
+                  "Hand 1 begins · Button: River",
+                  "Kai: SB 25 · Luna: BB 50",
+                  "You: Fold",
+                  "Mia: Call 50",
+                  "Alex: Call 50",
+                  "River: Call 50",
+                  "Kai: Call 25",
+                  "Luna: Check",
+                  "Flop · A♦ 9♥ 8♣",
+                  "Kai: Check",
+                  "Luna: Check",
+                  "Mia: Check",
+                  "Alex: Check",
+                  "River: Check",
+                  "Turn · Q♦",
+                  "Kai: Check",
+                  "Luna: Check",
+                  "Mia: Check",
+                  "Alex: Check",
+                  "River: Check",
+                  "River · 4♥",
+                  "Kai: Check",
+                  "Luna: Check",
+                  "Mia: Check",
+                  "Alex: Check",
+                  "River: Check",
+                  "Main Pot 250 → Luna 250",
+                  "Luna wins 250 chips · One Pair"
+                ]
+              },
+              "seats": [
+                {
+                  "action": {
+                    "label": "Check",
+                    "amount": null,
+                    "amountText": null,
+                    "meaning": null,
+                    "isDeciding": false
+                  }
+                },
+                {
+                  "action": {
+                    "label": "Check",
+                    "amount": null,
+                    "amountText": null,
+                    "meaning": null,
+                    "isDeciding": false
+                  }
+                },
+                {
+                  "action": {
+                    "label": "Check",
+                    "amount": null,
+                    "amountText": null,
+                    "meaning": null,
+                    "isDeciding": false
+                  }
+                },
+                {
+                  "action": {
+                    "label": "Check",
+                    "amount": null,
+                    "amountText": null,
+                    "meaning": null,
+                    "isDeciding": false
+                  }
+                },
+                {
+                  "action": {
+                    "label": "Check",
+                    "amount": null,
+                    "amountText": null,
+                    "meaning": null,
+                    "isDeciding": false
+                  }
+                }
+              ],
+              "actions": {"finishHandVisible": false, "nextHandVisible": true}
+            },
+            "clock": 0,
+            "draws": 25966,
+            "pending": 0,
+            "wealth": 30000
+          }
+        }
+      ]
+    },
+    {
+      "name": "Replay Hand reverses the settlement once and replays the same deal",
+      "seed": 13,
+      "storage": {"noir-sound": "true"},
+      "steps": [
+        {"do": "start"},
+        {"do": "playOut", "hero": "fold"},
+        {
+          "expect": {
+            "state": {
+              "phase": "done",
+              "hand": 1,
+              "session": {
+                "stack": 5000,
+                "stackText": "5,000",
+                "changeText": "+0 chips · Net this session",
+                "negative": false,
+                "hands": 1,
+                "wins": 0,
+                "winRateText": "0%"
+              },
+              "actions": {"replayVisible": true, "replayLabel": "↺ Replay Hand"},
+              "hero": {"cards": [{"card": "0-2"}, {"card": "2-7"}]},
+              "seats": [{"stack": 4975}, {"stack": 4950}, {"stack": 4950}, {"stack": 4950}, {"stack": 5175}],
+              "activity": {
+                "texts": [
+                  "Hand 1 begins · Button: You",
+                  "Mia: SB 25 · Alex: BB 50",
+                  "River: Call 50",
+                  "Kai: Call 50",
+                  "Luna: 2-bet open to 225",
+                  "You: Fold",
+                  "Mia: Fold",
+                  "Alex: Fold",
+                  "River: Fold",
+                  "Kai: Fold",
+                  "Main Pot 225 → Luna 225",
+                  "Uncalled 175 chips returned to Luna",
+                  "Luna wins 225 chips"
+                ]
+              }
+            },
+            "wealth": 30000,
+            "draws": 9696,
+            "clock": 18100
+          }
+        },
+        {"do": "replayHand", "returns": true},
+        {
+          "expect": {
+            "effects": ["cancelChipFlights", "sound:deal"],
+            "state": {
+              "hand": 1,
+              "phase": "playing",
+              "replayAttempt": 1,
+              "replayBadge": "Replay 1",
+              "replayNote": "Replaying this hand · Same hole cards and deal order; the original settlement has been reversed.",
+              "session": {
+                "stack": 5000,
+                "stackText": "5,000",
+                "changeText": "Build experience, starting this hand",
+                "negative": false,
+                "hands": 0,
+                "wins": 0,
+                "winRateText": "—"
+              },
+              "hero": {"cards": [{"card": "0-2"}, {"card": "2-7"}], "lastAction": null},
+              "seats": [
+                {
+                  "stack": 4975,
+                  "action": {
+                    "label": "SB",
+                    "amount": 25,
+                    "amountText": "25",
+                    "meaning": "SB 25 · 25 in this round",
+                    "isDeciding": false
+                  }
+                },
+                {
+                  "stack": 4950,
+                  "action": {
+                    "label": "BB",
+                    "amount": 50,
+                    "amountText": "50",
+                    "meaning": "BB 50 · 50 in this round",
+                    "isDeciding": false
+                  }
+                },
+                {
+                  "stack": 5000,
+                  "action": {
+                    "label": "Thinking",
+                    "amount": null,
+                    "amountText": null,
+                    "meaning": null,
+                    "isDeciding": true
+                  }
+                },
+                {
+                  "stack": 5000,
+                  "action": {
+                    "label": "Waiting",
+                    "amount": null,
+                    "amountText": null,
+                    "meaning": null,
+                    "isDeciding": false
+                  }
+                },
+                {
+                  "stack": 5000,
+                  "action": {
+                    "label": "Waiting",
+                    "amount": null,
+                    "amountText": null,
+                    "meaning": null,
+                    "isDeciding": false
+                  }
+                }
+              ],
+              "activity": {
+                "texts": [
+                  "Hand 1 begins · Button: You",
+                  "Mia: SB 25 · Alex: BB 50",
+                  "Hand 1 · Replay #1 · previous settlement reversed"
+                ]
+              },
+              "actions": {"replayVisible": false, "bet": 150},
+              "review": {"buttonVisible": false}
+            },
+            "thinking": {"actor": 3, "delayMs": 2697, "startedAt": 18100, "deadline": 20797},
+            "wealth": 30000,
+            "draws": 11073,
+            "epoch": 2,
+            "viewToken": 2
+          }
+        },
+        {"do": "replayHand", "returns": false},
+        {"do": "playOut", "hero": "callOrCheck"},
+        {
+          "expect": {
+            "state": {
+              "phase": "done",
+              "replayAttempt": 1,
+              "replayBadge": "Replay 1",
+              "session": {
+                "stack": 4950,
+                "stackText": "4,950",
+                "changeText": "-50 chips · Net this session",
+                "negative": true,
+                "hands": 1,
+                "wins": 0,
+                "winRateText": "0%"
+              },
+              "actions": {"replayVisible": true},
+              "activity": {
+                "texts": [
+                  "Hand 1 begins · Button: You",
+                  "Mia: SB 25 · Alex: BB 50",
+                  "Hand 1 · Replay #1 · previous settlement reversed",
+                  "River: Call 50",
+                  "Kai: Call 50",
+                  "Luna: Call 50",
+                  "You: Call 50",
+                  "Mia: Call 25",
+                  "Alex: Check",
+                  "Flop · 8♠ 10♥ 2♥",
+                  "Mia: Check",
+                  "Alex: Check",
+                  "River: Check",
+                  "Kai: Check",
+                  "Luna: Check",
+                  "You: Check",
+                  "Turn · 5♦",
+                  "Mia: Check",
+                  "Alex: Check",
+                  "River: Check",
+                  "Kai: Check",
+                  "Luna: Check",
+                  "You: Check",
+                  "River · 10♣",
+                  "Mia: Check",
+                  "Alex: Check",
+                  "River: Check",
+                  "Kai: Check",
+                  "Luna: Check",
+                  "You: Check",
+                  "Main Pot 300 → River 300",
+                  "River wins 300 chips · Two Pair"
+                ]
+              }
+            },
+            "wealth": 30000,
+            "draws": 35557
+          }
+        },
+        {"do": "replayHand", "returns": true},
+        {
+          "expect": {
+            "state": {
+              "replayAttempt": 2,
+              "replayBadge": "Replay 2",
+              "session": {
+                "stack": 5000,
+                "stackText": "5,000",
+                "changeText": "Build experience, starting this hand",
+                "negative": false,
+                "hands": 0,
+                "wins": 0,
+                "winRateText": "—"
+              }
+            },
+            "wealth": 30000
+          }
+        }
+      ]
+    },
+    {
+      "name": "background cancels bot timers and the foreground restarts the same plan",
+      "seed": 17,
+      "steps": [
+        {"do": "start"},
+        {
+          "expect": {
+            "thinking": {"actor": 3, "delayMs": 4721, "startedAt": 0, "deadline": 4721},
+            "pending": 1,
+            "nextDueAt": 4721,
+            "draws": 1430,
+            "clock": 0
+          }
+        },
+        {"do": "advance", "ms": 500},
+        {"do": "background"},
+        {
+          "expect": {
+            "state": {"backgrounded": true},
+            "pending": 0,
+            "thinking": {"actor": 3, "delayMs": 4721, "startedAt": 0, "deadline": 4721},
+            "canFinishHand": false,
+            "epoch": 2,
+            "viewToken": 1,
+            "draws": 1430,
+            "clock": 500
+          }
+        },
+        {"do": "advance", "ms": 60000},
+        {
+          "expect": {
+            "state": {"activity": {"texts": ["Hand 1 begins · Button: You", "Mia: SB 25 · Alex: BB 50"]}},
+            "pending": 0,
+            "draws": 1430,
+            "clock": 60500
+          }
+        },
+        {"do": "foreground"},
+        {
+          "expect": {
+            "state": {"backgrounded": false},
+            "thinking": {"actor": 3, "delayMs": 4721, "startedAt": 60500, "deadline": 65221},
+            "pending": 1,
+            "nextDueAt": 65221,
+            "draws": 1430,
+            "clock": 60500,
+            "epoch": 2
+          }
+        },
+        {"do": "runBots"},
+        {
+          "expect": {
+            "state": {
+              "activity": {
+                "texts": [
+                  "Hand 1 begins · Button: You",
+                  "Mia: SB 25 · Alex: BB 50",
+                  "River: Fold",
+                  "Kai: Fold",
+                  "Luna: Fold"
+                ]
+              }
+            },
+            "draws": 4187,
+            "clock": 72855
+          }
+        }
+      ]
+    },
+    {
+      "name": "settings: stored preferences, seat count, difficulty, sound and hints",
+      "seed": 19,
+      "storage": {"noir-table-v1": "{\"playerCount\":6.0,\"difficulty\":\"hard\"}", "noir-hints": "false"},
+      "steps": [
+        {
+          "expect": {
+            "state": {
+              "settings": {
+                "requestedSeatCount": 6,
+                "tableChangeNote": null,
+                "difficulty": "hard",
+                "hints": false,
+                "sound": false,
+                "soundA11y": "Turn sound on",
+                "soundTitle": "Sound off",
+                "seatCountOptions": ["5 players", "6 players", "7 players", "8 players", "9 players"],
+                "difficultyOptions": ["Easy", "Standard", "Advanced"],
+                "emotionOptions": ["Off", "Subtle", "Pronounced"]
+              },
+              "coach": {"visible": false, "toggleLabel": "Off"},
+              "playerCount": 6
+            },
+            "storage": {
+              "noir-table-v1": "{\"playerCount\":6.0,\"difficulty\":\"hard\"}",
+              "noir-hints": "false"
+            }
+          }
+        },
+        {"do": "setSeatCount", "count": 4, "returns": false},
+        {"do": "setSeatCount", "count": 9, "returns": true},
+        {
+          "expect": {
+            "state": {
+              "settings": {
+                "requestedSeatCount": 9,
+                "tableChangeNote": "Switches to 9 players next hand · Stacks reset to 5,000 and stats start over"
+              },
+              "playerCount": 6
+            },
+            "storage": {"noir-table-v1": "{\"playerCount\":9,\"difficulty\":\"hard\"}", "noir-hints": "false"}
+          }
+        },
+        {"do": "toggleSound"},
+        {"do": "toggleHints"},
+        {"do": "setDifficulty", "difficulty": "easy"},
+        {
+          "expect": {
+            "effects": ["sound:deal"],
+            "storage": {
+              "noir-table-v1": "{\"playerCount\":9,\"difficulty\":\"easy\"}",
+              "noir-hints": "true",
+              "noir-sound": "true"
+            },
+            "state": {
+              "settings": {
+                "requestedSeatCount": 9,
+                "tableChangeNote": "Switches to 9 players next hand · Stacks reset to 5,000 and stats start over",
+                "difficulty": "easy",
+                "hints": true,
+                "sound": true,
+                "soundA11y": "Turn sound off",
+                "soundTitle": "Sound on",
+                "seatCountOptions": ["5 players", "6 players", "7 players", "8 players", "9 players"],
+                "difficultyOptions": ["Easy", "Standard", "Advanced"],
+                "emotionOptions": ["Off", "Subtle", "Pronounced"]
+              },
+              "coach": {"visible": true, "toggleLabel": "On"}
+            }
+          }
+        },
+        {"do": "start"},
+        {
+          "expect": {
+            "state": {
+              "playerCount": 9,
+              "tableTag": "9-MAX",
+              "tableSize": "9-Handed No-Limit",
+              "settings": {"tableChangeNote": null},
+              "seats": [
+                {
+                  "name": "Mia",
+                  "position": "SB",
+                  "positionName": "Small Blind",
+                  "layoutX": 14.0,
+                  "layoutY": 72.0,
+                  "avatar": "M"
+                },
+                {
+                  "name": "Alex",
+                  "position": "BB",
+                  "positionName": "Big Blind",
+                  "layoutX": 13.0,
+                  "layoutY": 45.0,
+                  "avatar": "A"
+                },
+                {
+                  "name": "River",
+                  "position": "UTG",
+                  "positionName": "Under the Gun",
+                  "layoutX": 16.0,
+                  "layoutY": 18.0,
+                  "avatar": "R"
+                },
+                {
+                  "name": "Kai",
+                  "position": "UTG+1",
+                  "positionName": "Under the Gun +1",
+                  "layoutX": 36.0,
+                  "layoutY": 0.0,
+                  "avatar": "K"
+                },
+                {
+                  "name": "Luna",
+                  "position": "MP",
+                  "positionName": "Middle Position",
+                  "layoutX": 64.0,
+                  "layoutY": 0.0,
+                  "avatar": "L"
+                },
+                {
+                  "name": "Theo",
+                  "position": "LJ",
+                  "positionName": "Lojack",
+                  "layoutX": 84.0,
+                  "layoutY": 18.0,
+                  "avatar": "T"
+                },
+                {
+                  "name": "Jade",
+                  "position": "HJ",
+                  "positionName": "Hijack",
+                  "layoutX": 87.0,
+                  "layoutY": 45.0,
+                  "avatar": "J"
+                },
+                {
+                  "name": "Leo",
+                  "position": "CO",
+                  "positionName": "Cutoff",
+                  "layoutX": 86.0,
+                  "layoutY": 72.0,
+                  "avatar": "L"
+                }
+              ],
+              "hero": {"position": "BTN"},
+              "activity": {"texts": ["Hand 1 begins · Button: You", "Mia: SB 25 · Alex: BB 50"]}
+            },
+            "effects": ["sound:deal"],
+            "thinking": {"actor": 3, "delayMs": 2361, "startedAt": 0, "deadline": 2361},
+            "draws": 1428
+          }
+        },
+        {"do": "setSeatCount", "count": 5, "returns": true},
+        {"do": "playOut", "hero": "fold"},
+        {"do": "startNewSession"},
+        {
+          "expect": {
+            "state": {
+              "playerCount": 5,
+              "hand": 1,
+              "session": {
+                "stack": 5000,
+                "stackText": "5,000",
+                "changeText": "Build experience, starting this hand",
+                "negative": false,
+                "hands": 0,
+                "wins": 0,
+                "winRateText": "—"
+              },
+              "settings": {"tableChangeNote": null},
+              "seats": [
+                {"name": "Mia", "position": "SB"},
+                {"name": "Alex", "position": "BB"},
+                {"name": "River", "position": "UTG"},
+                {"name": "Kai", "position": "CO"}
+              ],
+              "activity": {"texts": ["Hand 1 begins · Button: You", "Mia: SB 25 · Alex: BB 50"]}
+            },
+            "storage": {
+              "noir-table-v1": "{\"playerCount\":5,\"difficulty\":\"easy\"}",
+              "noir-hints": "true",
+              "noir-sound": "true"
+            },
+            "wealth": 25000
+          }
+        }
+      ]
+    },
+    {
+      "name": "opponent styles: draft, save for the next hand, persona annotation",
+      "seed": 23,
+      "steps": [
+        {"do": "start"},
+        {"do": "openOpponentSettings"},
+        {
+          "expect": {
+            "state": {
+              "opponentsDialog": {
+                "emotionMode": "subtle",
+                "selectedProfile": "balanced",
+                "detailName": "Balanced Practice",
+                "sizingText": "Typical postflop bet: 45–80% pot",
+                "roster": [
+                  {
+                    "id": 1,
+                    "name": "Mia",
+                    "offTable": false,
+                    "subtitle": "Seat 1 · Steady",
+                    "assignment": "balanced",
+                    "currentStyle": "Style this hand: Balanced",
+                    "observed": "0 hands · VPIP — · PFR —"
+                  },
+                  {
+                    "id": 2,
+                    "name": "Alex",
+                    "offTable": false,
+                    "subtitle": "Seat 2 · Steady",
+                    "assignment": "balanced",
+                    "currentStyle": "Style this hand: Balanced",
+                    "observed": "0 hands · VPIP — · PFR —"
+                  },
+                  {
+                    "id": 3,
+                    "name": "River",
+                    "offTable": false,
+                    "subtitle": "Seat 3 · Steady",
+                    "assignment": "balanced",
+                    "currentStyle": "Style this hand: Balanced",
+                    "observed": "0 hands · VPIP — · PFR —"
+                  },
+                  {
+                    "id": 4,
+                    "name": "Kai",
+                    "offTable": false,
+                    "subtitle": "Seat 4 · Steady",
+                    "assignment": "balanced",
+                    "currentStyle": "Style this hand: Balanced",
+                    "observed": "0 hands · VPIP — · PFR —"
+                  },
+                  {
+                    "id": 5,
+                    "name": "Luna",
+                    "offTable": false,
+                    "subtitle": "Seat 5 · Steady",
+                    "assignment": "balanced",
+                    "currentStyle": "Style this hand: Balanced",
+                    "observed": "0 hands · VPIP — · PFR —"
+                  },
+                  {
+                    "id": 6,
+                    "name": "Theo",
+                    "offTable": true,
+                    "subtitle": "Not Seated · Steady",
+                    "assignment": "balanced",
+                    "currentStyle": "Not seated yet; uses the saved next-hand setting",
+                    "observed": "0 hands · VPIP — · PFR —"
+                  },
+                  {
+                    "id": 7,
+                    "name": "Jade",
+                    "offTable": true,
+                    "subtitle": "Not Seated · Steady",
+                    "assignment": "balanced",
+                    "currentStyle": "Not seated yet; uses the saved next-hand setting",
+                    "observed": "0 hands · VPIP — · PFR —"
+                  },
+                  {
+                    "id": 8,
+                    "name": "Leo",
+                    "offTable": true,
+                    "subtitle": "Not Seated · Steady",
+                    "assignment": "balanced",
+                    "currentStyle": "Not seated yet; uses the saved next-hand setting",
+                    "observed": "0 hands · VPIP — · PFR —"
+                  }
+                ]
+              },
+              "opponents": {"text": "Balanced", "changePending": false, "changeNote": null}
+            }
+          }
+        },
+        {"do": "mixLineup"},
+        {"do": "setEmotionMode", "mode": "lively"},
+        {"do": "assignSeatStyle", "seat": 2, "profile": "balanced"},
+        {"do": "previewProfile", "id": "dwan"},
+        {
+          "expect": {
+            "state": {
+              "opponentsDialog": {
+                "emotionMode": "lively",
+                "selectedProfile": "dwan",
+                "detailName": "Tom Dwan",
+                "sizingText": "Typical postflop bet: 65–120% pot",
+                "roster": [
+                  {"assignment": "tan"},
+                  {"assignment": "balanced"},
+                  {"assignment": "zang"},
+                  {"assignment": "peter"},
+                  {"assignment": "abao"},
+                  {"assignment": "viktor"},
+                  {"assignment": "jungleman"},
+                  {"assignment": "dwan"}
+                ]
+              },
+              "opponents": {"text": "Balanced", "changePending": false, "changeNote": null}
+            }
+          }
+        },
+        {"do": "saveOpponentSettings", "returns": true},
+        {
+          "expect": {
+            "state": {
+              "opponentsDialog": null,
+              "opponents": {
+                "text": "Next Hand",
+                "changePending": true,
+                "changeNote": "Opponent styles saved and will apply next hand. This hand and any replay use the current styles shown at each seat."
+              },
+              "seats": [
+                {"styleShort": "Balanced"},
+                {"styleShort": "Balanced"},
+                {"styleShort": "Balanced"},
+                {"styleShort": "Balanced"},
+                {"styleShort": "Balanced"}
+              ]
+            },
+            "storage": {
+              "noir-opponents-v1": "{\"emotionMode\":\"lively\",\"assignments\":{\"1\":\"tan\",\"2\":\"balanced\",\"3\":\"zang\",\"4\":\"peter\",\"5\":\"abao\",\"6\":\"viktor\",\"7\":\"jungleman\",\"8\":\"dwan\"}}"
+            }
+          }
+        },
+        {"do": "saveOpponentSettings", "returns": false},
+        {"do": "playOut", "hero": "fold"},
+        {"do": "nextHand", "returns": true},
+        {
+          "expect": {
+            "state": {
+              "opponents": {"text": "4 Styled Opponents", "changePending": false, "changeNote": null},
+              "hasFullPlayerNames": false,
+              "seats": [
+                {
+                  "profileId": "tan",
+                  "styleShort": "Boss Tan",
+                  "styleTitle": "Boss Tan · Tan Xuan · Wide range · Multi-street pressure",
+                  "mood": "steady",
+                  "avatarTitle": "Mia · Boss Tan (training archetype) · Simulated mood: Steady"
+                },
+                {
+                  "profileId": "balanced",
+                  "styleShort": "Balanced",
+                  "styleTitle": "Balanced Practice · Steady baseline opponent",
+                  "mood": "steady",
+                  "avatarTitle": "Alex · Balanced (training archetype) · Simulated mood: Steady"
+                },
+                {
+                  "profileId": "zang",
+                  "styleShort": "Aaron Zang",
+                  "styleTitle": "Zang Shunu · Aaron Zang · Seasoned aggression · River battles",
+                  "mood": "steady",
+                  "avatarTitle": "River · Aaron Zang (training archetype) · Simulated mood: Steady"
+                },
+                {
+                  "profileId": "peter",
+                  "styleShort": "Peter",
+                  "styleTitle": "Peter · HCL · Wide range · Big-bet brawler",
+                  "mood": "steady",
+                  "avatarTitle": "Kai · Peter (training archetype) · Simulated mood: Steady"
+                },
+                {
+                  "profileId": "abao",
+                  "styleShort": "A Bao",
+                  "styleTitle": "A Bao · KPC · Selective pressure · Semi-bluffs",
+                  "mood": "steady",
+                  "avatarTitle": "Luna · A Bao (training archetype) · Simulated mood: Steady"
+                }
+              ],
+              "activity": {
+                "entries": [
+                  {
+                    "number": 1,
+                    "text": "Hand 2 begins · Button: Mia (Boss Tan)",
+                    "type": "street",
+                    "playerId": null,
+                    "isHero": false,
+                    "street": 0,
+                    "personas": [" (Boss Tan)"]
+                  },
+                  {
+                    "number": 2,
+                    "text": "River (Aaron Zang) rebuys 5,000 virtual chips",
+                    "type": "info",
+                    "playerId": 3,
+                    "isHero": false,
+                    "street": 0,
+                    "personas": [" (Aaron Zang)"]
+                  },
+                  {
+                    "number": 3,
+                    "text": "Alex: SB 25 · River (Aaron Zang): BB 50",
+                    "type": "blind",
+                    "playerId": null,
+                    "isHero": false,
+                    "street": 0,
+                    "personas": [" (Aaron Zang)"]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "pot details with an uncalled refund, side pots at showdown, and the review lifecycle",
+      "seed": 29,
+      "reviewRunner": true,
+      "steps": [
+        {"do": "qa", "fixture": "foldPotRefund"},
+        {
+          "expect": {
+            "state": {
+              "potDetails": {
+                "open": false,
+                "settled": true,
+                "title": "Hand Settlement",
+                "note": null,
+                "pots": [
+                  {
+                    "index": 0,
+                    "label": "Main Pot",
+                    "amount": 125,
+                    "amountText": "125",
+                    "eligibilityLabel": "You're not in this pot",
+                    "heroEligible": false,
+                    "contributions": [
+                      {"playerId": 2, "text": "Alex", "amount": 50},
+                      {"playerId": 4, "text": "Kai · Folded", "amount": 25},
+                      {"playerId": 5, "text": "Luna · Folded", "amount": 50}
+                    ],
+                    "splitTotalText": null,
+                    "awards": [
+                      {
+                        "playerId": 2,
+                        "name": "Alex",
+                        "winnerText": "Alex wins",
+                        "label": "All other players folded",
+                        "amountText": "+125"
+                      }
+                    ],
+                    "distributionEligibility": "You're not in this pot · Eligible at settlement: Alex",
+                    "oddChipNote": null,
+                    "expanded": false,
+                    "playerCountText": " · 1 player",
+                    "participantsText": "Eligible: Alex"
+                  }
+                ],
+                "refunds": [
+                  {
+                    "playerId": 2,
+                    "amount": 75,
+                    "text": "Uncalled bet returned · Alex",
+                    "a11y": "Alex's uncalled 75 chips were returned",
+                    "returned": true
+                  }
+                ]
+              },
+              "potText": "125",
+              "potButtonLabel": "Pot · Details",
+              "seats": [
+                {
+                  "action": {
+                    "label": "Fold",
+                    "amount": null,
+                    "amountText": null,
+                    "meaning": null,
+                    "isDeciding": false
+                  }
+                },
+                {
+                  "action": {
+                    "label": "2-bet",
+                    "amount": 125,
+                    "amountText": "125",
+                    "meaning": "2-bet open to 125 · 125 in this round",
+                    "isDeciding": false
+                  }
+                },
+                {
+                  "action": {
+                    "label": "Fold",
+                    "amount": null,
+                    "amountText": null,
+                    "meaning": null,
+                    "isDeciding": false
+                  }
+                },
+                {
+                  "action": {
+                    "label": "Fold",
+                    "amount": null,
+                    "amountText": null,
+                    "meaning": null,
+                    "isDeciding": false
+                  }
+                },
+                {
+                  "action": {
+                    "label": "Fold",
+                    "amount": null,
+                    "amountText": null,
+                    "meaning": null,
+                    "isDeciding": false
+                  }
+                }
+              ],
+              "review": {
+                "buttonVisible": true,
+                "dialogOpen": false,
+                "key": "1:1",
+                "status": "idle",
+                "progress": 0,
+                "selected": 0,
+                "perspective": "hero",
+                "jobId": 2,
+                "decisions": 1,
+                "opponentRecords": 0
+              },
+              "actions": {"reviewVisible": true},
+              "activity": {
+                "texts": [
+                  "Hand 1 begins · Button: River",
+                  "Kai: SB 25 · Luna: BB 50",
+                  "You: Fold",
+                  "Mia: Fold",
+                  "Alex: 2-bet open to 125",
+                  "River: Fold",
+                  "Kai: Fold",
+                  "Luna: Fold",
+                  "Main Pot 125 → Alex 125",
+                  "Uncalled 75 chips returned to Alex",
+                  "Alex wins 125 chips"
+                ]
+              }
+            }
+          }
+        },
+        {"do": "openPotDetails"},
+        {"do": "togglePotDistribution", "index": 0},
+        {"expect": {"state": {"potDetails": {"open": true, "pots": [{"expanded": true}]}}}},
+        {"do": "openReview"},
+        {
+          "expect": {
+            "state": {
+              "review": {
+                "buttonVisible": true,
+                "dialogOpen": true,
+                "key": "1:1",
+                "status": "running",
+                "progress": 0,
+                "selected": 0,
+                "perspective": "hero",
+                "jobId": 3,
+                "decisions": 1,
+                "opponentRecords": 0
+              }
+            }
+          }
+        },
+        {"do": "completeReview", "priorityIndex": 5},
+        {
+          "expect": {
+            "state": {
+              "review": {
+                "buttonVisible": true,
+                "dialogOpen": true,
+                "key": "1:1",
+                "status": "done",
+                "progress": 0,
+                "selected": 0,
+                "perspective": "hero",
+                "jobId": 3,
+                "decisions": 1,
+                "opponentRecords": 0
+              }
+            }
+          }
+        },
+        {
+          "do": "qa",
+          "fixture": "scene",
+          "hole": "As Ah",
+          "board": "Kd 7c 2h 9s 3d",
+          "totals": [400, 1000, 1000, 100, 100, 100],
+          "folded": [3, 4],
+          "otherHoles": {"1": "Ks Kh", "2": "Qs Qd", "5": "Ac Ad"}
+        },
+        {
+          "expect": {
+            "state": {
+              "phase": "done",
+              "potDetails": {
+                "open": true,
+                "settled": true,
+                "title": "Hand Settlement",
+                "note": null,
+                "pots": [
+                  {
+                    "index": 0,
+                    "label": "Main Pot",
+                    "amount": 600,
+                    "amountText": "600",
+                    "eligibilityLabel": "You're eligible",
+                    "heroEligible": true,
+                    "contributions": [
+                      {"playerId": 0, "text": "You", "amount": 100},
+                      {"playerId": 1, "text": "Mia", "amount": 100},
+                      {"playerId": 2, "text": "Alex", "amount": 100},
+                      {"playerId": 3, "text": "River · Folded", "amount": 100},
+                      {"playerId": 4, "text": "Kai · Folded", "amount": 100},
+                      {"playerId": 5, "text": "Luna", "amount": 100}
+                    ],
+                    "splitTotalText": null,
+                    "awards": [
+                      {
+                        "playerId": 1,
+                        "name": "Mia",
+                        "winnerText": "Mia wins",
+                        "label": "Three of a Kind",
+                        "amountText": "+600"
+                      }
+                    ],
+                    "distributionEligibility": "You're eligible · Eligible at settlement: You, Mia, Alex, Luna",
+                    "oddChipNote": null,
+                    "expanded": true,
+                    "playerCountText": " · 4 players",
+                    "participantsText": "Eligible: You, Mia, Alex, Luna"
+                  },
+                  {
+                    "index": 1,
+                    "label": "Side Pot 1",
+                    "amount": 900,
+                    "amountText": "900",
+                    "eligibilityLabel": "You're eligible",
+                    "heroEligible": true,
+                    "contributions": [
+                      {"playerId": 0, "text": "You", "amount": 300},
+                      {"playerId": 1, "text": "Mia", "amount": 300},
+                      {"playerId": 2, "text": "Alex", "amount": 300}
+                    ],
+                    "splitTotalText": null,
+                    "awards": [
+                      {
+                        "playerId": 1,
+                        "name": "Mia",
+                        "winnerText": "Mia wins",
+                        "label": "Three of a Kind",
+                        "amountText": "+900"
+                      }
+                    ],
+                    "distributionEligibility": "You're eligible · Eligible at settlement: You, Mia, Alex",
+                    "oddChipNote": null,
+                    "expanded": false,
+                    "playerCountText": " · 3 players",
+                    "participantsText": "Eligible: You, Mia, Alex"
+                  },
+                  {
+                    "index": 2,
+                    "label": "Side Pot 2",
+                    "amount": 1200,
+                    "amountText": "1,200",
+                    "eligibilityLabel": "You're not in this pot",
+                    "heroEligible": false,
+                    "contributions": [
+                      {"playerId": 1, "text": "Mia", "amount": 600},
+                      {"playerId": 2, "text": "Alex", "amount": 600}
+                    ],
+                    "splitTotalText": null,
+                    "awards": [
+                      {
+                        "playerId": 1,
+                        "name": "Mia",
+                        "winnerText": "Mia wins",
+                        "label": "Three of a Kind",
+                        "amountText": "+1,200"
+                      }
+                    ],
+                    "distributionEligibility": "You're not in this pot · Eligible at settlement: Mia, Alex",
+                    "oddChipNote": null,
+                    "expanded": false,
+                    "playerCountText": " · 2 players",
+                    "participantsText": "Eligible: Mia, Alex"
+                  }
+                ],
+                "refunds": []
+              },
+              "showdown": {
+                "key": "2:1",
+                "context": "4 players at showdown · Main Pot and Side Pots settled separately",
+                "scenes": [
+                  {
+                    "id": 0,
+                    "name": "You",
+                    "label": "One Pair",
+                    "motion": "pair",
+                    "cards": ["0-14", "1-14", "3-13", "0-9", "2-7"],
+                    "highlights": [true, true, false, false, false],
+                    "explanation": "Pair of Aces",
+                    "amount": 0,
+                    "isWinner": false,
+                    "statusText": "No pot won",
+                    "footerText": "Best five cards",
+                    "a11y": "You · One Pair"
+                  },
+                  {
+                    "id": 1,
+                    "name": "Mia",
+                    "label": "Three of a Kind",
+                    "motion": "trips",
+                    "cards": ["0-13", "1-13", "3-13", "0-9", "2-7"],
+                    "highlights": [true, true, true, false, false],
+                    "explanation": "Three Kings",
+                    "amount": 2700,
+                    "isWinner": true,
+                    "statusText": "Won +2,700",
+                    "footerText": "Main Pot +600 · Side Pot 1 +900 · Side Pot 2 +1,200",
+                    "a11y": "Mia · Three of a Kind"
+                  },
+                  {
+                    "id": 2,
+                    "name": "Alex",
+                    "label": "One Pair",
+                    "motion": "pair",
+                    "cards": ["0-12", "3-12", "3-13", "0-9", "2-7"],
+                    "highlights": [true, true, false, false, false],
+                    "explanation": "Pair of Queens",
+                    "amount": 0,
+                    "isWinner": false,
+                    "statusText": "No pot won",
+                    "footerText": "Best five cards",
+                    "a11y": "Alex · One Pair"
+                  },
+                  {
+                    "id": 5,
+                    "name": "Luna",
+                    "label": "One Pair",
+                    "motion": "pair",
+                    "cards": ["2-14", "3-14", "3-13", "0-9", "2-7"],
+                    "highlights": [true, true, false, false, false],
+                    "explanation": "Pair of Aces",
+                    "amount": 0,
+                    "isWinner": false,
+                    "statusText": "No pot won",
+                    "footerText": "Best five cards",
+                    "a11y": "Luna · One Pair"
+                  }
+                ]
+              },
+              "boardCaption": "Settled separately · Main Pot 600 + 2 Side Pots",
+              "potButtonLabel": "Total Pot · 2 Side Pots",
+              "seats": [
+                {
+                  "badge": {
+                    "text": "Three of a Kind",
+                    "isWinner": true,
+                    "a11y": "Mia wins 2,700 chips",
+                    "title": "Three of a Kind · Won 2,700 chips"
+                  },
+                  "isWinner": true
+                },
+                {
+                  "badge": {"text": "One Pair", "isWinner": false, "a11y": null, "title": null},
+                  "isWinner": false
+                },
+                {"badge": null, "isWinner": false},
+                {"badge": null, "isWinner": false},
+                {
+                  "badge": {"text": "One Pair", "isWinner": false, "a11y": null, "title": null},
+                  "isWinner": false
+                }
+              ],
+              "hero": {"rankBadge": {"text": "One Pair", "isWinner": false, "a11y": null, "title": null}},
+              "board": [{"best": true}, {"best": true}, {"best": false}, {"best": true}, {"best": false}],
+              "review": {"buttonVisible": true, "dialogOpen": false, "status": "idle", "key": "2:1"}
+            },
+            "wealth": 30000
+          }
+        }
+      ]
+    }
+  ]
+}
