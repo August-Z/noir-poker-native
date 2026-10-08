@@ -8,7 +8,11 @@ node scripts/generate-reference-fixtures.mjs          # regenerate
 node scripts/generate-reference-fixtures.mjs --check  # CI: every file must match byte for byte
 ```
 
-Never edit these files by hand, and never bundle them into the apps. The Kotlin
+The one exception is `session-scenarios.json`, which is hand-authored (see its
+section below) because the reference table controller cannot run without a
+browser DOM; the generator neither writes nor checks it.
+
+Never edit the generated files by hand, and never bundle any fixture into the apps. The Kotlin
 (`android/core`) and Swift (`ios/Packages/PokerCore`) domain tests both read them
 and must reproduce every value exactly.
 
@@ -332,3 +336,20 @@ bot seats only, `draws` = cumulative draws after that action), `showdown`,
 decision snapshots), `thinkingMs` (per bot action), `logs` (newest first),
 `drawsAfterHand`. The generator asserts chip conservation after every action
 and at settlement.
+
+## `session-scenarios.json`
+
+Hand-authored table-session scenarios, consumed by
+`android/core/.../session/SessionScenarioFixtureTest.kt` and
+`ios/Packages/PokerCore/Tests/PokerCoreTests/Session/SessionScenarioFixtureTests.swift`.
+The reference `src/ui/table-controller.js` binds to the page on import, so the
+values come from the UI behavior spec and the copy catalog, not from the
+generator; `referenceCommit` records the reference version the spec describes.
+Each scenario has `name`, `seed` (one `SeededRandom` stream for the whole
+scenario), optional `storage` (initial key-value pairs) and `reviewRunner`
+(`true` installs a fake runner that completes on `completeReview`), and
+`steps`. A step is either a command (`do`, its arguments, and an optional
+`returns` boolean) or an `expect` excerpt that is compared partially: objects
+check only the listed keys, arrays check their length and every element, and
+numbers compare numerically. The commands and the projected fields are
+documented in `docs/SESSION.md` → "Shared session fixture".

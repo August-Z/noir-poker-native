@@ -88,7 +88,10 @@ authority for engine copy. UI-only copy is catalogued in `docs/COPY.md`.
 `fixtures/*.json` are generated from the pinned reference by
 `node scripts/generate-reference-fixtures.mjs` and verified in CI with
 `--check`. Fixture files are inputs to both native test suites; they must never
-be bundled into the apps. Each file carries `referenceCommit`.
+be bundled into the apps. Each file carries `referenceCommit`. The exception is
+`fixtures/session-scenarios.json`: the reference table controller is DOM-bound,
+so the table-session scenarios are hand-authored from the UI spec (see
+`docs/SESSION.md`) and are not covered by `--check`.
 
 ## Concurrency and cancellation
 
