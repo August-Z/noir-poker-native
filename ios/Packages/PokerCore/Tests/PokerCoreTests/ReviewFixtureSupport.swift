@@ -53,7 +53,7 @@ func decodeDecision(_ v: Any?, lenient: Bool = false) -> ReviewDecision? {
         let p = dict(item)
         guard let stack = chips(p["stack"]), let bet = chips(p["bet"]), let total = chips(p["total"]) else { return nil }
         let state = p.keys.contains("actedTo")
-            ? SeatState(actedTo: optionalInt(p["actedTo"]), checked: bool(p["checked"]), botProfile: string(p["botProfile"]),
+            ? ReviewSeatState(actedTo: optionalInt(p["actedTo"]), checked: bool(p["checked"]), botProfile: string(p["botProfile"]),
                         botMoodKind: string(p["botMoodKind"]).flatMap(MoodKind.init(rawValue:)))
             : nil
         players.append(ReviewSeat(

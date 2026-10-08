@@ -11,7 +11,7 @@
 /// Seat keys every engine snapshot carries. Hand-built snapshots (reference unit
 /// tests) omit all four; that absence changes the decision seed and disables the
 /// candidate simulation, exactly like an absent JavaScript key.
-public struct SeatState: Equatable, Sendable {
+public struct ReviewSeatState: Equatable, Sendable {
     /// The bet level this seat last acted at this street; `nil` before acting.
     public var actedTo: Int?
     public var checked: Bool
@@ -42,10 +42,10 @@ public struct ReviewSeat: Equatable, Sendable {
     public var action: String
     public var publicAxes: [Double]?
     /// `nil` when the snapshot omits these keys (hand-built snapshots).
-    public var state: SeatState?
+    public var state: ReviewSeatState?
 
     public init(id: Int, name: String, position: String, stack: Int, bet: Int, total: Int, folded: Bool,
-                allin: Bool, action: String = "", publicAxes: [Double]? = nil, state: SeatState? = nil) {
+                allin: Bool, action: String = "", publicAxes: [Double]? = nil, state: ReviewSeatState? = nil) {
         self.id = id
         self.name = name
         self.position = position
@@ -62,7 +62,7 @@ public struct ReviewSeat: Equatable, Sendable {
     public init(_ p: SnapshotPlayer) {
         self.init(id: p.id, name: p.name, position: p.position, stack: p.stack, bet: p.bet, total: p.total,
                   folded: p.folded, allin: p.allin, action: p.action, publicAxes: p.publicAxes,
-                  state: SeatState(actedTo: p.actedTo, checked: p.checked, botProfile: p.botProfile,
+                  state: ReviewSeatState(actedTo: p.actedTo, checked: p.checked, botProfile: p.botProfile,
                                    botMoodKind: p.botMoodKind))
     }
 }
