@@ -119,12 +119,33 @@ class SessionSchedulingTest {
         assertTrue(h.state.finishing)
         assertEquals("Dealing…", h.state.actions.finishHandLabel)
         assertFalse(h.state.actions.finishHandEnabled)
-        // The first step consumes the waiting plan without new draws.
+        // The first step consumes the waiting plan without new draws. A probe
+        // queued behind it runs before the second step and sees its effect.
+        var drawsAfterFirst = -1
+        var recordsAfterFirst = -1
+        h.scheduler.schedule(0) {
+            drawsAfterFirst = h.random.draws
+            recordsAfterFirst = h.hooks.timingRecords().size
+        }
         h.scheduler.runCurrent()
+        assertEquals(1, recordsAfterFirst)
+        assertEquals(draws, drawsAfterFirst)
         val first = h.hooks.timingRecords().first()
         assertEquals(waiting.actor, first.id)
         assertEquals(waiting.delayMs, first.trace.thinking!!.durationMs)
         assertTrue(first.trace.thinking!!.expedited)
+        // The executed action and amount are the planned ones: the same seed
+        // without Finish Hand executes the same decision at its deadline.
+        val twin = Harness(seed = 20)
+        twin.heroTurn(9)
+        assertTrue(twin.session.fold())
+        assertEquals(waiting.delayMs, twin.hooks.thinking()!!.delayMs)
+        twin.scheduler.advanceBy(waiting.delayMs.toLong())
+        val planned = twin.hooks.timingRecords().first()
+        assertEquals(planned.id, first.id)
+        assertEquals(planned.action, first.action)
+        assertEquals(planned.amount, first.amount)
+        assertFalse(planned.trace.thinking!!.expedited)
         h.scheduler.advanceBy(1000)
         assertEquals(Phase.DONE, h.game.phase)
         assertEquals(5, (h.game.practiceBoard ?: h.game.board).size)

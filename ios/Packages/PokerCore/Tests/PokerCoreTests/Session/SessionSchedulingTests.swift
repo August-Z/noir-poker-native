@@ -112,12 +112,33 @@ final class SessionSchedulingTests: XCTestCase {
         XCTAssertTrue(h.state.finishing)
         XCTAssertEqual(h.state.actions.finishHandLabel, "Dealing…")
         XCTAssertFalse(h.state.actions.finishHandEnabled)
-        // The first step consumes the waiting plan without new draws.
+        // The first step consumes the waiting plan without new draws. A probe
+        // queued behind it runs before the second step and sees its effect.
+        var drawsAfterFirst = -1
+        var recordsAfterFirst = -1
+        _ = h.scheduler.schedule(delayMs: 0) {
+            drawsAfterFirst = h.random.draws
+            recordsAfterFirst = h.hooks.timingRecords().count
+        }
         h.scheduler.runCurrent()
+        XCTAssertEqual(recordsAfterFirst, 1)
+        XCTAssertEqual(drawsAfterFirst, draws)
         let first = try XCTUnwrap(h.hooks.timingRecords().first)
         XCTAssertEqual(first.id, waiting.actor)
         XCTAssertEqual(first.trace.thinking?.durationMs, waiting.delayMs)
         XCTAssertEqual(first.trace.thinking?.expedited, true)
+        // The executed action and amount are the planned ones: the same seed
+        // without Finish Hand executes the same decision at its deadline.
+        let twin = Harness(seed: 20)
+        try twin.heroTurn(9)
+        XCTAssertTrue(twin.session.fold())
+        XCTAssertEqual(twin.hooks.thinking()?.delayMs, waiting.delayMs)
+        twin.scheduler.advance(by: waiting.delayMs)
+        let planned = try XCTUnwrap(twin.hooks.timingRecords().first)
+        XCTAssertEqual(first.id, planned.id)
+        XCTAssertEqual(first.action, planned.action)
+        XCTAssertEqual(first.amount, planned.amount)
+        XCTAssertEqual(planned.trace.thinking?.expedited, false)
         h.scheduler.advance(by: 1000)
         XCTAssertEqual(h.game.phase, .done)
         XCTAssertEqual((h.game.practiceBoard ?? h.game.board).count, 5)

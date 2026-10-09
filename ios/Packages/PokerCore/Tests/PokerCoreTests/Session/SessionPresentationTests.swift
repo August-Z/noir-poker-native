@@ -431,6 +431,47 @@ final class SessionPresentationTests: XCTestCase {
         XCTAssertFalse(h.state.potDetails.open)
     }
 
+    func testObservedVPIPAndPFRRoundHalfUpAndRestartAfterARestyle() throws {
+        func stats(_ hands: Int, _ vpip: Int, _ pfr: Int) -> BotStats {
+            var s = BotStats()
+            s.hands = hands
+            s.vpip = vpip
+            s.pfr = pfr
+            return s
+        }
+        let h = Harness()
+        try h.foldWin(6)
+        h.hooks.mutate { g in
+            g.players[1].botStats = stats(3, 1, 2)
+            g.players[2].botStats = stats(8, 1, 3)
+            g.players[3].botStats = BotStats()
+            g.players[4].botStats = stats(1, 1, 0)
+        }
+        h.session.openOpponentSettings()
+        let roster = try XCTUnwrap(h.state.opponentsDialog).roster
+        XCTAssertEqual(roster[0].observed, "3 hands · VPIP 33% · PFR 67%")
+        // 1/8 = 12.5% and 3/8 = 37.5% round half up.
+        XCTAssertEqual(roster[1].observed, "8 hands · VPIP 13% · PFR 38%")
+        XCTAssertEqual(roster[2].observed, "0 hands · VPIP — · PFR —")
+        XCTAssertEqual(roster[3].observed, "1 hand · VPIP 100% · PFR 0%")
+        // Off-table seats have no counters yet.
+        XCTAssertEqual(roster[7].observed, "0 hands · VPIP — · PFR —")
+        XCTAssertTrue(roster.allSatisfy { $0.observedTitle == SessionCopy.rosterObservedTitle })
+
+        // A style change restarts that seat's counters at the next deal only.
+        h.session.assignSeatStyle(1, "tan")
+        XCTAssertTrue(h.session.saveOpponentSettings())
+        h.session.openOpponentSettings()
+        XCTAssertEqual(h.state.opponentsDialog?.roster[0].observed, "3 hands · VPIP 33% · PFR 67%")
+        h.session.discardOpponentSettings()
+        h.session.nextHand()
+        h.hooks.stop()
+        h.session.openOpponentSettings()
+        let next = try XCTUnwrap(h.state.opponentsDialog).roster
+        XCTAssertEqual(next[0].observed, "0 hands · VPIP — · PFR —")
+        XCTAssertEqual(next[1].observed, "8 hands · VPIP 13% · PFR 38%")
+    }
+
     func testSessionStatsCoachAndHeaderCopy() throws {
         let h = Harness()
         try h.foldPotRefund()

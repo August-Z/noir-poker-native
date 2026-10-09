@@ -146,6 +146,18 @@ class TableSessionFlowTest {
         assertEquals(0, h.game.replayAttempt)
         assertNull(h.state.replayBadge)
 
+        // Preferences set before Start New Session: tips off, sound on and
+        // saved (pending) opponent styles.
+        h.session.toggleHints()
+        h.session.toggleSound()
+        h.session.openOpponentSettings()
+        h.session.mixLineup()
+        h.session.setEmotionMode(EmotionMode.LIVELY)
+        assertTrue(h.session.saveOpponentSettings())
+        assertEquals("Applies Next Hand", h.state.opponents.text)
+        val saved = h.session.savedBotSettings
+        val savedValues = h.storage.values.toMap()
+
         // Start New Session: fresh table and stats.
         h.session.startNewSession()
         h.hooks.stop()
@@ -153,6 +165,16 @@ class TableSessionFlowTest {
         assertEquals(0, h.state.session.hands)
         assertTrue(h.game.players.all { it.stack + it.total == STARTING_STACK })
         assertNotEquals(stacksAfterHand, h.game.players.map { it.stack + it.total })
+        // The preferences survive, and the saved styles are dealt in the new session.
+        assertFalse(h.state.settings.hints)
+        assertFalse(h.state.coach.visible)
+        assertTrue(h.state.settings.sound)
+        assertEquals(saved, h.session.savedBotSettings)
+        assertEquals(MIXED_LINEUP.values.take(5), h.game.players.drop(1).map { it.botProfile })
+        assertEquals(EmotionMode.LIVELY, h.game.emotionMode)
+        assertEquals("5 Styled Opponents", h.state.opponents.text)
+        assertNull(h.state.opponents.changeNote)
+        assertEquals(savedValues, h.storage.values.toMap())
     }
 
     @Test

@@ -1,6 +1,7 @@
 package com.august.noirpoker.core.session
 
 import com.august.noirpoker.core.Action
+import com.august.noirpoker.core.BotStats
 import com.august.noirpoker.core.LogType
 import com.august.noirpoker.core.Phase
 import com.august.noirpoker.core.Player
@@ -413,6 +414,41 @@ class SessionPresentationTest {
         assertTrue(d.pots.all { it.awards.isEmpty() })
         assertTrue(d.refunds.all { it.text.startsWith("To be called or returned · ") && !it.returned })
         assertTrue(d.refunds.isNotEmpty())
+    }
+
+    @Test
+    fun `observed VPIP and PFR round half up and restart after a restyle`() {
+        val h = Harness()
+        h.foldWin(6)
+        h.hooks.mutate { g ->
+            g.players[1].botStats = BotStats(hands = 3, vpip = 1, pfr = 2)
+            g.players[2].botStats = BotStats(hands = 8, vpip = 1, pfr = 3)
+            g.players[3].botStats = BotStats()
+            g.players[4].botStats = BotStats(hands = 1, vpip = 1, pfr = 0)
+        }
+        h.session.openOpponentSettings()
+        val roster = h.state.opponentsDialog!!.roster
+        assertEquals("3 hands · VPIP 33% · PFR 67%", roster[0].observed)
+        // 1/8 = 12.5% and 3/8 = 37.5% round half up.
+        assertEquals("8 hands · VPIP 13% · PFR 38%", roster[1].observed)
+        assertEquals("0 hands · VPIP — · PFR —", roster[2].observed)
+        assertEquals("1 hand · VPIP 100% · PFR 0%", roster[3].observed)
+        // Off-table seats have no counters yet.
+        assertEquals("0 hands · VPIP — · PFR —", roster[7].observed)
+        assertTrue(roster.all { it.observedTitle == SessionCopy.rosterObservedTitle })
+
+        // A style change restarts that seat's counters at the next deal only.
+        h.session.assignSeatStyle(1, "tan")
+        assertTrue(h.session.saveOpponentSettings())
+        h.session.openOpponentSettings()
+        assertEquals("3 hands · VPIP 33% · PFR 67%", h.state.opponentsDialog!!.roster[0].observed)
+        h.session.discardOpponentSettings()
+        h.session.nextHand()
+        h.hooks.stop()
+        h.session.openOpponentSettings()
+        val next = h.state.opponentsDialog!!.roster
+        assertEquals("0 hands · VPIP — · PFR —", next[0].observed)
+        assertEquals("8 hands · VPIP 13% · PFR 38%", next[1].observed)
     }
 
     @Test

@@ -128,6 +128,18 @@ final class TableSessionFlowTests: XCTestCase {
         XCTAssertFalse(h.session.nextHand())
         XCTAssertEqual(h.game.hand, hand + 1)
 
+        // Preferences set before Start New Session: tips off, sound on and
+        // saved (pending) opponent styles.
+        h.session.toggleHints()
+        h.session.toggleSound()
+        h.session.openOpponentSettings()
+        h.session.mixLineup()
+        h.session.setEmotionMode(.lively)
+        XCTAssertTrue(h.session.saveOpponentSettings())
+        XCTAssertEqual(h.state.opponents.text, "Applies Next Hand")
+        let saved = h.session.savedBotSettings
+        let savedValues = h.storage.values
+
         // Start New Session: fresh table and stats.
         h.session.startNewSession()
         h.hooks.stop()
@@ -135,6 +147,16 @@ final class TableSessionFlowTests: XCTestCase {
         XCTAssertEqual(h.state.session.hands, 0)
         XCTAssertTrue(h.game.players.allSatisfy { $0.stack + $0.total == STARTING_STACK })
         XCTAssertNotEqual(h.game.players.map { $0.stack + $0.total }, stacksAfterHand)
+        // The preferences survive, and the saved styles are dealt in the new session.
+        XCTAssertFalse(h.state.settings.hints)
+        XCTAssertFalse(h.state.coach.visible)
+        XCTAssertTrue(h.state.settings.sound)
+        XCTAssertEqual(h.session.savedBotSettings, saved)
+        XCTAssertEqual(h.game.players.dropFirst().map(\.botProfile), (1...5).map { MIXED_LINEUP[$0]! })
+        XCTAssertEqual(h.game.emotionMode, .lively)
+        XCTAssertEqual(h.state.opponents.text, "5 Styled Opponents")
+        XCTAssertNil(h.state.opponents.changeNote)
+        XCTAssertEqual(h.storage.values, savedValues)
     }
 
     func testReplayingTwiceReversesThePayoutExactlyOnce() throws {
