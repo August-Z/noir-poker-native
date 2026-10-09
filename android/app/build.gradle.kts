@@ -13,6 +13,8 @@ android {
         versionCode = 1
         versionName = "0.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        // Fail a hung instrumented test after two minutes instead of stalling the CI job.
+        testInstrumentationRunnerArguments["timeout_msec"] = "120000"
     }
     buildFeatures { compose = true }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }

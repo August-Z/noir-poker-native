@@ -153,7 +153,7 @@ jobs:
     name: Android native UI smoke test
     needs: [source, android]
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
         with:
@@ -200,7 +200,7 @@ jobs:
     name: iOS build, Swift tests, and simulator launch
     needs: source
     runs-on: macos-15
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v7
         with:
@@ -226,7 +226,7 @@ jobs:
           xcrun simctl bootstatus "$device_id" -b
           xcrun simctl install "$device_id" .build/ios/Build/Products/Debug-iphonesimulator/NoirPoker.app
           xcrun simctl launch "$device_id" com.august.noirpoker
-          TEST_RUNNER_NOIR_SHOTS_DIR="$PWD/.build/shots" xcodebuild -project ios/NoirPoker.xcodeproj -scheme NoirPoker -destination "id=$device_id" -derivedDataPath .build/ios -resultBundlePath .build/ios-ui-results CODE_SIGNING_ALLOWED=NO test 2>&1 | tee .build/ios-ui-test.log
+          TEST_RUNNER_NOIR_SHOTS_DIR="$PWD/.build/shots" xcodebuild -project ios/NoirPoker.xcodeproj -scheme NoirPoker -destination "id=$device_id" -derivedDataPath .build/ios -resultBundlePath .build/ios-ui-results CODE_SIGNING_ALLOWED=NO -test-timeouts-enabled YES -default-test-execution-time-allowance 180 -maximum-test-execution-time-allowance 300 test 2>&1 | tee .build/ios-ui-test.log
           xcrun simctl launch "$device_id" com.august.noirpoker
           xcrun simctl io "$device_id" screenshot .build/ios-simulator.png
           xcrun simctl shutdown "$device_id" || true
@@ -238,7 +238,7 @@ jobs:
           ipad_id=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; data=json.load(sys.stdin)["devices"]; pads=[d for runtime,devices in data.items() if "iOS" in runtime for d in devices if "iPad" in d["name"]]; pads.sort(key=lambda d: 0 if "iPad Pro" in d["name"] else 1); print(pads[0]["udid"])')
           xcrun simctl boot "$ipad_id" || true
           xcrun simctl bootstatus "$ipad_id" -b
-          TEST_RUNNER_NOIR_SHOTS_DIR="$PWD/.build/shots" xcodebuild -project ios/NoirPoker.xcodeproj -scheme NoirPoker -destination "id=$ipad_id" -derivedDataPath .build/ios -resultBundlePath .build/ios-ipad-ui-results CODE_SIGNING_ALLOWED=NO -only-testing:NoirPokerUITests/TabletLayoutTests test 2>&1 | tee .build/ios-ipad-ui-test.log
+          TEST_RUNNER_NOIR_SHOTS_DIR="$PWD/.build/shots" xcodebuild -project ios/NoirPoker.xcodeproj -scheme NoirPoker -destination "id=$ipad_id" -derivedDataPath .build/ios -resultBundlePath .build/ios-ipad-ui-results CODE_SIGNING_ALLOWED=NO -test-timeouts-enabled YES -default-test-execution-time-allowance 180 -only-testing:NoirPokerUITests/TabletLayoutTests test 2>&1 | tee .build/ios-ipad-ui-test.log
           xcrun simctl launch "$ipad_id" com.august.noirpoker
           xcrun simctl io "$ipad_id" screenshot .build/ios-ipad-simulator.png
       - name: Print UI test screenshots for review
