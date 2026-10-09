@@ -8,6 +8,17 @@ extension View {
             .alignmentGuide(.top) { _ in -point.y }
     }
 
+    /// Places the view's top-center at `point`, shifted sideways just enough
+    /// to keep the whole view inside `0...width`. The reference's phone seats
+    /// sit at 13–14 % and 86–87 % of the width, where a full plate would
+    /// otherwise reach past the felt's surface and be clipped.
+    func anchoredTopCenter(_ point: CGPoint, within width: CGFloat) -> some View {
+        alignmentGuide(.leading) { d in
+            -min(max(point.x - d.width / 2, 0), max(width - d.width, 0))
+        }
+        .alignmentGuide(.top) { _ in -point.y }
+    }
+
     /// Places the view's bottom-center at `point` inside a top-leading ZStack.
     func anchoredBottomCenter(_ point: CGPoint) -> some View {
         alignmentGuide(.leading) { d in d.width / 2 - point.x }
@@ -34,7 +45,7 @@ struct ArenaView: View {
                 .zIndex(2)
             ForEach(state.seats) { seat in
                 SeatView(seat: seat, metrics: m, newHandKey: dealKey) { model.session.toggleReveal(seat.id) }
-                    .anchoredTopCenter(m.seatAnchor(seat))
+                    .anchoredTopCenter(m.seatAnchor(seat), within: m.width)
                     .zIndex(3)
             }
             HeroView(hero: state.hero, metrics: m, dealKey: dealKey)
@@ -54,6 +65,7 @@ struct ArenaView: View {
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: m.height)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Texas Hold'em table")
+        .accessibilityIdentifier("arena")
     }
 
     /// Changes on every new deal and replay, so card views are rebuilt and animate once.
