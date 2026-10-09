@@ -74,6 +74,10 @@ struct SeatView: View {
     let newHandKey: String
     let onPeek: () -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Bumped when the eye toggle shows this seat's cards: they fade in from
+    /// 0.2 over 180 ms (the reference's `toggleOpponentHand`). Hiding, and the
+    /// automatic reveal at showdown, change nothing gradually.
+    @State private var revealFade = 0
 
     private var done: Bool { seat.peek != nil }
 
@@ -97,18 +101,16 @@ struct SeatView: View {
         }
         .opacity(seat.folded && !done ? 0.4 : 1)
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.4), value: seat.folded)
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.18), value: seat.revealed)
+        .onChange(of: seat.peek?.pressed) { old, new in
+            // Only a toggle on a settled table: the toggle existed before (the
+            // showdown reveal creates it already pressed).
+            if old == false, new == true, !reduceMotion { revealFade += 1 }
+        }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("seat-\(seat.id)")
     }
 
-    private var actionSpoken: String {
-        if seat.action.isDeciding { return seat.action.label }
-        var parts = [seat.action.label]
-        if let amount = seat.action.amountText { parts.append(amount) }
-        if let meaning = seat.action.meaning { parts.append(meaning) }
-        return parts.joined(separator: ", ")
-    }
+    private var actionSpoken: String { seat.actionSpoken }
 
     @ViewBuilder
     private var cards: some View {
@@ -120,7 +122,14 @@ struct SeatView: View {
                 }
             }
             .padding(.bottom, 6)
-            .transition(.opacity)
+            .keyframeAnimator(initialValue: 1.0, trigger: revealFade) { content, opacity in
+                content.opacity(opacity)
+            } keyframes: { _ in
+                KeyframeTrack {
+                    MoveKeyframe(0.2)
+                    LinearKeyframe(1.0, duration: 0.18, timingCurve: .easeOut)
+                }
+            }
             .id("faces-\(newHandKey)-\(seat.id)")
             .accessibilityElement(children: .combine)
             .accessibilityLabel("\(seat.name)'s hole cards")
@@ -144,13 +153,7 @@ struct SeatView: View {
         }
     }
 
-    private var plateA11yValue: String {
-        var parts = [seat.styleA11y, "\(seat.stackText) chips"]
-        if seat.mood != .steady { parts.append("Simulated mood: \(seat.moodLabel)") }
-        if seat.folded { parts.append("Folded") }
-        if seat.isActor { parts.append(seat.action.label) }
-        return parts.joined(separator: ". ")
-    }
+    private var plateA11yValue: String { seat.plateA11yValue }
 
     private var plate: some View {
         let radius: CGFloat = metrics.compact ? 8 : 10
@@ -234,6 +237,26 @@ struct SeatView: View {
                 }
             }
             .accessibilityHidden(true)
+    }
+}
+
+extension SeatState {
+    /// The spoken details of a seat plate (and of its large-text row).
+    var plateA11yValue: String {
+        var parts = [styleA11y, "\(stackText) chips"]
+        if mood != .steady { parts.append("Simulated mood: \(moodLabel)") }
+        if folded { parts.append("Folded") }
+        if isActor { parts.append(action.label) }
+        return parts.joined(separator: ". ")
+    }
+
+    /// The last action as one line: label, amount and meaning.
+    var actionSpoken: String {
+        if action.isDeciding { return action.label }
+        var parts = [action.label]
+        if let amount = action.amountText { parts.append(amount) }
+        if let meaning = action.meaning { parts.append(meaning) }
+        return parts.joined(separator: ", ")
     }
 }
 

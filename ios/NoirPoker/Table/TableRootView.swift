@@ -44,7 +44,7 @@ struct TableRootView: View {
                 if wide {
                     HStack(alignment: .top, spacing: gap) {
                         ScrollView {
-                            mainColumn(width: width - sidebarWidth - gap - gutter * 2, docked: false, wide: true)
+                            mainColumn(width: width - sidebarWidth - gap - gutter * 2, windowWidth: width, docked: false, wide: true)
                                 .padding(.vertical, 20)
                         }
                         ScrollView {
@@ -59,7 +59,7 @@ struct TableRootView: View {
                     ScrollViewReader { proxy in
                         ScrollView {
                             VStack(spacing: 20) {
-                                mainColumn(width: width - gutter * 2, docked: docked, wide: false)
+                                mainColumn(width: width - gutter * 2, windowWidth: width, docked: docked, wide: false)
                                 sidebar(width: width - gutter * 2, sideColumn: false)
                             }
                             .padding(.horizontal, gutter)
@@ -122,7 +122,7 @@ struct TableRootView: View {
 
     // MARK: Main column
 
-    private func mainColumn(width: CGFloat, docked: Bool, wide: Bool) -> some View {
+    private func mainColumn(width: CGFloat, windowWidth: CGFloat, docked: Bool, wide: Bool) -> some View {
         let compact = width < 600
         return VStack(alignment: .leading, spacing: 16) {
             TableHeading(state: state, compact: compact)
@@ -134,7 +134,10 @@ struct TableRootView: View {
                 ArenaView(model: model, width: width - 2)
                     .id(Self.arenaAnchor)
                 if let showdown = state.showdown {
-                    ShowdownView(showdown: showdown, columns: width >= 700 ? 2 : 1, compact: compact)
+                    ShowdownView(showdown: showdown,
+                                 columns: ShowdownView.columnCount(windowWidth: windowWidth, stageWidth: width,
+                                                                   largeText: typeSize.isAccessibilitySize),
+                                 compact: compact)
                 }
                 if !docked {
                     ActionPanelView(model: model, compact: compact) { model.session.openReview() }
