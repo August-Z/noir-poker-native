@@ -256,6 +256,13 @@ class TableSession(
      */
     fun nextHand(): Boolean {
         if (game.phase != Phase.IDLE && game.phase != Phase.DONE) return false
+        // Unlike the reference, the previous hand's review job does not outlive
+        // the hand: cancel it and drop any late result. Its settled input stays
+        // until the new hand settles, but it is no longer reachable (the review
+        // button is hidden during the new hand). An open dialog is closed first,
+        // while the old view token is still current.
+        if (review.state().dialogOpen) review.close()
+        review.pause()
         botWait = null
         seatHandVisibility.clear()
         finishing = false

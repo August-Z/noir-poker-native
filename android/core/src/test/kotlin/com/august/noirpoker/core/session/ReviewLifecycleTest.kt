@@ -99,6 +99,56 @@ class ReviewLifecycleTest {
     }
 
     @Test
+    fun `next hand cancels a running review job`() {
+        // The dialog is still open when Next Hand runs.
+        val runner = FakeReviewRunner()
+        val h = settledHand(runner)
+        val settled = h.state.review.input!!
+        h.session.openReview()
+        val job = runner.started.single()
+        assertTrue(h.session.nextHand())
+        h.hooks.stop()
+        assertTrue(job.cancelled)
+        assertFalse(h.state.review.dialogOpen)
+        assertFalse(h.state.review.buttonVisible)
+        assertEquals(ReviewStatus.IDLE, h.state.review.status)
+        assertTrue(h.state.review.jobId > job.job.id)
+        // A late result or failure from the cancelled job is dropped.
+        job.sink.progress(1, settled.decisions.size)
+        job.sink.complete(FakeAnalysis(0))
+        job.sink.fail(null)
+        assertEquals(ReviewStatus.IDLE, h.state.review.status)
+        assertEquals(0, h.state.review.progress)
+        assertNull(h.state.review.analysis)
+        // The settled entry is kept, but nothing restarts it during the new hand.
+        assertEquals(settled, h.state.review.input)
+        h.session.onBackground()
+        h.session.onForeground()
+        h.hooks.stop()
+        assertEquals(1, runner.started.size)
+
+        // The dialog was closed mid-analysis before Next Hand.
+        val closed = FakeReviewRunner()
+        val g = settledHand(closed, seed = 3)
+        g.session.openReview()
+        g.session.closeReview()
+        val running = closed.started.single()
+        assertFalse(running.cancelled)
+        g.session.nextHand()
+        g.hooks.stop()
+        assertTrue(running.cancelled)
+        running.sink.complete(FakeAnalysis(0))
+        assertNull(g.state.review.analysis)
+        // The next settled hand gets a fresh job when its review opens.
+        g.foldRest()
+        g.session.openReview()
+        assertEquals(2, closed.started.size)
+        assertEquals(g.game.hand, closed.started.last().job.input.hand)
+        closed.started.last().sink.complete(FakeAnalysis(0))
+        assertEquals(ReviewStatus.DONE, g.state.review.status)
+    }
+
+    @Test
     fun `start new session and seat changes reset the review`() {
         val runner = FakeReviewRunner()
         val h = settledHand(runner)

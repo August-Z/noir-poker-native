@@ -141,6 +141,19 @@ its dialog is still open. Background time is carried across, not restarted:
   unexecuted planned decision goes back to normal pacing as above, and the
   Finish Hand button is offered again so the player can tap it again.
 
+### Next Hand cancels the previous review (deviation from the reference)
+
+The reference keeps a running review job alive through Next Hand and drops its
+result only when the next hand settles. The native session cancels it at Next
+Hand instead, because stale work must not outlive the hand (project rule). If
+the review dialog is still open, Next Hand closes it first. The job is
+cancelled through the same path as a background transition: the runner's handle
+is cancelled, the job id advances so a late `progress`, `complete` or `fail` is
+dropped, and the entry returns to idle. The settled input itself is kept until
+the next hand settles and replaces it, but the review button is hidden during
+the new hand, so nothing restarts it, not even a later foreground. A seat-count
+change still resets the review completely.
+
 ## Effects
 
 `effectListener` receives `SessionEffect`s:
@@ -181,9 +194,9 @@ platforms). Opponent execution records are never sent to
 the hero analysis; they stay in `ReviewState.input.opponents` for the opponent
 panel. A typical Android runner launches the analysis on `Dispatchers.Default`,
 checks for cancellation between decisions, and posts each sink call back to
-the main thread. The session drops progress and results from stale jobs: a new
-hand settles, Replay Hand, Start New Session, a seat-count change, or the
-background. The review module's summary type implements `ReviewAnalysis`.
+the main thread. The session drops progress and results from stale jobs: Next
+Hand, a new hand settles, Replay Hand, Start New Session, a seat-count change,
+or the background. The review module's summary type implements `ReviewAnalysis`.
 
 ### Review dialog views (Kotlin)
 

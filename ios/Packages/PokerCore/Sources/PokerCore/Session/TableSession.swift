@@ -233,6 +233,13 @@ public final class TableSession {
     @discardableResult
     public func nextHand() -> Bool {
         guard game.phase == .idle || game.phase == .done else { return false }
+        // Unlike the reference, the previous hand's review job does not outlive
+        // the hand: cancel it and drop any late result. Its settled input stays
+        // until the new hand settles, but it is no longer reachable (the review
+        // button is hidden during the new hand). An open dialog is closed first,
+        // while the old view token is still current.
+        if review.state().dialogOpen { review.close() }
+        review.pause()
         botWait = nil
         seatHandVisibility.removeAll()
         finishing = false
