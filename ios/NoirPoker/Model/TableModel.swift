@@ -85,11 +85,19 @@ final class TableModel {
         }
     }
 
-    /// The public table snapshot as one line for UI tests. Reads `state` so
-    /// SwiftUI refreshes it after every change.
+    /// The public table snapshot as one line for UI tests, plus the settled
+    /// board size, whether a practice runout is shown, and the Hand Review
+    /// status. Reads `state` so SwiftUI refreshes it after every change.
     var probeText: String {
-        _ = state.version
-        return session.publicSnapshot().probeText
+        let review = state.review
+        let snapshot = session.publicSnapshot()
+        return [
+            snapshot.probeText,
+            "settlement=\(snapshot.settlementBoard.count)",
+            "practice=\(snapshot.practiceRunout ? 1 : 0)",
+            "review=\(review.status.rawValue)",
+            "reviewOpen=\(review.dialogOpen ? 1 : 0)",
+        ].joined(separator: ";")
     }
 
     func finishFlight(_ id: Int) {

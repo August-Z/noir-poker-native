@@ -67,13 +67,24 @@ struct TableProbe {
     var wealth: Int { Int(fields["wealth"] ?? "") ?? -1 }
     var totals: [Int] { (fields["totals"] ?? "").split(separator: ",").compactMap { Int($0) } }
     var hole: String { fields["hole"] ?? "" }
+    /// Community cards on display, including a practice runout.
     var boardCount: Int { Int(fields["board"] ?? "") ?? -1 }
+    /// Community cards the hand was settled with (a practice runout never changes them).
+    var settlementCount: Int { Int(fields["settlement"] ?? "") ?? -1 }
+    var practiceRunout: Bool { fields["practice"] == "1" }
+    /// Hand Review status: idle, running, done or error.
+    var reviewStatus: String { fields["review"] ?? "" }
+    var reviewOpen: Bool { fields["reviewOpen"] == "1" }
     var isDone: Bool { phase == "done" }
 }
 
 extension XCUIApplication {
     var probe: XCUIElement { descendants(matching: .any)["qa-state"] }
     var state: TableProbe { TableProbe(probe.label) }
+    /// The probe while it is in the accessibility tree. A modal sheet can hide
+    /// the table (and the probe) from XCUITest, and reading the label of a
+    /// missing element fails the test.
+    var visibleState: TableProbe? { probe.exists ? state : nil }
 
     func element(_ id: String) -> XCUIElement { descendants(matching: .any)[id] }
 
@@ -84,6 +95,31 @@ extension XCUIApplication {
     var nextButton: XCUIElement { buttons["next-hand"] }
     var replayButton: XCUIElement { buttons["replay-hand"] }
     var reviewButton: XCUIElement { buttons["review-hand"] }
+    /// Start New Session's confirm button. Matches both the current and the
+    /// Android-aligned identifier while the rename lands.
+    var resetConfirmButton: XCUIElement {
+        buttons.matching(NSPredicate(format: "identifier == 'confirm-reset' OR identifier == 'reset-confirm'")).firstMatch
+    }
+    /// Hand Review's close button (the sheet's Close control), by its
+    /// accessibility label in either copy revision.
+    var reviewCloseButton: XCUIElement {
+        buttons.matching(NSPredicate(format: "label == 'Close Hand Review' OR label == 'Close review'")).firstMatch
+    }
+    /// Any element carrying a decision verdict chip (timeline step or detail header).
+    var reviewVerdicts: XCUIElementQuery {
+        descendants(matching: .any).matching(NSPredicate(
+            format: "label CONTAINS 'Needs Work' OR label CONTAINS 'Worth Discussing' OR label CONTAINS 'Well Reasoned'"))
+    }
+    /// The candidate action simulation table, or the note shown when it can't run.
+    var reviewSimulation: XCUIElementQuery {
+        staticTexts.matching(NSPredicate(
+            format: "label == 'Candidate Action Simulation' OR label CONTAINS 'older snapshot lacks the full action state'"))
+    }
+    /// The note shown when the hero made no decision to review.
+    var reviewEmptyNote: XCUIElementQuery {
+        staticTexts.matching(NSPredicate(format: "label CONTAINS 'Blinds are forced bets'"))
+    }
+    var reviewRetryButton: XCUIElement { buttons["review-retry"] }
 
     /// The Hands Played counter in Your Practice.
     var handsPlayed: String { (element("stat-hands").value as? String) ?? "" }
@@ -154,12 +190,67 @@ extension XCUIApplication {
         element.tap()
     }
 
+    /// Waits until Hand Review has closed and the table is back in the
+    /// accessibility tree, with the settled buttons tappable.
+    @discardableResult
+    func waitForReviewClosed(timeout: TimeInterval = 10) -> Bool {
+        waitUntil(timeout: timeout) {
+            guard let probe = visibleState, !probe.reviewOpen else { return false }
+            return !buttons["review-tab-hero"].exists && nextButton.exists
+        }
+    }
+
+    /// Scrolls `element` into view and double-taps it: two taps in quick
+    /// succession, as an impatient player would.
+    func doubleTapWhenReady(_ element: XCUIElement, timeout: TimeInterval = 10, file: StaticString = #filePath, line: UInt = #line) {
+        XCTAssertTrue(element.waitForExistence(timeout: timeout), "\(element) never appeared", file: file, line: line)
+        reveal(element)
+        element.doubleTap()
+    }
+
+    /// Waits until Hand Review has finished its analysis. Done is read from
+    /// the probe when the table is still in the accessibility tree behind the
+    /// sheet; otherwise from what only a finished review shows: a verdict
+    /// chip, the no-decision note, or Analyze Again after an error.
+    @discardableResult
+    func waitForReviewAnalysis(timeout: TimeInterval = 120) -> Bool {
+        waitUntil(timeout: timeout) {
+            if let probe = visibleState, probe.reviewStatus == "done" || probe.reviewStatus == "error" { return true }
+            return reviewVerdicts.firstMatch.exists || reviewEmptyNote.firstMatch.exists || reviewRetryButton.exists
+        }
+    }
+
     /// Waits for the hero's first decision of the hand (Fold enabled) or for
     /// the hand to end without one. Returns true on the hero's turn.
     @discardableResult
     func waitForHeroTurn(timeout: TimeInterval = 45) -> Bool {
         waitUntil(timeout: timeout) { (foldButton.exists && foldButton.isEnabled) || state.isDone }
         return foldButton.exists && foldButton.isEnabled && !state.isDone
+    }
+
+    /// Folds at the hero's first decision of each hand and deals new hands
+    /// until one ends before the river after the hero folded (an opponent
+    /// wins uncontested). Returns false if no hand does within `maxHands`.
+    /// The seeded launch makes the sequence of hands the same on every run.
+    func foldUntilFoldWinBeforeRiver(maxHands: Int = 15, file: StaticString = #filePath, line: UInt = #line) -> Bool {
+        for _ in 0..<maxHands {
+            var folded = false
+            if waitForHeroTurn() {
+                // Retry a tap swallowed while the table scrolls the felt into view.
+                for _ in 0..<3 where !folded {
+                    if foldButton.isHittable { foldButton.tap() }
+                    folded = waitUntil(timeout: 4) { !(foldButton.exists && foldButton.isEnabled) }
+                }
+                XCTAssertTrue(folded, "The hero could not fold: \(probe.label)", file: file, line: line)
+            }
+            XCTAssertTrue(waitUntil(timeout: 120) { state.isDone && nextButton.exists },
+                          "The hand never settled: \(probe.label)", file: file, line: line)
+            let settled = state
+            if folded && settled.settlementCount < 5 && !settled.practiceRunout { return true }
+            tapWhenReady(nextButton, file: file, line: line)
+            XCTAssertTrue(waitUntil { state.hand == settled.hand + 1 }, probe.label, file: file, line: line)
+        }
+        return false
     }
 
     /// Plays the current hand to settlement. `fold` folds at the first
