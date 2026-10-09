@@ -19,7 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
@@ -45,6 +45,8 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -58,6 +60,7 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -80,6 +83,7 @@ import com.august.noirpoker.ui.UiCopy
 import com.august.noirpoker.ui.components.CardSize
 import com.august.noirpoker.ui.components.PlayingCardView
 import com.august.noirpoker.ui.theme.LocalNoirMetrics
+import com.august.noirpoker.ui.theme.LocalReducedMotion
 import com.august.noirpoker.ui.theme.Noir
 import com.august.noirpoker.ui.theme.NoirType
 
@@ -276,7 +280,23 @@ private fun Tabs(perspective: ReviewPerspective, onSelect: (ReviewPerspective) -
                     .semantics { selected = on },
                 contentAlignment = Alignment.Center,
             ) {
-                Text(label, style = NoirType.style(14.sp, color = if (on) RV.TabOnText else RV.TabOffText), maxLines = 1)
+                Column(Modifier.padding(vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        label,
+                        style = NoirType.style(14.sp, color = if (on) RV.TabOnText else RV.TabOffText),
+                        maxLines = 2,
+                        textAlign = TextAlign.Center,
+                    )
+                    // The reference's tab subtitle: why the bots played the way they did.
+                    if (value == ReviewPerspective.OPPONENTS) {
+                        Text(
+                            Copy.tabOpponentsSubtitle,
+                            style = NoirType.style(11.sp, color = RV.StepMeta),
+                            maxLines = 2,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                }
             }
         }
     }
@@ -316,6 +336,7 @@ private fun Timeline(
             Text(count, style = NoirType.style(13.sp, color = Noir.TextSubtle))
         }
         if (horizontal) {
+            val reduced = LocalReducedMotion.current
             val listState = rememberLazyListState()
             // One effect drives every scroll of this list. Two effects that both scroll
             // before the first layout each wait on the lazy list's first-layout signal,
@@ -329,7 +350,9 @@ private fun Timeline(
                 }
                 if (selected in items.indices) {
                     val visible = listState.layoutInfo.visibleItemsInfo.map { it.index }
-                    if (selected !in visible) listState.animateScrollToItem(selected)
+                    if (selected !in visible) {
+                        if (reduced) listState.scrollToItem(selected) else listState.animateScrollToItem(selected)
+                    }
                 }
             }
             LazyRow(state = listState, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -358,11 +381,19 @@ private fun StepCard(item: ReviewTimelineItem, modifier: Modifier, onClick: () -
             },
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Box(Modifier.size(23.dp).border(1.dp, RV.StepNumber, CircleShape), contentAlignment = Alignment.Center) {
-            Text(item.number, style = NoirType.tabular(NoirType.style(11.sp, color = Noir.TextDialogBody)))
+        // The badge grows with the text size and stays a circle.
+        Box(
+            Modifier
+                .border(1.dp, RV.StepNumber, CircleShape)
+                .squareOfLargestSide()
+                .sizeIn(minWidth = 23.dp, minHeight = 23.dp)
+                .padding(horizontal = 4.dp, vertical = 2.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(item.number, style = NoirType.tabular(NoirType.style(11.sp, color = Noir.TextDialogBody)), maxLines = 1)
         }
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(item.meta, style = NoirType.style(12.sp, color = RV.StepMeta), maxLines = 1)
+            Text(item.meta, style = NoirType.style(12.sp, color = RV.StepMeta), maxLines = 2)
             Text(item.action, style = NoirType.style(14.sp, FontWeight.Medium))
             Spacer(Modifier.height(2.dp))
             StatusChip(item.chip, item.tone)
@@ -502,7 +533,7 @@ private fun ListRow(left: String, right: String?) {
 private fun StepNav(position: String, canPrevious: Boolean, canNext: Boolean, onPrevious: () -> Unit, onNext: () -> Unit) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         NavButton(Copy.previous, canPrevious, onPrevious)
-        Text(position, style = NoirType.tabular(NoirType.style(13.sp, color = RV.NavText)), modifier = Modifier.weight(1f).padding(horizontal = 8.dp), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+        Text(position, style = NoirType.tabular(NoirType.style(13.sp, color = RV.NavText)), modifier = Modifier.weight(1f).padding(horizontal = 8.dp), textAlign = TextAlign.Center)
         NavButton(Copy.next, canNext, onNext)
     }
 }
@@ -669,33 +700,77 @@ private fun SimulationTable(sim: ReviewSimulationView) {
         Text(sim.heading, style = NoirType.style(15.sp, FontWeight.Medium), modifier = Modifier.semantics { heading() })
         Text(sim.stability, style = NoirType.style(13.sp, color = Noir.TextDialogBody).copy(lineHeight = 22.sp))
         Text(sim.caption, style = NoirType.style(11.sp, color = RV.Note).copy(lineHeight = 18.sp))
-        Column(Modifier.horizontalScroll(rememberScrollState())) {
-            Row(Modifier.padding(vertical = 8.dp)) {
-                sim.columns.forEachIndexed { i, c ->
-                    Text(c, style = NoirType.style(12.sp, color = RV.MetricLabel), modifier = Modifier.width(if (i == 0) 170.dp else 120.dp))
-                }
-            }
-            sim.rows.forEach { row ->
-                Box(Modifier.width(410.dp).height(1.dp).background(RV.PublicRule))
-                Row(Modifier.padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(row.label, style = NoirType.style(13.sp, FontWeight.Medium), modifier = Modifier.width(170.dp).padding(end = 8.dp))
-                    row.cells.forEach { cell ->
-                        Column(
-                            Modifier.width(120.dp).semantics(mergeDescendants = true) { contentDescription = cell.a11y },
-                            verticalArrangement = Arrangement.spacedBy(3.dp),
-                        ) {
-                            Text(cell.value, style = NoirType.tabular(NoirType.style(13.sp)))
-                            Text(cell.margin, style = NoirType.tabular(NoirType.style(11.sp, color = RV.Note)))
-                        }
-                    }
-                }
-            }
-            Box(Modifier.width(410.dp).height(1.dp).background(RV.PublicRule))
+        if (LocalDensity.current.fontScale >= LARGE_FONT_SCALE) {
+            StackedSimulationRows(sim)
+        } else {
+            SimulationGrid(sim)
         }
         Disclosure(sim.detailsSummary) {
             sim.details.forEach { Text(it, style = NoirType.style(12.sp, color = RV.Note).copy(lineHeight = 20.sp)) }
         }
     }
+}
+
+/** Font scale from which the simulation table stacks each action's results instead of a fixed-width grid. */
+private const val LARGE_FONT_SCALE = 1.3f
+
+/** Large text: one block per action, each result on its own lines, so nothing clips or scrolls sideways. */
+@Composable
+private fun StackedSimulationRows(sim: ReviewSimulationView) {
+    Column(Modifier.fillMaxWidth()) {
+        sim.rows.forEach { row ->
+            Box(Modifier.fillMaxWidth().height(1.dp).background(RV.PublicRule))
+            Column(Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(row.label, style = NoirType.style(13.sp, FontWeight.Medium))
+                row.cells.forEachIndexed { i, cell ->
+                    Column(
+                        Modifier.fillMaxWidth().semantics(mergeDescendants = true) { contentDescription = cell.a11y },
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                    ) {
+                        Text(sim.columns.getOrElse(i + 1) { "" }, style = NoirType.style(12.sp, color = RV.MetricLabel))
+                        Text(cell.value, style = NoirType.tabular(NoirType.style(13.sp)))
+                        Text(cell.margin, style = NoirType.tabular(NoirType.style(11.sp, color = RV.Note)))
+                    }
+                }
+            }
+        }
+        Box(Modifier.fillMaxWidth().height(1.dp).background(RV.PublicRule))
+    }
+}
+
+/** Default text size: the reference's three-column grid, scrolling sideways on narrow sheets. */
+@Composable
+private fun SimulationGrid(sim: ReviewSimulationView) {
+    Column(Modifier.horizontalScroll(rememberScrollState())) {
+        Row(Modifier.padding(vertical = 8.dp)) {
+            sim.columns.forEachIndexed { i, c ->
+                Text(c, style = NoirType.style(12.sp, color = RV.MetricLabel), modifier = Modifier.width(if (i == 0) 170.dp else 120.dp))
+            }
+        }
+        sim.rows.forEach { row ->
+            Box(Modifier.width(410.dp).height(1.dp).background(RV.PublicRule))
+            Row(Modifier.padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(row.label, style = NoirType.style(13.sp, FontWeight.Medium), modifier = Modifier.width(170.dp).padding(end = 8.dp))
+                row.cells.forEach { cell ->
+                    Column(
+                        Modifier.width(120.dp).semantics(mergeDescendants = true) { contentDescription = cell.a11y },
+                        verticalArrangement = Arrangement.spacedBy(3.dp),
+                    ) {
+                        Text(cell.value, style = NoirType.tabular(NoirType.style(13.sp)))
+                        Text(cell.margin, style = NoirType.tabular(NoirType.style(11.sp, color = RV.Note)))
+                    }
+                }
+            }
+        }
+        Box(Modifier.width(410.dp).height(1.dp).background(RV.PublicRule))
+    }
+}
+
+/** Lays the content out in a square of its larger side, centered, so a circle border fits any text. */
+private fun Modifier.squareOfLargestSide(): Modifier = layout { measurable, constraints ->
+    val placeable = measurable.measure(constraints)
+    val side = maxOf(placeable.width, placeable.height)
+    layout(side, side) { placeable.place((side - placeable.width) / 2, (side - placeable.height) / 2) }
 }
 
 @Composable

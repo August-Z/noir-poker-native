@@ -207,17 +207,25 @@ private struct ReviewTabs: View {
         return Button {
             select(value)
         } label: {
-            Text(title)
-                .noirFont(13, selected ? .semibold : .regular, relativeTo: .subheadline)
-                .foregroundStyle(selected ? ReviewColors.lavender : Color(hex: "#9fb0c0"))
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: .infinity, minHeight: 44)
-                .background(selected ? Color(hex: "#3c3451") : Color.clear, in: RoundedRectangle(cornerRadius: 7))
-                .contentShape(Rectangle())
+            VStack(spacing: 2) {
+                Text(title)
+                    .noirFont(13, selected ? .semibold : .regular, relativeTo: .subheadline)
+                    .foregroundStyle(selected ? ReviewColors.lavender : Color(hex: "#9fb0c0"))
+                if value == .opponents {
+                    Text(ReviewDialogCopy.tabOpponentsSubtitle)
+                        .noirFont(11, relativeTo: .caption2)
+                        .foregroundStyle(Color(hex: "#8fa3b4"))
+                }
+            }
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.vertical, 4)
+            .frame(maxWidth: .infinity, minHeight: 44)
+            .background(selected ? Color(hex: "#3c3451") : Color.clear, in: RoundedRectangle(cornerRadius: 7))
+            .contentShape(Rectangle())
         }
         .buttonStyle(PressScaleStyle())
         .accessibilityAddTraits(selected ? .isSelected : [])
-        .accessibilityHint(value == .opponents ? ReviewDialogCopy.tabOpponentsSubtitle : "")
         .accessibilityIdentifier(id)
     }
 }
@@ -231,6 +239,7 @@ private struct ReviewTimeline: View {
     let items: [ReviewTimelineItem]
     let horizontal: Bool
     let select: (Int) -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var selectedIndex: Int? { items.first { $0.selected }?.index }
 
@@ -263,7 +272,11 @@ private struct ReviewTimeline: View {
                     }
                     .onChange(of: selectedIndex) { _, index in
                         guard let index else { return }
-                        withAnimation(.easeOut(duration: 0.2)) { proxy.scrollTo(index, anchor: .center) }
+                        if reduceMotion {
+                            proxy.scrollTo(index, anchor: .center)
+                        } else {
+                            withAnimation(.easeOut(duration: 0.2)) { proxy.scrollTo(index, anchor: .center) }
+                        }
                     }
                 }
             } else {
@@ -743,9 +756,10 @@ private struct SimulationTableView: View {
                                 Text(column(i + 1) + ": " + cell.value + " " + cell.margin)
                                     .noirFont(13, relativeTo: .body, digits: true)
                                     .foregroundStyle(Noir.dialogBody)
+                                    .accessibilityLabel(cell.a11y)
                             }
                         }
-                        .accessibilityElement(children: .combine)
+                        .accessibilityElement(children: .contain)
                     }
                 }
             } else {
@@ -776,7 +790,6 @@ private struct SimulationTableView: View {
                         .noirFont(13, .medium, relativeTo: .subheadline)
                         .foregroundStyle(Noir.text)
                         .fixedSize(horizontal: false, vertical: true)
-                        .accessibilityLabel(rowLabel(row))
                     ForEach(Array(row.cells.enumerated()), id: \.offset) { _, cell in
                         VStack(alignment: .trailing, spacing: 2) {
                             Text(cell.value)
@@ -786,7 +799,8 @@ private struct SimulationTableView: View {
                                 .noirFont(11, relativeTo: .caption2, digits: true)
                                 .foregroundStyle(Noir.subtle)
                         }
-                        .accessibilityHidden(true)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(cell.a11y)
                     }
                 }
             }
@@ -797,12 +811,6 @@ private struct SimulationTableView: View {
     }
 
     private func column(_ i: Int) -> String { table.columns.indices.contains(i) ? table.columns[i] : "" }
-
-    private func rowLabel(_ row: ReviewSimulationRow) -> String {
-        var parts = [row.label]
-        for (i, cell) in row.cells.enumerated() { parts.append(column(i + 1) + " " + cell.value + ", " + cell.margin) }
-        return parts.joined(separator: "; ")
-    }
 }
 
 // MARK: Opponent panel
