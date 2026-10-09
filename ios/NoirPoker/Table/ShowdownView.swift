@@ -2,12 +2,23 @@ import SwiftUI
 import PokerCore
 
 /// The showdown stage below the arena: one panel per live player with their
-/// own best five. Cards arrive once per settled hand (the view is keyed by
+/// own best five. Cards arrive once per settled hand (the stage is keyed by
 /// `showdown.key`), and winner panels play their hand category's motion.
 struct ShowdownView: View {
     let showdown: ShowdownState
     let columns: Int
     var compact = false
+
+    /// The reference grid (`showdown.css`): two columns above 1150 pt and at
+    /// 601–900 pt of window width, one column at 901–1150 pt (beside the
+    /// sidebar) and at 600 pt or less. Two panels also need a stage at least
+    /// 620 pt wide, so a phone in landscape (whose table shares the window with
+    /// the sidebar) keeps one column, and accessibility text sizes always use
+    /// one column.
+    static func columnCount(windowWidth: CGFloat, stageWidth: CGFloat, largeText: Bool) -> Int {
+        let reference = windowWidth > 1150 || (windowWidth > 600 && windowWidth <= 900)
+        return reference && stageWidth >= 620 && !largeText ? 2 : 1
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -19,12 +30,7 @@ struct ShowdownView: View {
                     .foregroundStyle(Color(hex: "#b9c8c7"))
                     .fixedSize(horizontal: false, vertical: true)
             }
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 14, alignment: .top), count: max(columns, 1)),
-                      spacing: 14) {
-                ForEach(Array(showdown.scenes.enumerated()), id: \.offset) { _, scene in
-                    ScenePanel(scene: scene, compact: compact)
-                }
-            }
+            SceneGrid(scenes: showdown.scenes, columns: max(columns, 1), compact: compact)
         }
         .padding(.horizontal, compact ? 14 : 25)
         .padding(.top, compact ? 19 : 22)
@@ -45,9 +51,81 @@ struct ShowdownView: View {
     }
 }
 
+/// The panels in rows of `columns`. The grid is not lazy, so scrolling never
+/// rebuilds a panel and replays its motion. One clock drives every card: it
+/// starts when the stage appears (a new `showdown.key` makes a new stage) and
+/// stops once the last card has come to rest. Reduced motion shows the final
+/// layout at once, with no transforms.
+private struct SceneGrid: View {
+    let scenes: [ShowdownSceneState]
+    let columns: Int
+    let compact: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var start = Date()
+    @State private var finished = false
+
+    var body: some View {
+        if reduceMotion {
+            rows(elapsedMs: nil)
+        } else {
+            TimelineView(.animation(minimumInterval: nil, paused: finished)) { context in
+                rows(elapsedMs: finished ? .infinity : context.date.timeIntervalSince(start) * 1000)
+            }
+            .task {
+                try? await Task.sleep(nanoseconds: UInt64(endMs + 100) * 1_000_000)
+                finished = true
+            }
+        }
+    }
+
+    /// When the last card of the stage comes to rest.
+    private var endMs: Int {
+        scenes.flatMap { scene in
+            scene.scene.cards.indices.map { i in
+                motion(scene, i).endMs
+            }
+        }.max() ?? 0
+    }
+
+    private func motion(_ scene: ShowdownSceneState, _ i: Int) -> CardMotion {
+        CardMotion.forCard(i, motion: scene.scene.motion, winner: scene.isWinner, match: match(scene, i))
+    }
+
+    private func match(_ scene: ShowdownSceneState, _ i: Int) -> Bool {
+        scene.scene.highlights.indices.contains(i) && scene.scene.highlights[i]
+    }
+
+    private func poses(_ scene: ShowdownSceneState, elapsedMs: Double?) -> [CardPose?] {
+        scene.scene.cards.indices.map { i -> CardPose? in
+            guard let elapsedMs else { return nil }
+            return motion(scene, i).pose(atMs: elapsedMs)
+        }
+    }
+
+    private func rows(elapsedMs: Double?) -> some View {
+        let chunks = stride(from: 0, to: scenes.count, by: columns).map { Array(scenes[$0..<min($0 + columns, scenes.count)]) }
+        return VStack(alignment: .leading, spacing: 14) {
+            ForEach(chunks.indices, id: \.self) { r in
+                HStack(alignment: .top, spacing: 14) {
+                    ForEach(chunks[r].indices, id: \.self) { c in
+                        let scene = chunks[r][c]
+                        ScenePanel(scene: scene, compact: compact, poses: poses(scene, elapsedMs: elapsedMs))
+                            .frame(maxWidth: .infinity, alignment: .topLeading)
+                    }
+                    ForEach(chunks[r].count..<columns, id: \.self) { _ in
+                        Color.clear.frame(maxWidth: .infinity, maxHeight: 0)
+                    }
+                }
+            }
+        }
+    }
+}
+
 private struct ScenePanel: View {
     let scene: ShowdownSceneState
     let compact: Bool
+    /// Each card's pose on the motion clock, or nil under reduced motion.
+    let poses: [CardPose?]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -70,9 +148,9 @@ private struct ScenePanel: View {
                 .fixedSize(horizontal: false, vertical: true)
             HStack(spacing: compact ? 6 : 7) {
                 ForEach(Array(scene.scene.cards.enumerated()), id: \.offset) { i, card in
-                    WinningCard(card: card, index: i,
+                    WinningCard(card: card,
                                 match: scene.scene.highlights.indices.contains(i) && scene.scene.highlights[i],
-                                winner: scene.isWinner, motion: scene.scene.motion)
+                                winner: scene.isWinner, pose: poses.indices.contains(i) ? poses[i] : nil)
                 }
             }
             .frame(maxWidth: .infinity)
@@ -107,162 +185,22 @@ private struct ScenePanel: View {
     }
 }
 
+
 // MARK: Card motions
 
-/// The animatable transform of one showdown card.
-struct CardMotionValue {
-    var x: CGFloat = 0
-    var y: CGFloat = 0
-    var rotation: Double = 0
-    var rotationY: Double = 0
-    var scale: CGFloat = 1
-    var opacity: Double = 1
-    /// Added brightness (CSS `brightness(1.12)` is about +0.12).
-    var brightness: Double = 0
-}
-
-/// A reference keyframe animation as five stops (0 … 1) with a duration,
-/// per-card delay and segment curve. Every motion uses exactly five stops so
-/// the keyframe tracks stay static; intermediate stops interpolate the CSS
-/// keyframes where the reference has fewer.
-struct CardMotionPlan {
-    var times: [Double]
-    var values: [CardMotionValue]
-    var duration: Double
-    var delay: Double
-    var curve: UnitCurve
-
-    var final: CardMotionValue { values[4] }
-
-    /// Segment `k` (1…4) duration in seconds.
-    func segment(_ k: Int) -> Double { max((times[k] - times[k - 1]) * duration, 0.001) }
-
-    /// `rank-arrive`: every card in every panel unless a winner motion replaces it.
-    static func arrive(_ i: Int) -> CardMotionPlan {
-        let from = CardMotionValue(y: 18, rotationY: 45, opacity: 0)
-        let id = CardMotionValue()
-        return CardMotionPlan(times: [0, 0.25, 0.5, 0.75, 1],
-                              values: [from, mix(from, id, 0.6), mix(from, id, 0.85), mix(from, id, 0.96), id],
-                              duration: 0.8, delay: Double(i) * 0.08, curve: .linear)
-    }
-
-    /// The winner motion for card `i`, or nil when this card keeps `rank-arrive`
-    /// (kickers of the pair, two pair, trips, quads and high-card motions).
-    static func winner(_ motion: HandMotion, index i: Int, match: Bool) -> CardMotionPlan? {
-        let fi = Double(i)
-        let c = CGFloat(i)
-        let id = CardMotionValue()
-        switch motion {
-        case .high:
-            guard match else { return nil }
-            return CardMotionPlan(times: [0, 0.2, 0.4, 0.7, 1],
-                                  values: [CardMotionValue(scale: 0.7, brightness: -0.25),
-                                           CardMotionValue(y: -5, scale: 0.91, brightness: -0.05),
-                                           CardMotionValue(y: -10, scale: 1.12, brightness: 0.12),
-                                           CardMotionValue(y: -7.5, scale: 1.05, brightness: 0.05),
-                                           CardMotionValue(y: -5)],
-                                  duration: 1.7, delay: 0, curve: .easeOut)
-        case .pair:
-            guard match else { return nil }
-            let up = CardMotionValue(y: -4, scale: 1.08)
-            var rising = up
-            rising.opacity = 0.67
-            return CardMotionPlan(times: [0, 0.3, 0.45, 0.65, 1],
-                                  values: [CardMotionValue(y: 14, opacity: 0), rising, id, up, id],
-                                  duration: 1.5, delay: fi * 0.06, curve: .easeOut)
-        case .twoPair:
-            guard match else { return nil }
-            let from = CardMotionValue(x: (1.5 - c) * 14, rotation: (fi - 1.5) * 8, opacity: 0)
-            let peak = CardMotionValue(y: -7, opacity: 0.55)
-            return CardMotionPlan(times: [0, 0.3, 0.55, 0.8, 1],
-                                  values: [from, mix(from, peak, 0.55), peak, mix(peak, id, 0.55), id],
-                                  duration: 1.6, delay: fi * 0.09, curve: .easeOut)
-        case .trips:
-            guard match else { return nil }
-            return CardMotionPlan(times: [0, 0.45, 0.7, 0.85, 1],
-                                  values: [CardMotionValue(y: 24, opacity: 0), CardMotionValue(y: -12, opacity: 0.45),
-                                           CardMotionValue(y: 3, opacity: 0.7), CardMotionValue(y: 1.5, opacity: 0.85), id],
-                                  duration: 1.6, delay: fi * 0.15, curve: .easeOut)
-        case .straight:
-            let from = CardMotionValue(y: 20, rotationY: 90, opacity: 0)
-            let mid = CardMotionValue(y: -7)
-            return CardMotionPlan(times: [0, 0.25, 0.5, 0.75, 1],
-                                  values: [from, mix(from, mid, 0.5), mid, mix(mid, id, 0.5), id],
-                                  duration: 1.6, delay: fi * 0.14, curve: .easeOut)
-        case .flush:
-            return CardMotionPlan(times: [0, 0.35, 0.7, 0.85, 1],
-                                  values: [CardMotionValue(y: 10, rotation: -8, opacity: 0),
-                                           CardMotionValue(y: -10, rotation: 5, opacity: 0.35, brightness: 0.12),
-                                           CardMotionValue(y: 4, rotation: -2, opacity: 0.7, brightness: 0.05),
-                                           CardMotionValue(y: 2, rotation: -1, opacity: 0.85, brightness: 0.02),
-                                           id],
-                                  duration: 1.8, delay: fi * 0.1, curve: .easeInOut)
-        case .fullHouse:
-            let from = CardMotionValue(x: (c - 2) * 20, y: 14, opacity: 0)
-            let mid = CardMotionValue(x: (2 - c) * 3, y: -4, opacity: 0.5)
-            return CardMotionPlan(times: [0, 0.25, 0.5, 0.75, 1],
-                                  values: [from, mix(from, mid, 0.5), mid, mix(mid, id, 0.5), id],
-                                  duration: 1.8, delay: fi * 0.08,
-                                  curve: .bezier(startControlPoint: UnitPoint(x: 0.2, y: 0.8), endControlPoint: UnitPoint(x: 0.2, y: 1)))
-        case .quads:
-            guard match else { return nil }
-            return CardMotionPlan(times: [0, 0.25, 0.45, 0.65, 1],
-                                  values: [CardMotionValue(scale: 0.6, opacity: 0),
-                                           CardMotionValue(scale: 1.14, opacity: 0.25, brightness: 0.16),
-                                           CardMotionValue(scale: 0.96, opacity: 0.45, brightness: 0.1),
-                                           CardMotionValue(scale: 1.04, opacity: 0.65, brightness: 0.05),
-                                           id],
-                                  duration: 1.8, delay: fi * 0.06, curve: .easeOut)
-        case .straightFlush:
-            let from = CardMotionValue(y: 28, rotationY: 100, opacity: 0)
-            let peak = CardMotionValue(y: (c - 2) * (c - 2) * -3 - 7, brightness: 0.15)
-            return CardMotionPlan(times: [0, 0.2, 0.4, 0.7, 1],
-                                  values: [from, mix(from, peak, 0.5), peak, mix(peak, id, 0.5), id],
-                                  duration: 1.9, delay: fi * 0.1, curve: .easeOut)
-        case .royal:
-            let from = CardMotionValue(x: (2 - c) * 40, rotation: (fi - 2) * 14, opacity: 0)
-            let peak = CardMotionValue(y: -10, rotation: (fi - 2) * 5, brightness: 0.14)
-            let rest = CardMotionValue(rotation: (fi - 2) * 2)
-            return CardMotionPlan(times: [0, 0.25, 0.5, 0.75, 1],
-                                  values: [from, mix(from, peak, 0.5), peak, mix(peak, rest, 0.5), rest],
-                                  duration: 2.0, delay: fi * 0.06, curve: .easeOut)
-        }
-    }
-
-    private static func mix(_ a: CardMotionValue, _ b: CardMotionValue, _ t: Double) -> CardMotionValue {
-        let f = CGFloat(t)
-        return CardMotionValue(x: a.x + (b.x - a.x) * f,
-                               y: a.y + (b.y - a.y) * f,
-                               rotation: a.rotation + (b.rotation - a.rotation) * t,
-                               rotationY: a.rotationY + (b.rotationY - a.rotationY) * t,
-                               scale: a.scale + (b.scale - a.scale) * f,
-                               opacity: a.opacity + (b.opacity - a.opacity) * t,
-                               brightness: a.brightness + (b.brightness - a.brightness) * t)
-    }
-}
-
 /// One card in a showdown panel: the made-hand cards are outlined (gold for
-/// winners, mint for others) and kickers are dimmed. Winner panels replace the
-/// arrival with their hand category's motion. Reduced motion shows the final
-/// layout at once, with no transforms.
+/// winners, mint for others) and kickers are dimmed to 0.7. `pose` is the
+/// card's place on the motion clock (`CardMotion`); without one (reduced
+/// motion) the card rests untransformed and kickers show at full opacity, as
+/// the reference's reduced-motion rule does.
 private struct WinningCard: View {
     let card: Card
-    let index: Int
     let match: Bool
     let winner: Bool
-    let motion: HandMotion
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var started = false
+    let pose: CardPose?
 
     var body: some View {
-        if reduceMotion {
-            face
-        } else {
-            animated(plan: (winner ? CardMotionPlan.winner(motion, index: index, match: match) : nil) ?? .arrive(index))
-        }
-    }
-
-    private var face: some View {
+        let p = pose ?? .identity
         CardFaceView(card: card, width: 43, height: 62)
             .overlay {
                 if match {
@@ -272,79 +210,14 @@ private struct WinningCard: View {
                 }
             }
             .shadow(color: match && winner ? Color(hex: "#cfad6525") : .clear, radius: 8)
-            .opacity(match || reduceMotion ? 1 : 0.7)
-    }
-
-    private func animated(plan: CardMotionPlan) -> some View {
-        face
-            .keyframeAnimator(initialValue: plan.final, trigger: started) { content, v in
-                content
-                    .brightness(v.brightness)
-                    .scaleEffect(v.scale)
-                    .rotation3DEffect(.degrees(v.rotationY), axis: (x: 0, y: 1, z: 0), perspective: 0.7)
-                    .rotationEffect(.degrees(v.rotation))
-                    .offset(x: v.x, y: v.y)
-                    .opacity(v.opacity)
-            } keyframes: { _ in
-                KeyframeTrack(\.x) {
-                    MoveKeyframe(plan.values[0].x)
-                    LinearKeyframe(plan.values[0].x, duration: max(plan.delay, 0.001))
-                    LinearKeyframe(plan.values[1].x, duration: plan.segment(1), timingCurve: plan.curve)
-                    LinearKeyframe(plan.values[2].x, duration: plan.segment(2), timingCurve: plan.curve)
-                    LinearKeyframe(plan.values[3].x, duration: plan.segment(3), timingCurve: plan.curve)
-                    LinearKeyframe(plan.values[4].x, duration: plan.segment(4), timingCurve: plan.curve)
-                }
-                KeyframeTrack(\.y) {
-                    MoveKeyframe(plan.values[0].y)
-                    LinearKeyframe(plan.values[0].y, duration: max(plan.delay, 0.001))
-                    LinearKeyframe(plan.values[1].y, duration: plan.segment(1), timingCurve: plan.curve)
-                    LinearKeyframe(plan.values[2].y, duration: plan.segment(2), timingCurve: plan.curve)
-                    LinearKeyframe(plan.values[3].y, duration: plan.segment(3), timingCurve: plan.curve)
-                    LinearKeyframe(plan.values[4].y, duration: plan.segment(4), timingCurve: plan.curve)
-                }
-                KeyframeTrack(\.rotation) {
-                    MoveKeyframe(plan.values[0].rotation)
-                    LinearKeyframe(plan.values[0].rotation, duration: max(plan.delay, 0.001))
-                    LinearKeyframe(plan.values[1].rotation, duration: plan.segment(1), timingCurve: plan.curve)
-                    LinearKeyframe(plan.values[2].rotation, duration: plan.segment(2), timingCurve: plan.curve)
-                    LinearKeyframe(plan.values[3].rotation, duration: plan.segment(3), timingCurve: plan.curve)
-                    LinearKeyframe(plan.values[4].rotation, duration: plan.segment(4), timingCurve: plan.curve)
-                }
-                KeyframeTrack(\.rotationY) {
-                    MoveKeyframe(plan.values[0].rotationY)
-                    LinearKeyframe(plan.values[0].rotationY, duration: max(plan.delay, 0.001))
-                    LinearKeyframe(plan.values[1].rotationY, duration: plan.segment(1), timingCurve: plan.curve)
-                    LinearKeyframe(plan.values[2].rotationY, duration: plan.segment(2), timingCurve: plan.curve)
-                    LinearKeyframe(plan.values[3].rotationY, duration: plan.segment(3), timingCurve: plan.curve)
-                    LinearKeyframe(plan.values[4].rotationY, duration: plan.segment(4), timingCurve: plan.curve)
-                }
-                KeyframeTrack(\.scale) {
-                    MoveKeyframe(plan.values[0].scale)
-                    LinearKeyframe(plan.values[0].scale, duration: max(plan.delay, 0.001))
-                    LinearKeyframe(plan.values[1].scale, duration: plan.segment(1), timingCurve: plan.curve)
-                    LinearKeyframe(plan.values[2].scale, duration: plan.segment(2), timingCurve: plan.curve)
-                    LinearKeyframe(plan.values[3].scale, duration: plan.segment(3), timingCurve: plan.curve)
-                    LinearKeyframe(plan.values[4].scale, duration: plan.segment(4), timingCurve: plan.curve)
-                }
-                KeyframeTrack(\.opacity) {
-                    MoveKeyframe(plan.values[0].opacity)
-                    LinearKeyframe(plan.values[0].opacity, duration: max(plan.delay, 0.001))
-                    LinearKeyframe(plan.values[1].opacity, duration: plan.segment(1), timingCurve: plan.curve)
-                    LinearKeyframe(plan.values[2].opacity, duration: plan.segment(2), timingCurve: plan.curve)
-                    LinearKeyframe(plan.values[3].opacity, duration: plan.segment(3), timingCurve: plan.curve)
-                    LinearKeyframe(plan.values[4].opacity, duration: plan.segment(4), timingCurve: plan.curve)
-                }
-                KeyframeTrack(\.brightness) {
-                    MoveKeyframe(plan.values[0].brightness)
-                    LinearKeyframe(plan.values[0].brightness, duration: max(plan.delay, 0.001))
-                    LinearKeyframe(plan.values[1].brightness, duration: plan.segment(1), timingCurve: plan.curve)
-                    LinearKeyframe(plan.values[2].brightness, duration: plan.segment(2), timingCurve: plan.curve)
-                    LinearKeyframe(plan.values[3].brightness, duration: plan.segment(3), timingCurve: plan.curve)
-                    LinearKeyframe(plan.values[4].brightness, duration: plan.segment(4), timingCurve: plan.curve)
-                }
-            }
-            // Hidden until the first frame of the animation (CSS `fill-mode: both`).
-            .opacity(started ? 1 : 0)
-            .onAppear { started = true }
+            .opacity(match || pose == nil ? 1 : 0.7)
+            // CSS brightness() multiplies; SwiftUI adds. On the white card
+            // face the two agree.
+            .brightness(p.brightness - 1)
+            .scaleEffect(p.scale)
+            .rotation3DEffect(.degrees(p.ry), axis: (x: 0, y: 1, z: 0), perspective: 0.7)
+            .rotationEffect(.degrees(p.rz))
+            .offset(x: p.tx, y: p.ty)
+            .opacity(p.alpha)
     }
 }

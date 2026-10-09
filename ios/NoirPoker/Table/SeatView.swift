@@ -74,6 +74,10 @@ struct SeatView: View {
     let newHandKey: String
     let onPeek: () -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Bumped when the eye toggle shows this seat's cards: they fade in from
+    /// 0.2 over 180 ms (the reference's `toggleOpponentHand`). Hiding, and the
+    /// automatic reveal at showdown, change nothing gradually.
+    @State private var revealFade = 0
 
     private var done: Bool { seat.peek != nil }
 
@@ -97,18 +101,16 @@ struct SeatView: View {
         }
         .opacity(seat.folded && !done ? 0.4 : 1)
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.4), value: seat.folded)
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.18), value: seat.revealed)
+        .onChange(of: seat.peek?.pressed) { old, new in
+            // Only a toggle on a settled table: the toggle existed before (the
+            // showdown reveal creates it already pressed).
+            if old == false, new == true, !reduceMotion { revealFade += 1 }
+        }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("seat-\(seat.id)")
     }
 
-    private var actionSpoken: String {
-        if seat.action.isDeciding { return seat.action.label }
-        var parts = [seat.action.label]
-        if let amount = seat.action.amountText { parts.append(amount) }
-        if let meaning = seat.action.meaning { parts.append(meaning) }
-        return parts.joined(separator: ", ")
-    }
+    private var actionSpoken: String { seat.actionSpoken }
 
     @ViewBuilder
     private var cards: some View {
@@ -120,7 +122,14 @@ struct SeatView: View {
                 }
             }
             .padding(.bottom, 6)
-            .transition(.opacity)
+            .keyframeAnimator(initialValue: 1.0, trigger: revealFade) { content, opacity in
+                content.opacity(opacity)
+            } keyframes: { _ in
+                KeyframeTrack {
+                    MoveKeyframe(0.2)
+                    LinearKeyframe(1.0, duration: 0.18, timingCurve: .easeOut)
+                }
+            }
             .id("faces-\(newHandKey)-\(seat.id)")
             .accessibilityElement(children: .combine)
             .accessibilityLabel("\(seat.name)'s hole cards")
@@ -144,13 +153,7 @@ struct SeatView: View {
         }
     }
 
-    private var plateA11yValue: String {
-        var parts = [seat.styleA11y, "\(seat.stackText) chips"]
-        if seat.mood != .steady { parts.append("Simulated mood: \(seat.moodLabel)") }
-        if seat.folded { parts.append("Folded") }
-        if seat.isActor { parts.append(seat.action.label) }
-        return parts.joined(separator: ". ")
-    }
+    private var plateA11yValue: String { seat.plateA11yValue }
 
     private var plate: some View {
         let radius: CGFloat = metrics.compact ? 8 : 10
@@ -212,6 +215,7 @@ struct SeatView: View {
         .accessibilityLabel("\(seat.name), \(seat.position.name)")
         .accessibilityValue(plateA11yValue)
         .accessibilityHint(seat.avatarTitle)
+        .accessibilityIdentifier("seat-plate-\(seat.id)")
         .overlay(alignment: .bottomTrailing) {
             if let peek = seat.peek {
                 PeekButton(peek: peek, seat: seat.id, action: onPeek)
@@ -237,10 +241,112 @@ struct SeatView: View {
     }
 }
 
+extension SeatState {
+    /// The spoken details of a seat plate (and of its large-text row).
+    var plateA11yValue: String {
+        var parts = [styleA11y, "\(stackText) chips"]
+        if mood != .steady { parts.append("Simulated mood: \(moodLabel)") }
+        if folded { parts.append("Folded") }
+        if isActor { parts.append(action.label) }
+        return parts.joined(separator: ". ")
+    }
+
+    /// The last action as one line: label, amount and meaning.
+    var actionSpoken: String {
+        if action.isDeciding { return action.label }
+        var parts = [action.label]
+        if let amount = action.amountText { parts.append(amount) }
+        if let meaning = action.meaning { parts.append(meaning) }
+        return parts.joined(separator: ", ")
+    }
+}
+
+/// The large-text companion to the arena (accessibility text sizes, where the
+/// felt caps its own text): every opponent as a full-size row with name,
+/// position, style, stack, last action, hand badge and the reveal toggle, so
+/// nothing is only readable on the scaled diagram. Mirrors Android's `SeatList`.
+struct SeatListView: View {
+    let seats: [SeatState]
+    let done: Bool
+    let onPeek: (Int) -> Void
+
+    var body: some View {
+        VStack(spacing: 8) {
+            ForEach(seats) { seat in
+                SeatListRow(seat: seat, done: done) { onPeek(seat.id) }
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("seat-list")
+    }
+}
+
+private struct SeatListRow: View {
+    let seat: SeatState
+    let done: Bool
+    let onPeek: () -> Void
+
+    var body: some View {
+        let border: Color = seat.isWinner ? (done ? Noir.gold : Noir.goldSeat) : seat.isActor ? Noir.mint : Noir.plateBorder
+        HStack(alignment: .center, spacing: 8) {
+            VStack(alignment: .leading, spacing: 4) {
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 6) { name; PositionBadgeView(badge: seat.position) }
+                    VStack(alignment: .leading, spacing: 4) { name; PositionBadgeView(badge: seat.position) }
+                }
+                Text("\(seat.styleShort) · \(seat.stackText)")
+                    .noirFont(13, relativeTo: .subheadline, digits: true)
+                    .foregroundStyle(Noir.seatStack)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(actionText)
+                    .noirFont(13, relativeTo: .subheadline)
+                    .foregroundStyle(seat.action.isDeciding ? Noir.mint : (seat.isWinner ? Noir.goldAction : Noir.seatAction))
+                    .fixedSize(horizontal: false, vertical: true)
+                if let badge = seat.badge {
+                    RankBadgeView(badge: badge)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("\(seat.name), \(seat.position.name)")
+            .accessibilityValue(spoken)
+            .accessibilityIdentifier("seat-list-\(seat.id)")
+            if let peek = seat.peek {
+                PeekButton(peek: peek, seat: seat.id, identifier: "seat-list-peek-\(seat.id)", action: onPeek)
+                    .padding(11.5)
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .opacity(seat.folded && !done ? 0.6 : 1)
+        .background(Noir.plate, in: RoundedRectangle(cornerRadius: 8))
+        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(border, lineWidth: 1))
+    }
+
+    private var name: some View {
+        Text(seat.name)
+            .noirFont(14, .medium, relativeTo: .body)
+            .foregroundStyle(Noir.text)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private var actionText: String {
+        [seat.action.label, seat.action.amountText].compactMap { $0 }.joined(separator: " ")
+    }
+
+    private var spoken: String {
+        var parts = [seat.plateA11yValue, "\(seat.actionA11y): \(seat.actionSpoken)"]
+        if let badge = seat.badge { parts.append(badge.a11y ?? badge.text) }
+        return parts.joined(separator: ". ")
+    }
+}
+
 /// The post-settlement eye toggle (21×21 visual, 44×44 hit area).
 struct PeekButton: View {
     let peek: PeekToggle
     let seat: Int
+    var identifier: String? = nil
     let action: () -> Void
 
     var body: some View {
@@ -258,6 +364,6 @@ struct PeekButton: View {
         .padding(-11.5)
         .accessibilityLabel(peek.a11y)
         .accessibilityAddTraits(peek.pressed ? .isSelected : [])
-        .accessibilityIdentifier("peek-toggle-\(seat)")
+        .accessibilityIdentifier(identifier ?? "peek-toggle-\(seat)")
     }
 }

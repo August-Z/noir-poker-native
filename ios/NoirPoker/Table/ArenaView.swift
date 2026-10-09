@@ -8,6 +8,17 @@ extension View {
             .alignmentGuide(.top) { _ in -point.y }
     }
 
+    /// Places the view's top-center at `point`, shifted sideways just enough
+    /// to keep the whole view inside `0...width`. The reference's phone seats
+    /// sit at 13–14 % and 86–87 % of the width, where a full plate would
+    /// otherwise reach past the felt's surface and be clipped.
+    func anchoredTopCenter(_ point: CGPoint, within width: CGFloat) -> some View {
+        alignmentGuide(.leading) { d in
+            -min(max(point.x - d.width / 2, 0), max(width - d.width, 0))
+        }
+        .alignmentGuide(.top) { _ in -point.y }
+    }
+
     /// Places the view's bottom-center at `point` inside a top-leading ZStack.
     func anchoredBottomCenter(_ point: CGPoint) -> some View {
         alignmentGuide(.leading) { d in d.width / 2 - point.x }
@@ -20,6 +31,7 @@ struct ArenaView: View {
     let model: TableModel
     let width: CGFloat
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var state: TableRenderState { model.state }
 
@@ -33,7 +45,7 @@ struct ArenaView: View {
                 .zIndex(2)
             ForEach(state.seats) { seat in
                 SeatView(seat: seat, metrics: m, newHandKey: dealKey) { model.session.toggleReveal(seat.id) }
-                    .anchoredTopCenter(m.seatAnchor(seat))
+                    .anchoredTopCenter(m.seatAnchor(seat), within: m.width)
                     .zIndex(3)
             }
             HeroView(hero: state.hero, metrics: m, dealKey: dealKey)
@@ -50,9 +62,10 @@ struct ArenaView: View {
         // up to a cap (lower for the dense 7–9 seat phone layout), and the arena
         // gets taller at large sizes. Controls outside the felt scale fully.
         .dynamicTypeSize(...(m.dense ? DynamicTypeSize.xLarge : DynamicTypeSize.xxxLarge))
-        .animation(.easeInOut(duration: 0.3), value: m.height)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: m.height)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Texas Hold'em table")
+        .accessibilityIdentifier("arena")
     }
 
     /// Changes on every new deal and replay, so card views are rebuilt and animate once.
@@ -86,9 +99,13 @@ private struct FeltView: View {
 
     private var feltLayer: some View {
         ZStack(alignment: .top) {
-            Ellipse().fill(EllipticalGradient(colors: [Noir.feltCenter, Noir.felt, Noir.feltEdge],
+            // `radial-gradient(ellipse at 50% 60%, …, felt 68%, …)`, with the
+            // same radius as Android: 0.62 of the felt's width and height.
+            Ellipse().fill(EllipticalGradient(stops: [.init(color: Noir.feltCenter, location: 0),
+                                                      .init(color: Noir.felt, location: 0.68),
+                                                      .init(color: Noir.feltEdge, location: 1)],
                                               center: UnitPoint(x: 0.5, y: 0.6), startRadiusFraction: 0,
-                                              endRadiusFraction: 0.75))
+                                              endRadiusFraction: 0.62))
             Canvas { context, size in
                 var dots = Path()
                 var y: CGFloat = 2
@@ -107,10 +124,10 @@ private struct FeltView: View {
             Ellipse().strokeBorder(Noir.feltOutline, lineWidth: 1).padding(metrics.feltOutlineInset)
             VStack(spacing: metrics.compact ? 5 : 7) {
                 Text("N O I R")
-                    .font(.system(size: metrics.compact ? 14 : 18, weight: .bold))
+                    .font(NoirTypeface.font(size: metrics.compact ? 14 : 18, weight: .bold))
                     .tracking(metrics.compact ? 5 : 8)
                 Text("POKER CLUB")
-                    .font(.system(size: metrics.compact ? 8 : 10))
+                    .font(NoirTypeface.font(size: metrics.compact ? 8 : 10))
                     .tracking(metrics.compact ? 2 : 3)
             }
             .foregroundStyle(Noir.watermark)
