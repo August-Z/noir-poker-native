@@ -278,7 +278,8 @@ private fun RosterCard(row: RosterRowState, callbacks: OpponentsCallbacks, modif
         Text(
             row.observed,
             style = NoirType.tabular(NoirType.style(12.sp, color = Noir.TextSubtle)),
-            modifier = Modifier.semantics { stateDescription = row.observedTitle },
+            // The explanation is a description, not a state: read it after the figures.
+            modifier = Modifier.semantics { contentDescription = "${row.observed}. ${row.observedTitle}" },
         )
         row.moodReason?.let { Text(it, style = NoirType.style(12.sp, color = Color(0xFFD6B887))) }
     }

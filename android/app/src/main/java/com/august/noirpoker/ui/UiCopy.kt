@@ -4,6 +4,9 @@ package com.august.noirpoker.ui
  * UI-only English copy: the reference's static page chrome and dialog text
  * (copy catalog section 6). Everything dynamic comes from the session's render
  * state (`SessionCopy` and engine copy).
+ *
+ * iOS mirrors this table key for key in `ios/NoirPoker/Design/UiCopy.swift`;
+ * `node scripts/check-ui-copy.mjs` fails when the two drift apart.
  */
 object UiCopy {
     // Header and page chrome.
@@ -36,8 +39,9 @@ object UiCopy {
     const val statWins = "Hands Won"
     const val statWinRate = "Win Rate"
     const val coachTitle = "✧ Table Tips"
+    const val coachToggleA11y = "Table Tips"
     const val coachFooter = "Every hand, practice one good decision"
-    const val activityTitle = "Activity"
+    const val activityTitle = "Hand Activity"
     const val activityListA11y = "This hand's activity, in chronological order"
     const val activityEmpty = "Once cards are dealt, every action is logged here."
     const val footnoteA = "Stay patient."
@@ -73,7 +77,7 @@ object UiCopy {
     )
     const val rulesReplayHeading = "Replaying a Hand"
     const val rulesReplayBody =
-        "After a hand ends, tap “Replay Hand” to keep everyone's hole cards, the button, starting stacks, and the upcoming deal order, and make your decisions again from preflop. The original settlement and this hand's stats are reversed and replaced by the latest result. The computer responds to your new choices, so winning more is not guaranteed; this is strategy practice on a known hand."
+        "After a hand ends, tap “Replay Hand” to keep everyone's hole cards, the button, starting stacks, and the upcoming deal order, and make your decisions again from preflop. The original settlement and this hand's stats are reversed and replaced by the latest result. The computer opponents respond to your new choices, so a better result isn't guaranteed. This is strategy practice on a known hand."
     const val rulesRanksHeading = "Hand Rankings, Strongest First"
     const val rulesRanks = "Straight Flush · Four of a Kind · Full House · Flush · Straight · Three of a Kind · Two Pair · One Pair · High Card"
     val rulesNotes = listOf(
@@ -94,7 +98,7 @@ object UiCopy {
     const val oppCloseA11y = "Close opponent settings"
     const val oppTitle = "Give every opponent a style of their own"
     const val oppIntro =
-        "Training archetypes distilled from publicly reported hands, not replicas of the real players. The 0–100 values are strategy-tendency indices, not anyone's actual VPIP or PFR; highlight hands don't represent long-run frequencies."
+        "Training archetypes distilled from publicly reported hands, not replicas of the real players. The 0–100 values are tendency scores, not anyone's actual VPIP or PFR; highlight hands don't represent long-run frequencies."
     const val oppResearchA11y = "Player archetype research"
     const val oppAssignA11y = "Assign opponent styles"
     const val oppRosterHeading = "Assign by Seat"
@@ -102,7 +106,7 @@ object UiCopy {
     const val oppEmotionLabel = "Human-like emotion simulation"
     const val oppEmotionA11y = "Emotion simulation strength"
     const val oppEmotionHelp =
-        "Losing a big pot, a winning streak, or being pushed off hands repeatedly by the same opponent can trigger a brief urge to chase losses, tighten up, or fight back. The effect fades after two hands and has a cooldown. Every archetype uses the same synthetic mechanism; it does not represent anyone's real personality."
+        "Losing a big pot, a winning streak, or being pushed off hands repeatedly by the same opponent can trigger a brief urge to chase losses, play it safe, or fight back. The effect fades after two hands and has a cooldown. Every archetype uses the same synthetic mechanism; it does not represent anyone's real personality."
     const val oppCompareSummary = "Compare all parameters and stat definitions"
     const val oppCompareCaption = "Training parameters for all archetypes (0–100)"
     const val oppCompareArchetype = "Archetype"
@@ -117,6 +121,7 @@ object UiCopy {
     // Settings sheet (native grouping of the surface controls, tips and sound).
     const val settingsEyebrow = "TABLE SETTINGS"
     const val settingsTitle = "Settings"
+    const val settingsCloseA11y = "Close settings"
     const val settingsHints = "Table Tips"
     const val settingsSound = "Sound"
     const val expanded = "Expanded"

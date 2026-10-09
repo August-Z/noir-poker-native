@@ -69,6 +69,7 @@ fun SettingsSheet(settings: SettingsState, coach: CoachState, opponents: Opponen
         eyebrow = UiCopy.settingsEyebrow,
         onDismiss = callbacks::close,
         maxWidth = 560.dp,
+        closeA11y = UiCopy.settingsCloseA11y,
         footer = { NoirButton(UiCopy.backToTable, callbacks::close, Modifier.fillMaxWidth()) },
     ) {
         SheetTitle(UiCopy.settingsTitle)
@@ -98,7 +99,7 @@ fun SettingsSheet(settings: SettingsState, coach: CoachState, opponents: Opponen
             )
         }
         Section(UiCopy.opponentsButton) {
-            RowButton(UiCopy.opponentsButton, opponents.text, if (opponents.changePending) Noir.GoldNote else Noir.TextSubtle, callbacks::openOpponents)
+            RowButton(UiCopy.opponentsButton, opponents.text, if (opponents.changePending) Noir.GoldNote else Noir.TextSubtle, callbacks::openOpponents, "settings-opponents")
             opponents.changeNote?.let { Text(it, style = NoirType.style(12.sp, color = Noir.GoldNote).copy(lineHeight = 19.sp)) }
         }
         Section(null) {
@@ -119,7 +120,7 @@ private fun Section(title: String?, content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun RowButton(label: String, value: String, valueColor: Color, onClick: () -> Unit) {
+private fun RowButton(label: String, value: String, valueColor: Color, onClick: () -> Unit, tag: String) {
     val shape = RoundedCornerShape(8.dp)
     Row(
         Modifier
@@ -128,6 +129,7 @@ private fun RowButton(label: String, value: String, valueColor: Color, onClick: 
             .background(Noir.SelectBg, shape)
             .border(1.dp, Noir.SelectBorder, shape)
             .clickable(role = Role.Button, onClick = onClick)
+            .testTag(tag)
             .padding(horizontal = 14.dp)
             .semantics(mergeDescendants = true) {
                 contentDescription = label
