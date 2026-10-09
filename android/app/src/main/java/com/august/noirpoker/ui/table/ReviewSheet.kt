@@ -317,8 +317,16 @@ private fun Timeline(
         }
         if (horizontal) {
             val listState = rememberLazyListState()
-            LaunchedEffect(key) { listState.scrollToItem(0) }
+            // One effect drives every scroll of this list. Two effects that both scroll
+            // before the first layout each wait on the lazy list's first-layout signal,
+            // and resuming one while the other is cancelled by the scroll mutex crashed
+            // the layout pass (IndexOutOfBoundsException in AwaitFirstLayoutModifier).
+            val shownKey = remember { arrayOf(key) }
             LaunchedEffect(key, selected) {
+                if (shownKey[0] != key) {
+                    shownKey[0] = key
+                    listState.scrollToItem(0)
+                }
                 if (selected in items.indices) {
                     val visible = listState.layoutInfo.visibleItemsInfo.map { it.index }
                     if (selected !in visible) listState.animateScrollToItem(selected)
