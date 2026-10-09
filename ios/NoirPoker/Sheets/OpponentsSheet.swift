@@ -13,10 +13,10 @@ struct OpponentsSheet: View {
     private var session: TableSession { model.session }
 
     var body: some View {
-        NoirSheet(eyebrow: "OPPONENT LAB", title: "Give every opponent a style of their own",
-                  closeLabel: "Close opponent settings", onClose: { session.discardOpponentSettings() }) {
+        NoirSheet(eyebrow: UiCopy.oppEyebrow, title: UiCopy.oppTitle,
+                  closeLabel: UiCopy.oppCloseA11y, onClose: { session.discardOpponentSettings() }) {
             if let dialog {
-                SheetParagraph("Training archetypes distilled from publicly reported hands, not replicas of the real players. The 0–100 values are strategy-tendency indices, not anyone's actual VPIP or PFR; highlight hands don't represent long-run frequencies.")
+                SheetParagraph(UiCopy.oppIntro)
                 profileCards(dialog)
                 ProfileDetailPanel(detail: dialog.detail)
                 roster(dialog)
@@ -55,7 +55,7 @@ struct OpponentsSheet: View {
             }
         }
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Player archetype research")
+        .accessibilityLabel(UiCopy.oppResearchA11y)
     }
 
     // MARK: Roster
@@ -63,9 +63,9 @@ struct OpponentsSheet: View {
     private func roster(_ dialog: OpponentsDialogState) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                SheetHeading("Assign by Seat")
+                SheetHeading(UiCopy.oppRosterHeading)
                 Spacer(minLength: 8)
-                Button("Mixed Lineup") { session.mixLineup() }
+                Button(UiCopy.oppMixButton) { session.mixLineup() }
                     .noirFont(13, .medium, relativeTo: .subheadline)
                     .foregroundStyle(Color(hex: "#9cd7c3"))
                     .padding(.horizontal, 12)
@@ -82,7 +82,7 @@ struct OpponentsSheet: View {
                 }
             }
             .accessibilityElement(children: .contain)
-            .accessibilityLabel("Assign opponent styles")
+            .accessibilityLabel(UiCopy.oppAssignA11y)
         }
     }
 
@@ -90,18 +90,18 @@ struct OpponentsSheet: View {
 
     private func emotionBox(_ dialog: OpponentsDialogState) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Human-like emotion simulation")
+            Text(UiCopy.oppEmotionLabel)
                 .noirFont(14, .medium, relativeTo: .headline)
                 .foregroundStyle(Noir.text)
-            Picker("Emotion simulation strength", selection: Binding(get: { dialog.emotionMode },
+            Picker(UiCopy.oppEmotionA11y, selection: Binding(get: { dialog.emotionMode },
                                                                        set: { session.setEmotionMode($0) })) {
                 ForEach(dialog.emotionOptions, id: \.self) { mode in
                     Text(mode.label).tag(mode)
                 }
             }
             .pickerStyle(.segmented)
-            .accessibilityLabel("Emotion simulation strength")
-            Text("Losing a big pot, a winning streak, or being pushed off hands repeatedly by the same opponent can trigger a brief urge to chase losses, tighten up, or fight back. The effect fades after two hands and has a cooldown. Every archetype uses the same synthetic mechanism; it does not represent anyone's real personality.")
+            .accessibilityLabel(UiCopy.oppEmotionA11y)
+            Text(UiCopy.oppEmotionHelp)
                 .noirFont(12, relativeTo: .footnote)
                 .foregroundStyle(Noir.dialogBody)
                 .lineSpacing(4)
@@ -117,17 +117,17 @@ struct OpponentsSheet: View {
     private func comparison(_ dialog: OpponentsDialogState) -> some View {
         DisclosureGroup(isExpanded: $compareExpanded) {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Training parameters for all archetypes (0–100)")
+                Text(UiCopy.oppCompareCaption)
                     .noirFont(12, .medium, relativeTo: .caption)
                     .foregroundStyle(Noir.dialogBody)
                 ScrollView(.horizontal) {
                     Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 8) {
                         GridRow {
-                            Text("Archetype").fontWeight(.semibold).foregroundStyle(Noir.subtle)
+                            Text(UiCopy.oppCompareArchetype).fontWeight(.semibold).foregroundStyle(Noir.subtle)
                             ForEach(PROFILE_AXES, id: \.self) { axis in
                                 Text(axis).fontWeight(.semibold).foregroundStyle(Noir.subtle)
                             }
-                            Text("Bet / Pot").fontWeight(.semibold).foregroundStyle(Noir.subtle)
+                            Text(UiCopy.oppCompareSizing).fontWeight(.semibold).foregroundStyle(Noir.subtle)
                         }
                         ForEach(dialog.comparison, id: \.id) { row in
                             GridRow {
@@ -142,15 +142,15 @@ struct OpponentsSheet: View {
                     .noirFont(12, relativeTo: .caption)
                     .padding(.vertical, 4)
                 }
-                Text("Range Width shapes starting-hand ranges; Aggression and Bluffing set raise probability in suitable spots; Calling Down affects marginal calls; Trapping raises the slow-play tendency only on safe boards. Position, player count, hand strength, and legal actions take priority over style.")
-                Text("The VPIP / PFR shown for each seat are actual stats from hands completed this session: hands with money voluntarily put in / total hands, and hands raised preflop / total hands. Forced blinds don't count; switching a style restarts the count, and relaunching the app or starting a new session resets it to zero. Bet ranges are typical postflop sizes and don't limit special raises, short stacks, or all-ins.")
+                Text(UiCopy.oppCompareNoteAxes)
+                Text(UiCopy.oppCompareNoteStats)
             }
             .noirFont(12, relativeTo: .footnote)
             .foregroundStyle(Noir.dialogBody)
             .fixedSize(horizontal: false, vertical: true)
             .padding(.top, 8)
         } label: {
-            Text("Compare all parameters and stat definitions")
+            Text(UiCopy.oppCompareSummary)
                 .noirFont(13, relativeTo: .body)
                 .foregroundStyle(Color(hex: "#86ccb8"))
         }
@@ -166,7 +166,7 @@ struct OpponentsSheet: View {
                 .noirFont(12, relativeTo: .footnote)
                 .foregroundStyle(Noir.subtle)
                 .fixedSize(horizontal: false, vertical: true)
-            Button("Save · Applies Next Hand") { session.saveOpponentSettings() }
+            Button(UiCopy.oppSaveButton) { session.saveOpponentSettings() }
                 .buttonStyle(PrimaryButtonStyle())
                 .accessibilityIdentifier("save-opponents")
         }
@@ -238,7 +238,7 @@ private struct ProfileDetailPanel: View {
                             .multilineTextAlignment(.leading)
                             .minimumHitTarget()
                     }
-                    .accessibilityHint("Opens in your browser")
+                    .accessibilityHint(UiCopy.opensInBrowser)
                 }
             }
         }

@@ -20,10 +20,10 @@ struct SessionStatsCard: View {
                 }
             }
             VStack(alignment: .leading, spacing: 4) {
-                Text("Current Stack").noirFont(12, relativeTo: .caption).foregroundStyle(Noir.subtle)
+                Text(UiCopy.sessionStackLabel).noirFont(12, relativeTo: .caption).foregroundStyle(Noir.subtle)
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text(stats.stackText)
-                        .noirFont(compact ? 26 : 32, .semibold, relativeTo: .largeTitle, digits: true, tracking: -1)
+                        .noirFont(compact ? 26 : 35, .semibold, relativeTo: .largeTitle, digits: true, tracking: -1)
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)
                         .foregroundStyle(Noir.text)
@@ -39,28 +39,28 @@ struct SessionStatsCard: View {
             Rectangle().fill(Noir.statsDivider).frame(height: 1)
             ViewThatFits(in: .horizontal) {
                 HStack(alignment: .top) {
-                    stat("\(stats.hands)", "Hands Played", id: "stat-hands")
+                    stat("\(stats.hands)", UiCopy.statHands, id: "stat-hands")
                     Spacer(minLength: 6)
-                    stat("\(stats.wins)", "Hands Won", id: "stat-wins")
+                    stat("\(stats.wins)", UiCopy.statWins, id: "stat-wins")
                     Spacer(minLength: 6)
-                    stat(stats.winRateText, "Win Rate", id: "stat-win-rate")
+                    stat(stats.winRateText, UiCopy.statWinRate, id: "stat-win-rate")
                 }
                 VStack(alignment: .leading, spacing: 10) {
-                    stat("\(stats.hands)", "Hands Played", id: "stat-hands")
-                    stat("\(stats.wins)", "Hands Won", id: "stat-wins")
-                    stat(stats.winRateText, "Win Rate", id: "stat-win-rate")
+                    stat("\(stats.hands)", UiCopy.statHands, id: "stat-hands")
+                    stat("\(stats.wins)", UiCopy.statWins, id: "stat-wins")
+                    stat(stats.winRateText, UiCopy.statWinRate, id: "stat-win-rate")
                 }
             }
         }
     }
 
     private var practiceTitle: some View {
-        Text("Your Practice").noirFont(compact ? 12 : 14, .medium, relativeTo: .headline).foregroundStyle(Noir.text)
+        Text(UiCopy.sessionTitle).noirFont(compact ? 12 : 14, .medium, relativeTo: .headline).foregroundStyle(Noir.text)
             .accessibilityAddTraits(.isHeader)
     }
 
     private var tableCaption: some View {
-        Text("This Table").noirFont(11, relativeTo: .caption).foregroundStyle(Noir.subtle)
+        Text(UiCopy.sessionSubtitle).noirFont(11, relativeTo: .caption).foregroundStyle(Noir.subtle)
     }
 
     private func stat(_ value: String, _ caption: String, id: String) -> some View {
@@ -86,7 +86,7 @@ struct CoachCard: View {
     var body: some View {
         SidebarCard(coach: true, compact: compact) {
             HStack {
-                Text("✧ Table Tips").noirFont(compact ? 12 : 14, .medium, relativeTo: .headline).foregroundStyle(Noir.text)
+                Text(UiCopy.coachTitle).noirFont(compact ? 12 : 14, .medium, relativeTo: .headline).foregroundStyle(Noir.text)
                     .accessibilityAddTraits(.isHeader)
                 Spacer(minLength: 6)
                 Button(action: toggle) {
@@ -99,11 +99,12 @@ struct CoachCard: View {
                         .minimumHitTarget()
                 }
                 .buttonStyle(PressScaleStyle())
-                .accessibilityLabel("Table Tips")
+                .accessibilityLabel(UiCopy.coachToggleA11y)
                 .accessibilityValue(coach.toggleLabel)
                 .accessibilityAddTraits(coach.toggleOn ? .isSelected : [])
                 .accessibilityIdentifier("hints-toggle")
             }
+            // With tips Off only the header and toggle remain, footer included, as on Android.
             if coach.visible {
                 Text(coach.stage).noirFont(12, relativeTo: .caption).foregroundStyle(Noir.mint.opacity(0.8))
                 Text(coach.tip)
@@ -112,12 +113,13 @@ struct CoachCard: View {
                     .lineSpacing(compact ? 5 : 6)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityAddTraits(.updatesFrequently)
-            }
-            if !compact {
-                HStack(spacing: 8) {
-                    Rectangle().fill(Noir.coachBorder).frame(width: 18, height: 1)
-                    Text("Every hand, practice one good decision").noirFont(11, relativeTo: .caption2).foregroundStyle(Noir.subtle)
-                        .fixedSize(horizontal: false, vertical: true)
+                if !compact {
+                    HStack(spacing: 8) {
+                        Rectangle().fill(Noir.coachBorder).frame(width: 18, height: 1)
+                        Text(UiCopy.coachFooter).noirFont(11, relativeTo: .caption2).foregroundStyle(Noir.subtle)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityIdentifier("coach-footer")
+                    }
                 }
             }
         }
@@ -135,13 +137,13 @@ struct ActivityCard: View {
     var body: some View {
         SidebarCard(compact: compact) {
             HStack {
-                Text("Activity").noirFont(compact ? 12 : 14, .medium, relativeTo: .headline).foregroundStyle(Noir.text)
+                Text(UiCopy.activityTitle).noirFont(compact ? 12 : 14, .medium, relativeTo: .headline).foregroundStyle(Noir.text)
                     .accessibilityAddTraits(.isHeader)
                 Spacer()
                 Text(activity.badge).noirFont(11, relativeTo: .caption, tracking: 1).foregroundStyle(Noir.subtle)
             }
             if activity.entries.isEmpty {
-                Text("Once cards are dealt, every action is logged here.")
+                Text(UiCopy.activityEmpty)
                     .noirFont(compact ? 12 : 13, relativeTo: .body)
                     .foregroundStyle(Noir.subtle)
                     .fixedSize(horizontal: false, vertical: true)
@@ -158,7 +160,7 @@ struct ActivityCard: View {
                     }
                 }
                 .accessibilityElement(children: .contain)
-                .accessibilityLabel("This hand's activity, in chronological order")
+                .accessibilityLabel(UiCopy.activityListA11y)
                 .accessibilityIdentifier("activity-list")
             }
         }
@@ -196,7 +198,10 @@ struct ActivityCard: View {
         }
     }
 
+    /// The reference's `li:first-child` rule outranks the type colors, so the
+    /// oldest entry is always the lighter first-line color.
     private func color(_ entry: ActivityEntryState) -> Color {
+        if entry.number == 1 { return Color(hex: "#bfd2d6") }
         if entry.isHero { return Noir.logHero }
         switch entry.type {
         case .result: return Noir.logResult

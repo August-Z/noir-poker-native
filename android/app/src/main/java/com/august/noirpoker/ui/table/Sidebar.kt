@@ -135,7 +135,7 @@ fun CoachCard(coach: CoachState, onToggle: () -> Unit, modifier: Modifier = Modi
                     .clickable(role = Role.Switch, onClick = onToggle)
                     .padding(horizontal = 10.dp, vertical = 6.dp)
                     .semantics {
-                        contentDescription = UiCopy.coachTitle
+                        contentDescription = UiCopy.coachToggleA11y
                         stateDescription = coach.toggleLabel
                     },
                 contentAlignment = Alignment.Center,
@@ -200,16 +200,21 @@ fun ActivityCard(activity: ActivityState, modifier: Modifier = Modifier) {
     }
 }
 
+private val FIRST_ENTRY_COLOR = Color(0xFFBFD2D6)
+
 @Composable
 private fun ActivityRow(entry: ActivityEntryState) {
     val metrics = LocalNoirMetrics.current
+    // The reference's `li:first-child` rule outranks the type colors, so the
+    // oldest entry is always the lighter first-line color.
     val color = when {
+        entry.number == 1 -> FIRST_ENTRY_COLOR
         entry.isHero -> Noir.LogHero
         entry.type == LogType.RESULT -> Noir.LogResult
         entry.type == LogType.STREET -> Noir.LogStreet
         else -> Noir.LogDefault
     }
-    Row(Modifier.semantics(mergeDescendants = true) {}) {
+    Row(Modifier.testTag("activity-entry").semantics(mergeDescendants = true) {}) {
         Text(
             "${entry.number}.",
             style = NoirType.tabular(NoirType.style(11.sp, color = color.copy(alpha = 0.65f))),
