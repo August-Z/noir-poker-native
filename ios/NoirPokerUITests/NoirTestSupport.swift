@@ -80,7 +80,7 @@ extension XCUIApplication {
     var foldButton: XCUIElement { buttons["fold"] }
     var callButton: XCUIElement { buttons["call"] }
     var raiseButton: XCUIElement { buttons["raise"] }
-    var finishButton: XCUIElement { buttons["finish-hand"] }
+    var finishButton: XCUIElement { buttons["continue-deal"] }
     var nextButton: XCUIElement { buttons["next-hand"] }
     var replayButton: XCUIElement { buttons["replay-hand"] }
     var reviewButton: XCUIElement { buttons["review-hand"] }

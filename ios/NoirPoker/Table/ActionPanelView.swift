@@ -1,8 +1,9 @@
 import SwiftUI
 import PokerCore
 
-/// The decision strip and the hero's action panel (bet controls and buttons,
-/// Finish Hand after a fold, or the settled-hand buttons).
+/// The decision strip and the hero's action panel: bet controls and buttons
+/// while the hand is live, Finish Hand after the hero folds, and the
+/// settled-hand buttons (both groups after a fold-win before the river).
 struct ActionPanelView: View {
     let model: TableModel
     var compact: Bool
@@ -41,7 +42,11 @@ struct ActionPanelView: View {
                             .layoutPriority(1)
                     }
                 }
-            } else if a.finishHandVisible {
+            }
+            // Finish Hand and the settled buttons are independent, as in the
+            // reference: after a fold-win before the river, Finish Hand (a
+            // practice runout) sits beside Next Hand, Replay Hand and Review.
+            if a.finishHandVisible {
                 Button(a.finishHandLabel) { session.finishHand() }
                     .buttonStyle(OutlineButtonStyle(foreground: Noir.finishText, border: Noir.finishBorder, background: Noir.finishBg))
                     .frame(minWidth: compact ? nil : 200)
@@ -50,8 +55,9 @@ struct ActionPanelView: View {
                     .disabled(!a.finishHandEnabled)
                     .opacity(a.finishHandEnabled ? 1 : 0.6)
                     .accessibilityHint(a.finishHandTitle)
-                    .accessibilityIdentifier("finish-hand")
-            } else if a.nextHandVisible || a.replayVisible || a.reviewVisible {
+                    .accessibilityIdentifier("continue-deal")
+            }
+            if a.nextHandVisible || a.replayVisible || a.reviewVisible {
                 settledButtons
             }
         }
