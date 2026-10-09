@@ -9,20 +9,39 @@ import XCTest
 enum Noir {
     static let defaultSeed = 20_261_008
 
-    static func makeApp(seed: Int = defaultSeed, resetPreferences: Bool = true, extra: [String] = []) -> XCUIApplication {
+    static func makeApp(seed: Int = defaultSeed, speed: Int = 20, resetPreferences: Bool = true,
+                        extra: [String] = []) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-noir-ui-testing", "-noir-seed", "\(seed)", "-noir-speed", "20"]
+        app.launchArguments = ["-noir-ui-testing", "-noir-seed", "\(seed)", "-noir-speed", "\(speed)"]
         if resetPreferences { app.launchArguments.append("-noir-reset-preferences") }
         app.launchArguments += extra
         return app
     }
 
     @discardableResult
-    static func launch(seed: Int = defaultSeed, resetPreferences: Bool = true, extra: [String] = []) -> XCUIApplication {
-        let app = makeApp(seed: seed, resetPreferences: resetPreferences, extra: extra)
+    static func launch(seed: Int = defaultSeed, speed: Int = 20, resetPreferences: Bool = true,
+                       extra: [String] = []) -> XCUIApplication {
+        let app = makeApp(seed: seed, speed: speed, resetPreferences: resetPreferences, extra: extra)
         app.launch()
         XCTAssertTrue(app.probe.waitForExistence(timeout: 15), "The UI-test probe is missing")
         return app
+    }
+}
+
+extension Noir {
+    /// Saves a screenshot for the CI visual check when `NOIR_SHOTS_DIR` is set
+    /// (CI passes it as `TEST_RUNNER_NOIR_SHOTS_DIR`), and attaches it to the
+    /// test result either way.
+    static func snapshot(_ name: String, in test: XCTestCase) {
+        let shot = XCUIScreen.main.screenshot()
+        let attachment = XCTAttachment(screenshot: shot)
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        test.add(attachment)
+        guard let dir = ProcessInfo.processInfo.environment["NOIR_SHOTS_DIR"], !dir.isEmpty else { return }
+        let folder = URL(fileURLWithPath: dir, isDirectory: true)
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        try? shot.pngRepresentation.write(to: folder.appendingPathComponent("\(name).png"))
     }
 }
 
@@ -104,7 +123,9 @@ extension XCUIApplication {
     }
 
     /// Plays the current hand to settlement. `fold` folds at the first
-    /// decision and uses Finish Hand; otherwise the hero checks or calls.
+    /// decision and lets the opponents finish; otherwise the hero checks or
+    /// calls. It never taps Finish Hand: on the fast clock the hand can settle
+    /// while the button is being tapped (see `testFoldThenFinishHand`).
     func playToSettlement(fold: Bool, timeout: TimeInterval = 120, file: StaticString = #filePath, line: UInt = #line) {
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {
@@ -113,8 +134,6 @@ extension XCUIApplication {
                 foldButton.tap()
             } else if !fold, callButton.exists, callButton.isEnabled, callButton.isHittable {
                 callButton.tap()
-            } else if finishButton.exists, finishButton.isEnabled, finishButton.isHittable {
-                finishButton.tap()
             } else {
                 Thread.sleep(forTimeInterval: 0.3)
             }

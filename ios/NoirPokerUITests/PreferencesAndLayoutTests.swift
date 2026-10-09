@@ -53,6 +53,7 @@ final class PreferencesAndLayoutTests: XCTestCase {
         // Save: Mixed Lineup, then Save · Applies Next Hand.
         styles.tap()
         app.tapWhenReady(app.buttons["mixed-lineup"], timeout: 5)
+        Noir.snapshot("phone-opponents", in: self)
         app.tapWhenReady(app.buttons["save-opponents"], timeout: 5)
         XCTAssertTrue(styles.waitForExistence(timeout: 5))
         XCTAssertTrue(app.waitUntil(timeout: 5) { (styles.value as? String) == "Next Hand" },
@@ -64,12 +65,14 @@ final class PreferencesAndLayoutTests: XCTestCase {
     func testLargeAccessibilityTextShowsActionButtons() {
         let app = Noir.launch(extra: ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"])
         XCTAssertTrue(app.waitForHeroTurn(), app.probe.label)
+        Noir.snapshot("phone-large-text-top", in: self)
         for button in [app.raiseButton, app.foldButton, app.callButton] {
             XCTAssertTrue(button.exists)
             app.reveal(button)
             XCTAssertTrue(button.isHittable, "\(button) is not reachable at accessibility sizes")
             XCTAssertFalse(button.label.isEmpty)
         }
+        Noir.snapshot("phone-large-text-actions", in: self)
         app.foldButton.tap()
         app.playToSettlement(fold: true)
         app.reveal(app.nextButton)
@@ -98,6 +101,7 @@ final class TabletLayoutTests: XCTestCase {
         XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "Stay patient")).firstMatch
             .waitForExistence(timeout: 10), "The wide layout shows the sidebar footnote")
         XCTAssertTrue(app.waitForHeroTurn(), app.probe.label)
+        Noir.snapshot("ipad-landscape-6max", in: self)
         XCTAssertTrue(app.foldButton.isHittable, "The action panel is visible without scrolling")
         XCTAssertTrue(app.element("stat-hands").isHittable, "The sidebar is visible next to the table")
 
@@ -111,6 +115,7 @@ final class TabletLayoutTests: XCTestCase {
             XCTAssertTrue(app.element("seat-\(seat)").waitForExistence(timeout: 5))
         }
         XCTAssertTrue(app.waitForHeroTurn(), app.probe.label)
+        Noir.snapshot("ipad-landscape-9max", in: self)
         XCTAssertTrue(app.foldButton.isHittable)
 
         XCUIDevice.shared.orientation = .portrait

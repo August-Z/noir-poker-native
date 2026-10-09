@@ -22,7 +22,9 @@ final class LaunchTests: XCTestCase {
         let app = Noir.launch()
         XCTAssertEqual(app.state.hand, 1)
         XCTAssertEqual(app.state.players, 6)
+        if app.waitForHeroTurn() { Noir.snapshot("phone-hero-turn", in: self) }
         app.playToSettlement(fold: false)
+        Noir.snapshot("phone-settled", in: self)
         let settled = app.state
         XCTAssertTrue(settled.isDone)
         XCTAssertEqual(settled.wealth, 30_000, "Chips were created or lost: \(app.probe.label)")
@@ -33,21 +35,19 @@ final class LaunchTests: XCTestCase {
     }
 
     /// Folds at the first decision, then Finish Hand deals the rest at once.
+    /// Runs on the real-time clock so opponents are still thinking (at least
+    /// 1.2 s each) when Finish Hand is tapped.
     func testFoldThenFinishHand() {
-        let app = Noir.launch()
+        let app = Noir.launch(speed: 1)
         XCTAssertTrue(app.waitForHeroTurn(), "The hero never got a decision: \(app.probe.label)")
         app.foldButton.tap()
         // Finish Hand appears while opponents are still playing; with the fast
         // clock the hand may settle first, which is also correct.
-        var finished = false
-        if app.finishButton.waitForExistence(timeout: 5), app.finishButton.isEnabled, !app.state.isDone {
-            app.finishButton.tap()
-            finished = true
-        }
-        XCTAssertTrue(app.waitUntil { app.state.isDone }, "Finish Hand did not settle the hand: \(app.probe.label)")
-        if finished {
-            XCTAssertEqual(app.state.boardCount, 5, "Finish Hand deals all five board cards")
-        }
+        XCTAssertTrue(app.finishButton.waitForExistence(timeout: 5), "Finish Hand appears after a fold")
+        XCTAssertTrue(app.finishButton.isEnabled)
+        app.finishButton.tap()
+        XCTAssertTrue(app.waitUntil(timeout: 5) { app.state.isDone }, "Finish Hand did not settle the hand: \(app.probe.label)")
+        XCTAssertEqual(app.state.boardCount, 5, "Finish Hand deals all five board cards")
         XCTAssertEqual(app.state.wealth, 30_000)
         XCTAssertTrue(app.nextButton.waitForExistence(timeout: 5))
         XCTAssertFalse(app.finishButton.exists)
@@ -150,8 +150,10 @@ final class LaunchTests: XCTestCase {
         let opponentsTab = app.buttons["review-tab-opponents"]
         XCTAssertTrue(opponentsTab.waitForExistence(timeout: 10))
         XCTAssertTrue(app.element("review-status").exists)
+        Noir.snapshot("phone-review-hero", in: self)
         opponentsTab.tap()
         XCTAssertTrue(app.buttons["review-opponent-filter"].waitForExistence(timeout: 5))
+        Noir.snapshot("phone-review-opponents", in: self)
         app.buttons["review-tab-hero"].tap()
         XCTAssertTrue(app.element("review-status").waitForExistence(timeout: 5))
         app.buttons["Close Hand Review"].firstMatch.tap()
