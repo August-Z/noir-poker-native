@@ -202,6 +202,8 @@ struct TableRootView: View {
                     .overlay(alignment: .top) { Rectangle().fill(Noir.stripDivider).frame(height: 1) }
                     .ignoresSafeArea(edges: .bottom)
             )
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("action-dock")
     }
 
     // MARK: Sidebar

@@ -104,8 +104,8 @@ final class LaunchTests: XCTestCase {
         XCTAssertTrue(app.waitUntil { app.state.hand == 2 })
         XCTAssertEqual(app.handsPlayed, "1")
 
-        app.tapWhenReady(app.buttons["start-new-session"])
-        app.tapWhenReady(app.buttons["reset-confirm"], timeout: 5)
+        app.tap(app.buttons["start-new-session"], until: app.buttons["reset-confirm"])
+        app.buttons["reset-confirm"].tap()
         XCTAssertTrue(app.waitUntil { app.state.hand == 1 }, app.probe.label)
         XCTAssertEqual(app.handsPlayed, "0")
         XCTAssertEqual(app.element("stat-wins").value as? String, "0")
@@ -167,8 +167,8 @@ final class LaunchTests: XCTestCase {
         app.tapWhenReady(app.buttons["settings"])
         XCTAssertTrue(app.switches["settings-hints"].waitForExistence(timeout: 5))
         app.buttons["Close settings"].firstMatch.tap()
-        app.tapWhenReady(app.buttons["start-new-session"])
-        app.tapWhenReady(app.buttons["reset-cancel"], timeout: 5)
+        app.tap(app.buttons["start-new-session"], until: app.buttons["reset-cancel"])
+        app.buttons["reset-cancel"].tap()
         XCTAssertTrue(app.buttons["start-new-session"].waitForExistence(timeout: 5))
         XCTAssertEqual(app.state.hand, 1)
     }

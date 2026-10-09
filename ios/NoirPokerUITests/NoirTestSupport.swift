@@ -104,7 +104,7 @@ extension XCUIApplication {
     /// sits, and beside the element on wide layouts.
     func reveal(_ element: XCUIElement, maxSteps: Int = 16) {
         var steps = 0
-        while element.exists && !element.isHittable && steps < maxSteps {
+        while element.exists && !isUnobscured(element) && steps < maxSteps {
             let window = windows.firstMatch.frame
             let frame = element.frame
             guard window.width > 0, window.height > 0 else { return }
@@ -118,6 +118,34 @@ extension XCUIApplication {
         // Let the scroll view settle: a tap during deceleration only stops
         // the scroll and never reaches the button.
         if steps > 0 { Thread.sleep(forTimeInterval: 0.8) }
+    }
+
+    /// Hittable and not behind the docked phone action panel. XCUITest's
+    /// `isHittable` does not see the dock's plain background, so content
+    /// scrolled under it would otherwise count as tappable.
+    func isUnobscured(_ element: XCUIElement) -> Bool {
+        guard element.exists, element.isHittable else { return false }
+        let dock = self.element("action-dock")
+        // No dock (wide layouts, large text) or a sheet covers it.
+        guard dock.exists, dock.isHittable else { return true }
+        let dockFrame = dock.frame
+        let frame = element.frame
+        if dockFrame.contains(frame) { return true }
+        return frame.maxY <= dockFrame.minY + 1 || frame.minY >= dockFrame.maxY - 1
+    }
+
+    /// Taps `element` until `result` appears (up to three tries). A tap can
+    /// be swallowed while the table is still scrolling, for example when the
+    /// table scrolls the felt into view at the hero's turn.
+    func tap(_ element: XCUIElement, until result: XCUIElement, timeout: TimeInterval = 10,
+             file: StaticString = #filePath, line: UInt = #line) {
+        XCTAssertTrue(element.waitForExistence(timeout: timeout), "\(element) never appeared", file: file, line: line)
+        for _ in 0..<3 {
+            reveal(element)
+            if isUnobscured(element) { element.tap() }
+            if result.waitForExistence(timeout: 4) { return }
+        }
+        XCTFail("\(result) never appeared after tapping \(element)", file: file, line: line)
     }
 
     func tapWhenReady(_ element: XCUIElement, timeout: TimeInterval = 10, file: StaticString = #filePath, line: UInt = #line) {
