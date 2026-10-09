@@ -51,7 +51,7 @@ struct TableRootView: View {
                         ScrollViewReader { proxy in
                             ScrollView {
                                 mainColumn(width: mainWidth, windowWidth: width, docked: tableDock, wide: true,
-                                           arenaMaxHeight: tableDock ? geo.size.height - Self.wideChromeHeight : nil)
+                                           arenaMaxHeight: tableDock ? geo.size.height - wideChromeHeight : nil)
                                     .padding(.vertical, 20)
                             }
                             .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -60,6 +60,16 @@ struct TableRootView: View {
                             .onChange(of: tableFocusKey) { _, key in
                                 guard tableDock, key != nil else { return }
                                 scrollToArena(proxy)
+                            }
+                            // Also on launch and on rotation into the docked layout,
+                            // when the hero is already deciding or the hand is over.
+                            .onAppear {
+                                guard tableDock, tableFocusKey != nil else { return }
+                                DispatchQueue.main.async { scrollToArena(proxy, animated: false) }
+                            }
+                            .onChange(of: tableDock) { _, docked in
+                                guard docked, tableFocusKey != nil else { return }
+                                DispatchQueue.main.async { scrollToArena(proxy, animated: false) }
                             }
                         }
                         ScrollView {
@@ -132,11 +142,12 @@ struct TableRootView: View {
     }
 
     /// Header, scroll padding and the docked wide action panel: the height left
-    /// for the felt is the window height minus this.
-    private static let wideChromeHeight: CGFloat = 270
+    /// for the felt is the window height minus this. The settled panel is a
+    /// single row of buttons, so a finished hand gives the felt more room.
+    private var wideChromeHeight: CGFloat { state.phase == .done ? 200 : 270 }
 
-    private func scrollToArena(_ proxy: ScrollViewProxy) {
-        if reduceMotion {
+    private func scrollToArena(_ proxy: ScrollViewProxy, animated: Bool = true) {
+        if reduceMotion || !animated {
             proxy.scrollTo(Self.arenaAnchor, anchor: .bottom)
         } else {
             withAnimation(.easeInOut(duration: 0.35)) {

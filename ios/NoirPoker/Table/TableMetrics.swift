@@ -31,7 +31,7 @@ struct TableMetrics {
         guard let maxHeight, !compact else { return full }
         let floor: CGFloat
         switch count {
-        case ...6: floor = done ? 540 : 480
+        case ...6: floor = done ? 600 : 480
         case 7: floor = 540
         default: floor = 580
         }
