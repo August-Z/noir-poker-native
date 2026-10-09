@@ -74,3 +74,17 @@ struct SheetHeading: View {
             .accessibilityAddTraits(.isHeader)
     }
 }
+
+extension View {
+    /// Large sheets (Hand Review, Opponent Styles) use the page size on iPad,
+    /// so their tables and timelines get room instead of the narrow form sheet.
+    /// Phones present them full height either way.
+    @ViewBuilder
+    func widePresentation() -> some View {
+        if #available(iOS 18.0, *) {
+            presentationSizing(.page)
+        } else {
+            self
+        }
+    }
+}

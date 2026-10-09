@@ -232,7 +232,18 @@ final class TabletLayoutTests: XCTestCase {
             .waitForExistence(timeout: 10), "The wide layout shows the sidebar footnote")
         XCTAssertTrue(app.waitForHeroTurn(), app.probe.label)
         Noir.snapshot("ipad-landscape-6max", in: self)
-        XCTAssertTrue(app.element("hand-label").isHittable, "The table is on screen")
+        // The action panel is docked under the table column, and at the hero's
+        // turn the whole felt sits above it without scrolling.
+        // (The 13-inch iPad is tall enough to keep the panel inline.)
+        if app.windows.firstMatch.frame.height < 1000 {
+            let dock = app.element("action-dock")
+            XCTAssertTrue(dock.waitForExistence(timeout: 5), "Landscape iPads dock the action panel")
+            XCTAssertTrue(app.foldButton.isHittable, "The docked action panel is on screen")
+            XCTAssertTrue(app.waitUntil(timeout: 5) { app.element("arena").frame.maxY <= dock.frame.minY + 1 },
+                          "The felt clears the dock: arena \(app.element("arena").frame), dock \(dock.frame)")
+        } else {
+            XCTAssertTrue(app.element("hand-label").isHittable, "The table is on screen")
+        }
         XCTAssertTrue(app.element("stat-hands").isHittable, "The sidebar is visible next to the table")
         app.reveal(app.foldButton)
         XCTAssertTrue(app.foldButton.isHittable, "The action panel is reachable")

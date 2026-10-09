@@ -42,10 +42,25 @@ struct TableRootView: View {
                 HeaderView(state: state, width: width, toggleSound: { model.session.toggleSound() },
                            showSettings: { showSettings = true }, showRules: { showRules = true })
                 if wide {
+                    let mainWidth = width - sidebarWidth - gap - gutter * 2
+                    // Tablets in landscape (and other wide windows shorter than the
+                    // full table) dock the action panel under the table column, so
+                    // the felt and the controls share one screen like a console.
+                    let tableDock = !landscapePhone && !typeSize.isAccessibilitySize && geo.size.height < 1000
                     HStack(alignment: .top, spacing: gap) {
-                        ScrollView {
-                            mainColumn(width: width - sidebarWidth - gap - gutter * 2, windowWidth: width, docked: false, wide: true)
-                                .padding(.vertical, 20)
+                        ScrollViewReader { proxy in
+                            ScrollView {
+                                mainColumn(width: mainWidth, windowWidth: width, docked: tableDock, wide: true,
+                                           arenaMaxHeight: tableDock ? geo.size.height - Self.wideChromeHeight : nil)
+                                    .padding(.vertical, 20)
+                            }
+                            .safeAreaInset(edge: .bottom, spacing: 0) {
+                                if tableDock { wideActionDock(width: mainWidth) }
+                            }
+                            .onChange(of: tableFocusKey) { _, key in
+                                guard tableDock, key != nil else { return }
+                                scrollToArena(proxy)
+                            }
                         }
                         ScrollView {
                             sidebar(width: sidebarWidth, sideColumn: true)
@@ -70,13 +85,7 @@ struct TableRootView: View {
                         }
                         .onChange(of: tableFocusKey) { _, key in
                             guard docked, key != nil else { return }
-                            if reduceMotion {
-                                proxy.scrollTo(Self.arenaAnchor, anchor: .bottom)
-                            } else {
-                                withAnimation(.easeInOut(duration: 0.35)) {
-                                    proxy.scrollTo(Self.arenaAnchor, anchor: .bottom)
-                                }
-                            }
+                            scrollToArena(proxy)
                         }
                     }
                 }
@@ -100,11 +109,13 @@ struct TableRootView: View {
         .sheet(isPresented: Binding(get: { state.review.dialogOpen }, set: { if !$0 { model.session.closeReview() } })) {
             ReviewSheet(model: model) { model.session.closeReview() }
                 .presentationDetents([.large])
+                .widePresentation()
         }
         .sheet(isPresented: Binding(get: { state.opponentsDialog != nil },
                                     set: { if !$0 && model.state.opponentsDialog != nil { model.session.discardOpponentSettings() } })) {
             OpponentsSheet(model: model)
                 .presentationDetents([.large])
+                .widePresentation()
         }
         .sheet(isPresented: $showSettings) {
             SettingsSheet(model: model) { showSettings = false }
@@ -120,9 +131,24 @@ struct TableRootView: View {
         }
     }
 
+    /// Header, scroll padding and the docked wide action panel: the height left
+    /// for the felt is the window height minus this.
+    private static let wideChromeHeight: CGFloat = 270
+
+    private func scrollToArena(_ proxy: ScrollViewProxy) {
+        if reduceMotion {
+            proxy.scrollTo(Self.arenaAnchor, anchor: .bottom)
+        } else {
+            withAnimation(.easeInOut(duration: 0.35)) {
+                proxy.scrollTo(Self.arenaAnchor, anchor: .bottom)
+            }
+        }
+    }
+
     // MARK: Main column
 
-    private func mainColumn(width: CGFloat, windowWidth: CGFloat, docked: Bool, wide: Bool) -> some View {
+    private func mainColumn(width: CGFloat, windowWidth: CGFloat, docked: Bool, wide: Bool,
+                            arenaMaxHeight: CGFloat? = nil) -> some View {
         let compact = width < 600
         return VStack(alignment: .leading, spacing: 16) {
             TableHeading(state: state, compact: compact)
@@ -131,7 +157,7 @@ struct TableRootView: View {
                     .padding(.horizontal, compact ? 14 : 24)
                     .padding(.top, compact ? 14 : 20)
                     .padding(.bottom, 8)
-                ArenaView(model: model, width: width - 2)
+                ArenaView(model: model, width: width - 2, maxHeight: arenaMaxHeight)
                     .id(Self.arenaAnchor)
                 if typeSize.isAccessibilitySize {
                     // The felt caps its text size; this list carries every
@@ -200,6 +226,25 @@ struct TableRootView: View {
             .fixedSize(horizontal: false, vertical: true)
             .minimumHitTarget()
             .accessibilityIdentifier("start-new-session")
+    }
+
+    /// The wide-layout dock: the full-size action panel pinned under the table
+    /// column, styled as the bottom strip of the game surface.
+    private func wideActionDock(width: CGFloat) -> some View {
+        ActionPanelView(model: model, compact: false) { model.session.openReview() }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 16)
+            .frame(width: width)
+            .background(
+                Noir.panel.opacity(0.97)
+                    .overlay(alignment: .top) { Rectangle().fill(Noir.stripDivider).frame(height: 1) }
+            )
+            .clipShape(UnevenRoundedRectangle(topLeadingRadius: 18, topTrailingRadius: 18))
+            .shadow(color: .black.opacity(0.35), radius: 24, y: -6)
+            .frame(maxWidth: .infinity)
+            .padding(.bottom, 8)
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("action-dock")
     }
 
     private var actionDock: some View {
@@ -420,6 +465,15 @@ private struct SurfaceTopBar: View {
                         opponentsButton
                         playersMenu
                         difficulty
+                    }
+                    VStack(alignment: .leading, spacing: 10) {
+                        handLabel
+                        HStack(spacing: 12) {
+                            opponentsButton
+                            Spacer(minLength: 8)
+                            playersMenu
+                            difficulty
+                        }
                     }
                     VStack(alignment: .leading, spacing: 10) {
                         handLabel

@@ -11,6 +11,9 @@ struct TableMetrics {
     let longNames: Bool
     /// Dynamic Type is at an accessibility size: plates drop their avatars.
     let largeText: Bool
+    /// Docked wide layouts fit the felt to the window, down to a floor that
+    /// keeps plates, revealed cards and the board apart.
+    var maxHeight: CGFloat? = nil
 
     var compact: Bool { width <= 600 }
     var dense: Bool { compact && count >= 7 }
@@ -24,7 +27,15 @@ struct TableMetrics {
         default:
             if compact && longNames { base = count == 8 ? 800 : 900 } else { base = compact ? 720 : 690 }
         }
-        return base + (largeText ? 90 : 0)
+        let full = base + (largeText ? 90 : 0)
+        guard let maxHeight, !compact else { return full }
+        let floor: CGFloat
+        switch count {
+        case ...6: floor = done ? 540 : 480
+        case 7: floor = 540
+        default: floor = 580
+        }
+        return min(full, max(floor, maxHeight))
     }
 
     /// Rail ellipse insets: top, horizontal, bottom.
