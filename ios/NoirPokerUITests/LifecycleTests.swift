@@ -117,7 +117,8 @@ final class LifecycleTests: XCTestCase {
                       "The review never finished after the return")
         XCTAssertTrue(app.element("review-priority").exists, "The analysis failed after the return")
 
-        app.buttons["Close Hand Review"].firstMatch.tap()
+        app.reviewCloseButton.tap()
+        XCTAssertTrue(app.waitForReviewClosed(), "The review sheet did not close: \(app.probe.label)")
         XCTAssertTrue(app.nextButton.waitForExistence(timeout: 10))
         XCTAssertTrue(app.lifecycleProbe.waitForExistence(timeout: 5))
         let probe = app.lifecycle

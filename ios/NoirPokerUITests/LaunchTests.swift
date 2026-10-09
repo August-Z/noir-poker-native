@@ -198,7 +198,7 @@ final class LaunchTests: XCTestCase {
         XCTAssertEqual(runout.boardCount, 5, "The practice runout shows all five community cards")
         XCTAssertEqual(runout.settlementCount, settled.settlementCount, "The settled board is unchanged")
         XCTAssertEqual(runout.totals, settled.totals, "The practice runout never moves chips")
-        XCTAssertEqual(runout.wealth, 30_000)
+        XCTAssertEqual(runout.wealth, settled.wealth, "The practice runout creates no chips")
         XCTAssertEqual(runout.hand, settled.hand)
         XCTAssertEqual(app.handsPlayed, handsPlayed, "The fold-win is counted once")
         XCTAssertTrue(app.waitUntil(timeout: 5) { !app.finishButton.exists }, "Finish Hand is gone after the runout")
