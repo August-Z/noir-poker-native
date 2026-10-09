@@ -2,25 +2,31 @@ import SwiftUI
 import PokerCore
 
 /// Table settings in one sheet: seat count (5–9, applied by the next deal),
-/// opponent difficulty (applies now), coaching tips and sound. The same
-/// controls also sit on the table surface and in the sidebar, as in the
-/// reference; this sheet gathers them for phones and large text. Every value
-/// and option label comes from `SettingsState`, and the session persists the
-/// changes.
+/// opponent difficulty (applies now), opponent styles, table tips and sound,
+/// in the same order as Android's Settings sheet. The same controls also sit on
+/// the table surface and in the sidebar, as in the reference; this sheet gathers
+/// them for phones and large text. Every value and option label comes from
+/// `SettingsState`, and the session persists the changes.
 struct SettingsSheet: View {
     let model: TableModel
     let onClose: () -> Void
+    /// Set when the Opponent Styles row closes this sheet: the opponents sheet
+    /// opens once this one has finished disappearing, because SwiftUI cannot
+    /// present a second sheet while the first is still being dismissed.
+    @State private var opensOpponentsOnDismiss = false
 
     private var settings: SettingsState { model.state.settings }
     private var coach: CoachState { model.state.coach }
     private var session: TableSession { model.session }
+    private var opponents: OpponentsSummary { model.state.opponents }
 
     var body: some View {
-        NoirSheet(eyebrow: "TABLE SETTINGS", title: "Practice Table", closeLabel: "Close settings", onClose: onClose) {
-            section("Players") {
+        NoirSheet(eyebrow: UiCopy.settingsEyebrow, title: UiCopy.settingsTitle, closeLabel: UiCopy.settingsCloseA11y,
+                  onClose: onClose) {
+            section(UiCopy.playersLabel) {
                 OptionGrid(options: settings.seatCountOptions.map { ($0.value, $0.label) },
                            selected: settings.requestedSeatCount, minimum: 92,
-                           a11yPrefix: "Table size") { session.setSeatCount($0) }
+                           a11yPrefix: UiCopy.playerCountA11y) { session.setSeatCount($0) }
                 if let note = settings.tableChangeNote {
                     Text(note)
                         .noirFont(12, relativeTo: .caption)
@@ -29,25 +35,74 @@ struct SettingsSheet: View {
                         .accessibilityAddTraits(.updatesFrequently)
                 }
             }
-            section("Opponent Difficulty") {
+            section(UiCopy.difficultyLabel) {
                 OptionGrid(options: settings.difficultyOptions.map { ($0.value, $0.label) },
                            selected: settings.difficulty, minimum: 92,
-                           a11yPrefix: "Opponent Difficulty") { session.setDifficulty($0) }
+                           a11yPrefix: UiCopy.difficultyLabel) { session.setDifficulty($0) }
+            }
+            section(UiCopy.opponentsButton) {
+                opponentsRow
+                if let note = opponents.changeNote {
+                    Text(note)
+                        .noirFont(12, relativeTo: .caption)
+                        .foregroundStyle(Noir.note)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
             VStack(spacing: 0) {
-                toggleRow(title: "Coaching Tips", detail: coach.toggleLabel, isOn: settings.hints,
+                toggleRow(title: UiCopy.settingsHints, detail: coach.toggleLabel, isOn: settings.hints,
                           id: "settings-hints") { session.toggleHints() }
                 Rectangle().fill(Noir.line).frame(height: 1)
-                toggleRow(title: "Sound", detail: settings.soundTitle, isOn: settings.sound,
+                toggleRow(title: UiCopy.settingsSound, detail: settings.soundTitle, isOn: settings.sound,
                           id: "settings-sound") { session.toggleSound() }
             }
             .padding(.horizontal, 14)
             .background(Color(hex: "#111b24"), in: RoundedRectangle(cornerRadius: 10))
             .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color(hex: "#33424b"), lineWidth: 1))
-            Button("Back to Table", action: onClose)
+            Button(UiCopy.backToTable, action: onClose)
                 .buttonStyle(PrimaryButtonStyle())
                 .padding(.top, 4)
         }
+        .onDisappear {
+            guard opensOpponentsOnDismiss else { return }
+            opensOpponentsOnDismiss = false
+            session.openOpponentSettings()
+        }
+    }
+
+    /// Opponent Styles with the pending-change summary; opens the opponents sheet.
+    private var opponentsRow: some View {
+        Button {
+            opensOpponentsOnDismiss = true
+            onClose()
+        } label: {
+            HStack(spacing: 8) {
+                Text(UiCopy.opponentsButton)
+                    .noirFont(14, relativeTo: .body)
+                    .foregroundStyle(Noir.selectText)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Text(opponents.text)
+                    .noirFont(12, relativeTo: .caption)
+                    .foregroundStyle(opponents.changePending ? Noir.note : Noir.subtle)
+                    .multilineTextAlignment(.trailing)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Noir.selectText)
+                    .accessibilityHidden(true)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity, minHeight: 48)
+            .background(Noir.selectBg, in: RoundedRectangle(cornerRadius: 8))
+            .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Noir.selectBorder, lineWidth: 1))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PressScaleStyle())
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(UiCopy.opponentsButton)
+        .accessibilityValue(opponents.text)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityIdentifier("settings-opponents")
     }
 
     private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
@@ -114,8 +169,8 @@ struct ResetSheet: View {
     let onConfirm: () -> Void
 
     var body: some View {
-        NoirSheet(eyebrow: "FRESH START", title: "Start a new session?", onClose: onCancel) {
-            SheetParagraph("This session will end, every player returns to 5,000 chips, and your practice stats reset to zero.")
+        NoirSheet(eyebrow: UiCopy.resetEyebrow, title: UiCopy.resetTitle, onClose: onCancel) {
+            SheetParagraph(UiCopy.resetBody)
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 20) { buttons }
                 VStack(spacing: 12) { buttons }
@@ -126,11 +181,11 @@ struct ResetSheet: View {
 
     @ViewBuilder
     private var buttons: some View {
-        Button("Keep Practicing", action: onCancel)
+        Button(UiCopy.resetCancel, action: onCancel)
             .buttonStyle(OutlineButtonStyle(foreground: Noir.selectText, border: Noir.selectBorder, background: Noir.selectBg))
             .accessibilityIdentifier("reset-cancel")
-        Button("Start New Session", action: onConfirm)
+        Button(UiCopy.resetConfirm, action: onConfirm)
             .buttonStyle(PrimaryButtonStyle())
-            .accessibilityIdentifier("reset-confirm")
+            .accessibilityIdentifier("confirm-reset")
     }
 }

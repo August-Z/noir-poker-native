@@ -104,8 +104,8 @@ final class LaunchTests: XCTestCase {
         XCTAssertTrue(app.waitUntil { app.state.hand == 2 })
         XCTAssertEqual(app.handsPlayed, "1")
 
-        app.tap(app.buttons["start-new-session"], until: app.buttons["reset-confirm"])
-        app.buttons["reset-confirm"].tap()
+        app.tap(app.buttons["start-new-session"], until: app.buttons["confirm-reset"])
+        app.buttons["confirm-reset"].tap()
         XCTAssertTrue(app.waitUntil { app.state.hand == 1 }, app.probe.label)
         XCTAssertEqual(app.handsPlayed, "0")
         XCTAssertEqual(app.element("stat-wins").value as? String, "0")

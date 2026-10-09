@@ -6,7 +6,7 @@ struct NoirSheet<Content: View>: View {
     let eyebrow: String
     let title: String
     var eyebrowColor: Color = Noir.eyebrow
-    var closeLabel = "Close"
+    var closeLabel = UiCopy.closeA11y
     let onClose: () -> Void
     @ViewBuilder var content: Content
 
