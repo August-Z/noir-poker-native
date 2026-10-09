@@ -1,12 +1,18 @@
 package com.august.noirpoker
 
+import android.database.ContentObserver
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.august.noirpoker.platform.HandlerScheduler
@@ -31,6 +37,38 @@ class MainActivity : ComponentActivity() {
     /** The session clock, for instrumented UI tests (main thread only). */
     val tableScheduler: HandlerScheduler get() = table.scheduler
 
+    /**
+     * Reduced motion follows the system "Remove animations" setting (animator
+     * duration scale 0). It is observed while the activity is started, and read
+     * again on every start, so a change made in Settings while the app was in the
+     * background or open in split screen applies without recreating the activity.
+     */
+    private var reducedMotion by mutableStateOf(false)
+
+    private val animatorScaleObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
+        override fun onChange(selfChange: Boolean) {
+            reducedMotion = readReducedMotion()
+        }
+    }
+
+    private fun readReducedMotion(): Boolean =
+        Settings.Global.getFloat(contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
+
+    override fun onStart() {
+        super.onStart()
+        reducedMotion = readReducedMotion()
+        contentResolver.registerContentObserver(
+            Settings.Global.getUriFor(Settings.Global.ANIMATOR_DURATION_SCALE),
+            false,
+            animatorScaleObserver,
+        )
+    }
+
+    override fun onStop() {
+        contentResolver.unregisterContentObserver(animatorScaleObserver)
+        super.onStop()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         NoirType.install(ManropeFamily)
@@ -39,7 +77,7 @@ class MainActivity : ComponentActivity() {
             statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
         )
-        val reducedMotion = Settings.Global.getFloat(contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
+        reducedMotion = readReducedMotion()
         setContent {
             NoirTheme(reducedMotion = reducedMotion) {
                 NoirTableScreen(table.model)
