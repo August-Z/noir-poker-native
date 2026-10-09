@@ -198,4 +198,24 @@ class SessionReviewTest {
         val analysis = assertIs<HeroReviewAnalysis>(h.state.review.analysis)
         assertEquals(analysis.priorityIndex, h.state.review.selected)
     }
+
+    @Test
+    fun `without a runner opening the review reports an error`() {
+        val h = Harness(seed = 1, runner = null)
+        h.heroTurn(6)
+        h.session.callOrCheck()
+        h.respondToHero()
+        h.hooks.mutate { g ->
+            while (g.phase != Phase.DONE) {
+                if (g.phase == Phase.BETWEEN) advanceStreet(g) else act(g, g.actor, Action.CALL)
+            }
+        }
+        assertNotNull(h.state.review.input)
+        h.session.openReview()
+        assertEquals(SessionReviewStatus.ERROR, h.state.review.status)
+        val view = assertNotNull(presentHeroReview(h.state.review))
+        assertTrue(view.retryVisible)
+        assertEquals(ReviewDialogCopy.stateError, view.stateText)
+        assertEquals(false, view.running)
+    }
 }

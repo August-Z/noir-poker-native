@@ -5,23 +5,25 @@
 // reads the opponent records; they appear only in the opponent panel, which
 // exists only after settlement because the review input does.
 
-/// Static Hand Review copy (reference `index.html` review dialog markup).
+/// Static and templated Hand Review copy. The strings match the Kotlin
+/// `ReviewDialogCopy` (review copy catalog §8, §9, Appendix B) one for one;
+/// `fixtures/review-dialog.json` locks both tables.
 public enum ReviewDialogCopy {
     public static let eyebrow = "HAND REVIEW"
-    public static let closeA11y = "Close Hand Review"
+    public static let closeA11y = "Close review"
     public static let titleDefault = "Hand Review"
     public static let tabsA11y = "Review perspective"
     public static let tabHero = "Your Decisions"
     public static let tabOpponents = "Opponent Decisions"
-    public static let tabOpponentsSubtitle = "Why opponents played it this way"
+    public static let tabOpponentsSubtitle = "Why they played it that way"
     public static let timelineA11y = "Decision timeline for this hand"
-    public static let routesA11y = "Conditions and trade-offs of both lines"
-    public static let simulationA11y = "Candidate action comparison"
-    public static let scope = "Reviewed with the information available at each decision · Ranges are assumptions, and winning or losing doesn't by itself make a choice good or bad."
-    public static let methodSummary = "Method and Scope"
+    public static let routesA11y = "Conditions and trade-offs for both lines"
+    public static let simulationA11y = "Candidate action simulation comparison"
+    public static let scope = "Reviewed with the information available at each decision · Ranges are assumptions, and winning or losing doesn't decide whether a choice was good."
+    public static let methodSummary = "How the analysis works"
     public static let methodInfo = "Only the hole cards, community cards, public actions, and stacks at the moment of each decision are used. Opponents' hidden cards, later cards, and the final winners play no part in grading decisions."
-    public static let methodPrice = "Equity needed = effective call cost ÷ the pot you can win after calling. The Main Pot and Side Pots are estimated separately by eligibility, and uncalled refunds don't count as winnings."
-    public static let methodRanges = "\"Equity vs. Two Ranges\" samples a random range and a stronger range for the player who bet or raised. These ranges are assumptions, not opponents' actual holdings, and not an error interval. Later betting, fold rates, and implied odds are not fully modeled. The analysis accounts for hand category, kicker, draws, position, board texture, player count, and betting pressure. Cards that directly improve you are not guaranteed outs; only the chance of improving on the next card is shown, and seeing both the turn and the river is never treated as paid for with a single call. Heads-up on the river, every legal holding is enumerated; other spots use fixed-seed sampling. Enumeration removes sampling error but not the error in the range assumptions. Candidate bet sizes are practice lines, not a GTO solver."
+    public static let methodPrice = "Required equity = effective call cost ÷ the pot you can win after calling. The Main Pot and Side Pots are estimated separately by eligibility, and uncalled refunds don't count as winnings."
+    public static let methodRanges = "The \"two-range estimate\" comes from sampling a random range and a stronger range for whoever bet or raised. These range assumptions are not the opponents' actual hands, and they are not an error interval. Later betting, fold rates, and potential winnings are not fully modeled. The analysis accounts for hand type, kicker, draws, position, board texture, number of players, and betting pressure. Direct completion cards are not guaranteed winning outs; only the chance of hitting on the next card is shown, because seeing both the turn and the river from the flop usually costs more than one payment. Heads-up on the river, every legal hole-card combo is enumerated; everything else uses fixed-seed sampling. Enumeration removes sampling error but not the error in the range assumptions. Candidate bet sizes are practice lines, not a GTO solution."
     public static let methodRefsPrefix = "References:"
     /// Optional external references; open them in the system browser.
     public static let methodRefs: [ReviewReference] = [
@@ -29,19 +31,23 @@ public enum ReviewDialogCopy {
         ReviewReference(label: "Starting Hands and Position",
                         url: "https://www.pokerstars.com/poker/learn/lesson/poker-starting-hands/"),
     ]
-    public static let methodSimulation = "The candidate action simulation samples the unknown cards from that spot and plays the hand out with the rules engine, including further bets, folds, side pots, and refunds. Your later decisions use a balanced simulated strategy, opponents keep their public styles, and each simulated decision uses 8 equity samples. It compares chip results under these strategies, not the value of optimal follow-up play, and sampling error doesn't cover range or model errors."
-    public static let methodOpponents = "Opponent explanations read each bot's actual execution record after settlement, showing the price, range, mood, and random branches it used at the time. These private records never feed into grading your decisions."
+    public static let methodSimulation = "The candidate action simulation samples the unknown cards from the position at the time and plays the hand out with the rules engine, including further bets, folds, side pots, and refunds. Your later decisions use a balanced simulated strategy, opponents keep their public styles, and each simulated decision uses 8 equity samples. It compares chip results under these strategies, not the value of an optimal follow-up strategy, and sampling error doesn't cover range or model errors."
+    public static let methodOpponents = "Opponent explanations read the actual decision records after settlement and show the price, range, mood, and random branches each bot used at the time. These private records never feed into grading your decisions."
+    /// The method paragraphs before the references, in order.
+    public static var methodParagraphs: [String] { [methodInfo, methodPrice, methodRanges] }
+    /// The method paragraphs after the references, in order.
+    public static var methodClosingParagraphs: [String] { [methodSimulation, methodOpponents] }
     public static let backToTable = "Back to Table"
     public static let previous = "Previous"
     public static let next = "Next"
 
     // Header
-    public static func title(_ hand: Int) -> String { "Hand \(hand) · Hand Review" }
+    public static func title(_ hand: Int) -> String { "Hand #\(hand) · Review" }
     public static func resultChange(_ profit: Int) -> String {
         profit < 0 ? "\(formatChips(profit)) chips" : profit > 0 ? "+\(formatChips(profit)) chips" : "0 chips"
     }
     public static let contextFolded = "You folded this hand"
-    public static let contextPartialWin = "Won part of the pot but lost chips overall"
+    public static let contextPartialWin = "Won part of the pot, net loss for the hand"
     public static let contextWon = "You won the pot"
     public static let contextLost = "You didn't win the pot"
 
@@ -49,17 +55,20 @@ public enum ReviewDialogCopy {
     public static let stateError = "Analysis didn't finish. You can try again."
     public static func stateProgress(_ done: Int, _ total: Int) -> String { "Analyzing decision \(done) of \(total)…" }
     public static let statePreparing = "Preparing this hand's decision snapshots…"
-    public static let summaryTitleDefault = "Back to the moment of each decision"
-    public static let priorityButton = "Go to the Priority Decision"
-    public static let fromFirstButton = "Review From Step 1"
+    public static let summaryTitleDefault = "Back to the decisions as they were"
+    public static let priorityButton = "Go to the priority decision"
+    public static let fromFirstButton = "Review from step 1"
     public static let retryButton = "Analyze Again"
 
     // Status chips
+    public static let statusAttention = "Needs Work"
+    public static let statusConsider = "Worth Discussing"
+    public static let statusSound = "Well Reasoned"
     public static func status(_ status: ReviewStatus) -> String {
         switch status {
-        case .attention: return "Needs Work"
-        case .consider: return "Worth Discussing"
-        case .sound: return "Well Reasoned"
+        case .attention: return statusAttention
+        case .consider: return statusConsider
+        case .sound: return statusSound
         }
     }
     public static let statusPending = "Pending"
@@ -68,78 +77,89 @@ public enum ReviewDialogCopy {
     // Hero timeline and detail
     public static let timelineTitle = "Your Decisions"
     public static func actionCount(_ n: Int) -> String { n == 1 ? "1 action" : "\(n) actions" }
-    public static let empty = "You made no voluntary decisions this hand, so there's nothing to grade. Blinds are forced bets and never count as mistakes."
+    public static let empty = "You made no decisions this hand, so there's nothing to evaluate. Blinds are forced bets and never count as mistakes."
     public static func detailTitle(_ step: Int, _ street: String) -> String { "Step \(step) · \(street)" }
-    public static let holeLabel = "Your Hole Cards"
-    public static let boardLabel = "Community Cards at the Time"
+    public static let holeLabel = "Your hole cards"
+    public static let boardLabel = "Community cards at the time"
     public static let noBoard = "No community cards yet"
     public static let positionLabel = "Position"
-    public static let potLabel = "Pot at the Time"
-    public static let stackLabel = "Stack Behind"
-    public static let yourChoice = "Your Choice"
+    public static let potLabel = "Pot at the time"
+    public static let stackLabel = "Stack remaining"
+    public static let yourChoice = "Your choice"
     public static let suggestedLine = "Suggested Line"
-    public static let suggestionPending = "Comparing the available actions…"
+    public static let suggestionPending = "Comparing available actions…"
     public static let routePrimary = "When the main line holds"
     public static let routeSecondary = "Conditional alternative"
     public static let simulationHeading = "Candidate Action Simulation"
-    public static let simulationStable = "In this sample, one line clearly leads under both ranges, though it still depends on assumptions about later play."
-    public static let simulationUnstable = "Range assumptions or sampling error could change the order; no single best action has been shown."
+    public static let simulationStable = "In this sample, one line clearly led under both ranges; it still depends on assumptions about later play."
+    public static let simulationUnstable = "Ranges or sampling error could change the order; no single best action has been shown."
     public static func simulationCaption(_ trials: Int) -> String {
-        "\(trials) hands simulated per action and range · Net chip change from this decision"
+        "\(trials) hands simulated per action and range · Net chip change from this decision on"
     }
     public static let simulationColumns = ["Action", "Random Range", "Action-Weighted"]
     public static func simulationMargin(_ margin: Double) -> String { "≈ ±\(formatChips(margin))" }
-    public static let simulationDetailsSummary = "How the simulation handles later actions"
-    public static let simulationDetailsBody = "Results include immediate folds, getting called, later raises, and showdowns. Real hidden hole cards, the actual future deal order, and the final winners are never used. The two range results are not a range of optimal returns."
-    public static let simulationUnavailable = "This older snapshot lacks the full action state, so later actions can't be simulated. The range and price analysis from public information is still shown."
-    public static let simulationRunning = "Simulating each legal action and how the hand plays out…"
+    public static let simulationDetailsSummary = "How the simulation handles later action"
+    public static let simulationDetailsBody = "Results include immediate folds, calls, later raises, and showdowns; the real hidden hole cards, the actual card order that followed, and the final winners are never used. The two range results are not a range of optimal returns."
+    public static let simulationUnavailable = "This older snapshot lacks the full action state, so later action can't be simulated; the range and price analysis from public information still applies."
+    public static let simulationRunning = "Simulating each legal action and the rest of the hand…"
     public static let decisionTitleDefault = "Analysis based on what you knew then"
-    public static let reasonDefault = "Uses only your hole cards, the community cards, public actions, and stack sizes at the time, never opponents' hidden cards or cards dealt later."
-    public static let evidenceHeading = "Key Factors at the Time"
-    public static let confidenceDefault = "Awaiting analysis"
-    public static let lessonLabel = "Focus for Next Time"
-    public static let lessonDefault = "Judge the decision separately from the result. A specific practice focus appears when the review finishes."
-    public static let planHeading = "Plan for Later Streets"
-    public static let planDefault = "The follow-up plan appears when the analysis finishes."
-    public static let metricPrice = "Equity Needed to Call"
-    public static let metricEquity = "Equity vs. Two Ranges"
-    public static let metricContestable = "Contestable After Calling"
+    public static let reasonDefault = "Uses your hole cards, the community cards, public actions, and stacks at the time, never opponents' hidden cards or cards dealt later."
+    public static let evidenceHeading = "Key factors at the time"
+    public static let confidenceDefault = "Waiting for analysis"
+    public static let lessonLabel = "Focus for next practice"
+    public static let lessonDefault = "Judge the decision separately from the result; a specific practice focus appears when the review is done."
+    public static let planHeading = "Plan for later streets"
+    public static let planDefault = "The follow-up plan appears when analysis finishes."
+    public static let metricPrice = "Equity needed to call"
+    public static let metricEquity = "Two-range estimate"
+    public static let metricContestable = "Winnable after calling"
     public static let metricPending = "…"
     public static let metricNoCall = "No call needed"
     public static let metricNone = "—"
     public static func equityAbout(_ p: String) -> String { "≈\(p)" }
     public static func modelEnumeration(_ trials: Int) -> String {
-        "Heads-up on the river: all \(trials) legal opponent hole-card combinations were enumerated, so there is no sampling error across combinations, but the true range is still unknown."
+        "River heads-up: all \(trials) legal opponent hole-card combos were enumerated; there's no sampling error across combos, but the real range is still unknown."
     }
     public static func modelSampling(_ trials: Int, _ points: Int) -> String {
-        "\(trials) samples per range, with a conservative sampling-error band of about ±\(points) percentage points; this is not the error in the opponent's actual range."
+        "\(trials) samples per range, with a conservative sampling-error band of about ±\(points) percentage points; this isn't the error in the opponent's real range."
     }
     public static func modelEquity(_ random: String, _ weighted: String) -> String {
         "Random / action-weighted equity: \(random) / \(weighted). The gap between the two ranges is not a confidence interval."
     }
     public static let priceNoteSidePots = "Estimated separately for each pot you're eligible for; side pots beyond your all-in amount are excluded."
-    public static let priceNoteClosing = "The call price uses the amount you can currently win, net of any uncalled refund."
-    public static let priceNoteDefault = "The price is only a guide; later bets, other players' actions, and implied odds aren't included."
-    public static let publicActionsSummary = "Earlier Public Actions"
-    public static let publicActionsEmpty = "No other voluntary actions on this street yet."
+    public static let priceNoteClosing = "The call price uses the amount you can currently win, after removing uncalled refunds."
+    public static let priceNoteDefault = "The price is only a guide; later bets, other players' actions, and potential winnings aren't included."
+    public static let publicActionsSummary = "Earlier public actions"
+    public static let publicActionsEmpty = "No other actions yet this round."
     public static func stepPosition(_ step: Int, _ total: Int) -> String { "\(step) / \(total)" }
 
+    // Accessibility text of timeline items and simulation cells (shared with Android).
+    public static func heroStepA11y(_ step: Int, _ meta: String, _ action: String, _ chip: String) -> String {
+        "Step \(step), \(meta), \(action), \(chip)"
+    }
+    public static func opponentStepA11y(_ sequence: Int, _ meta: String, _ action: String, _ profile: String) -> String {
+        "\(opponentPublicAction(sequence)), \(meta), \(action), \(profile)"
+    }
+    public static func simulationCellA11y(_ action: String, _ column: String, _ value: String, _ margin: String) -> String {
+        "\(action), \(column): \(value) chips, \(margin)"
+    }
+
     // Opponent panel
-    public static let opponentIntro = "Step through how each opponent judged its spot. Hole cards enter this panel only after the hand ends; your own decision grades still use only the public information available at the time."
+    public static let opponentIntro = "Step through how each bot decided at the time. Hole cards enter this panel only after the hand ends; your own decision ratings still use only the public information at the time."
     public static let opponentFilterLabel = "Show opponent"
     public static let opponentFilterAll = "All Opponents"
     public static let opponentTimelineA11y = "Opponent decision timeline"
     public static let opponentTimelineTitle = "What Opponents Actually Did"
-    public static let opponentEmpty = "No bot decisions were recorded this hand. Reasons are never invented for actions that can't be reconstructed; the next hand will record the actual reasoning."
-    public static let opponentRecordChip = "Actual Decision Record"
-    public static func opponentHoleLabel(_ name: String) -> String { "\(name)'s Hole Cards at the Time" }
+    public static let opponentEmpty = "No bot decision records for this hand. Reasons are never invented for actions that can't be reconstructed; the next hand will record the actual decisions."
+    public static let opponentRecordChip = "Actual decision record"
+    public static func opponentHoleLabel(_ name: String) -> String { "\(name)'s hole cards at the time" }
     public static func opponentChoice(_ made: String) -> String { "It chose · \(made)" }
-    public static let opponentEvidenceHeading = "What It Actually Used"
-    public static let opponentBranchesSummary = "Show the actual random branches (0–1 draws)"
+    public static let opponentEvidenceHeading = "What it actually used"
+    public static let opponentBranchesSummary = "Show the actual random branches (0–1 rolls)"
     public static func opponentBranch(_ value: Double, _ threshold: Double, _ hit: Bool) -> String {
         "\(jsToFixed(value, 3)) / threshold \(jsToFixed(threshold * 100, 1))% · \(hit ? "Hit" : "Miss")"
     }
-    public static let opponentBranchesEmpty = "No additional random branches at this step."
+    public static let opponentBranchesEmpty = "No extra random branches on this step."
     public static func opponentPublicAction(_ sequence: Int) -> String { "Public action #\(sequence)" }
 }
 
@@ -185,6 +205,8 @@ public struct ReviewRouteCard: Equatable, Sendable {
 public struct ReviewSimulationCell: Equatable, Sendable {
     public var value: String
     public var margin: String
+    /// Spoken text of the cell: action, column, value and margin.
+    public var a11y: String
 }
 
 public struct ReviewSimulationRow: Equatable, Sendable {
@@ -306,7 +328,8 @@ public struct ReviewDialogContent: Equatable, Sendable {
     public var resultContext: String
     public var summaryTitle: String
     public var statusText: String
-    /// Analysis in progress (show a spinner and progress).
+    /// The analysis job is running (show a spinner and progress). An idle
+    /// review, for example after a background pause, shows no spinner.
     public var running: Bool
     public var progressDone: Int
     public var progressTotal: Int
@@ -358,7 +381,7 @@ public func presentReviewDialog(_ state: HandReviewState) -> ReviewDialogContent
         let label = actionLabel(LabelStep(s))
         return ReviewTimelineItem(index: i, number: i + 1, meta: meta, label: label, chip: chip,
                                   chipKind: ReviewChipKind(status), selected: i == selected,
-                                  a11y: "Step \(i + 1), \(meta), \(label), \(chip)")
+                                  a11y: C.heroStepA11y(i + 1, meta, label, chip))
     }
     var detail: HeroReviewDetail?
     if steps.indices.contains(selected) {
@@ -372,7 +395,7 @@ public func presentReviewDialog(_ state: HandReviewState) -> ReviewDialogContent
         resultContext: context,
         summaryTitle: summary?.title ?? C.summaryTitleDefault,
         statusText: statusText,
-        running: summary == nil && state.status != .error,
+        running: state.status == .running,
         progressDone: state.progress,
         progressTotal: total,
         retryVisible: state.status == .error,
@@ -414,10 +437,14 @@ private func heroDetail(_ d: DecisionSnapshot, result: DecisionAnalysis?, index:
             trials: sim.trials,
             columns: C.simulationColumns,
             rows: sim.rows.map { row in
-                ReviewSimulationRow(label: actionLabel(step, row.action.action, row.action.amount),
-                                    cells: row.scenarios.map {
-                                        ReviewSimulationCell(value: signedChips($0.ev), margin: C.simulationMargin($0.margin))
-                                    })
+                let label = actionLabel(step, row.action.action, row.action.amount)
+                return ReviewSimulationRow(label: label, cells: row.scenarios.enumerated().map { i, scenario in
+                    let column = C.simulationColumns[i == 0 ? 1 : 2]
+                    let value = signedChips(scenario.ev)
+                    let margin = C.simulationMargin(scenario.margin)
+                    return ReviewSimulationCell(value: value, margin: margin,
+                                                a11y: C.simulationCellA11y(label, column, value, margin))
+                })
             },
             detailsSummary: C.simulationDetailsSummary,
             note: sim.note,
@@ -512,7 +539,7 @@ private func opponentPanel(_ state: HandReviewState, all: [BotDecisionRecord]) -
         let label = actionLabel(opponentStep(r))
         return ReviewTimelineItem(index: i, number: r.sequence, meta: meta, label: label, chip: r.trace.profileName,
                                   chipKind: .pending, selected: i == selected,
-                                  a11y: "\(C.opponentPublicAction(r.sequence)), \(meta), \(label), \(r.trace.profileName)")
+                                  a11y: C.opponentStepA11y(r.sequence, meta, label, r.trace.profileName))
     }
     var detail: OpponentReviewDetail?
     if visible.indices.contains(selected) {

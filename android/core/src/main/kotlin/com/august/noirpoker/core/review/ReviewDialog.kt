@@ -1,8 +1,10 @@
 package com.august.noirpoker.core.review
 
 import com.august.noirpoker.core.BotDecisionRecord
+import com.august.noirpoker.core.BotView
 import com.august.noirpoker.core.Card
 import com.august.noirpoker.core.LabelStep
+import com.august.noirpoker.core.LegalActions
 import com.august.noirpoker.core.actionLabel
 import com.august.noirpoker.core.forLabels
 import com.august.noirpoker.core.historyActionLabel
@@ -22,7 +24,7 @@ object ReviewDialogCopy {
     const val eyebrow = "HAND REVIEW"
     const val closeA11y = "Close review"
     const val titleDefault = "Hand Review"
-    fun title(hand: Int) = "Hand $hand · Hand Review"
+    fun title(hand: Int) = "Hand #$hand · Review"
     fun change(profit: Int) = when {
         profit < 0 -> "${formatChipsSigned(profit)} chips"
         profit > 0 -> "+${formatChipsSigned(profit)} chips"
@@ -44,6 +46,7 @@ object ReviewDialogCopy {
     const val tabsA11y = "Review perspective"
     const val tabHero = "Your Decisions"
     const val tabOpponents = "Opponent Decisions"
+    const val tabOpponentsSubtitle = "Why they played it that way"
 
     const val timelineA11y = "Decision timeline for this hand"
     const val timelineTitle = "Your Decisions"
@@ -124,6 +127,11 @@ object ReviewDialogCopy {
     const val previous = "Previous"
     const val next = "Next"
     fun stepPosition(step: Int, total: Int) = "$step / $total"
+
+    // Accessibility text of timeline items and simulation cells (shared with iOS).
+    fun heroStepA11y(step: Int, meta: String, action: String, chip: String) = "Step $step, $meta, $action, $chip"
+    fun oppStepA11y(sequence: Int, meta: String, action: String, profile: String) = "${oppPublicAction(sequence)}, $meta, $action, $profile"
+    fun simCellA11y(action: String, column: String, value: String, margin: String) = "$action, $column: $value chips, $margin"
 
     const val scope =
         "Reviewed with the information available at each decision · Ranges are assumptions, and winning or losing doesn't decide whether a choice was good."
@@ -326,7 +334,8 @@ fun reviewSigned(v: Double): String = (if (v > 0) "+" else "") + number(v)
  * bot's own view at the time, which has no `minRaise` key.
  */
 fun BotDecisionRecord.labelStep(): LabelStep {
-    val v = requireNotNull(trace.view) { "A bot decision record carries its view" }
+    // The engine always records a view; a record without one still gets a plain label.
+    val v = trace.view ?: return LabelStep(0, action = action, amount = amount?.toDouble())
     return LabelStep(v.street, v.history, v.currentBet, null, v.legal.forLabels(), v.stack, action, amount?.toDouble())
 }
 
@@ -358,7 +367,7 @@ fun presentHeroReview(state: ReviewState): HeroReviewView? {
         val meta = "${streetName(s.street)} · ${s.position}"
         val action = actionLabel(s.labelStep())
         val chip = status?.let(copy::status) ?: copy.statusPending
-        ReviewTimelineItem(i, "${i + 1}", meta, action, chip, status?.tone() ?: ReviewTone.PENDING, i == selected, "${i + 1}. $meta. $action. $chip")
+        ReviewTimelineItem(i, "${i + 1}", meta, action, chip, status?.tone() ?: ReviewTone.PENDING, i == selected, copy.heroStepA11y(i + 1, meta, action, chip))
     }
     val step = decision?.let { d ->
         val labels = d.labelStep()
@@ -405,7 +414,7 @@ fun presentHeroReview(state: ReviewState): HeroReviewView? {
                                 val column = if (i == 0) copy.simColRandom else copy.simColWeighted
                                 val value = reviewSigned(sc.ev)
                                 val margin = copy.simMargin(sc.margin)
-                                ReviewSimCell(value, margin, "$label, $column: $value chips, $margin")
+                                ReviewSimCell(value, margin, copy.simCellA11y(label, column, value, margin))
                             },
                         )
                     },
@@ -501,24 +510,25 @@ fun presentOpponentReview(state: ReviewState): OpponentReviewView? {
         val v = r.trace.view
         val meta = "${r.name} · ${streetName(v?.street ?: 0)}"
         val action = actionLabel(r.labelStep())
-        ReviewTimelineItem(i, "${r.sequence}", meta, action, r.trace.profileName, ReviewTone.PENDING, i == selected, "${copy.oppPublicAction(r.sequence)}. $meta. $action. ${r.trace.profileName}")
+        ReviewTimelineItem(i, "${r.sequence}", meta, action, r.trace.profileName, ReviewTone.PENDING, i == selected, copy.oppStepA11y(r.sequence, meta, action, r.trace.profileName))
     }
     val record = visible.getOrNull(selected)
     val step = record?.let { r ->
         val t = r.trace
-        val v = requireNotNull(t.view)
-        val e = explainOpponent(r)
+        // The engine always records a view; without one the scene stays empty instead of failing.
+        val v = t.view
+        val e = explainOpponent(if (v != null) r else r.copy(trace = t.copy(view = BotView(r.id, emptyList(), legal = LegalActions.DISABLED))))
         OpponentStepView(
             index = selected,
-            title = "${r.name} · ${streetName(v.street)}",
+            title = "${r.name} · ${streetName(v?.street ?: 0)}",
             statusText = copy.oppRecordStatus,
             tone = if (t.exceptions.isNotEmpty()) ReviewTone.CONSIDER else ReviewTone.SOUND,
             scene = ReviewSceneView(
-                copy.oppHoleLabel(r.name), v.hole, copy.boardLabel, v.board, copy.noBoard,
+                copy.oppHoleLabel(r.name), v?.hole ?: emptyList(), copy.boardLabel, v?.board ?: emptyList(), copy.noBoard,
                 listOf(
-                    ReviewMeta(copy.positionLabel, v.position),
-                    ReviewMeta(copy.potLabel, number(v.pot)),
-                    ReviewMeta(copy.stackLabel, number(v.stack)),
+                    ReviewMeta(copy.positionLabel, v?.position ?: ""),
+                    ReviewMeta(copy.potLabel, number(v?.pot ?: 0)),
+                    ReviewMeta(copy.stackLabel, number(v?.stack ?: 0)),
                 ),
             ),
             choiceLabel = copy.oppChoiceLabel(e.made),

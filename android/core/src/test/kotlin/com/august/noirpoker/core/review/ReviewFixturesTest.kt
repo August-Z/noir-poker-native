@@ -225,6 +225,18 @@ class ReviewFixturesTest {
         for (p in f.getValue("privacy").arr) {
             val o = p.obj
             val name = o.getValue("name").str
+            check("$name › variants share public decisions and differ in outcome") {
+                val variants = o.getValue("variants").arr
+                val inputs = variants.map { reviewInputOf(it) }
+                when {
+                    variants.size != 2 -> "expected 2 variants, got ${variants.size}"
+                    variants[0].obj["decisions"] != variants[1].obj["decisions"] -> "raw public decisions differ"
+                    inputs[0].decisions != inputs[1].decisions -> "decoded public decisions differ"
+                    variants[0].obj["outcome"] == variants[1].obj["outcome"] -> "raw outcomes are identical"
+                    inputs[0].outcome == inputs[1].outcome -> "decoded outcomes are identical"
+                    else -> null
+                }
+            }
             o.getValue("variants").arr.forEachIndexed { k, v ->
                 check("$name › variant ${"AB"[k]}") {
                     val (trials, rollout) = options(o["options"])
