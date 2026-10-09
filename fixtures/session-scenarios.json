@@ -2214,7 +2214,7 @@
                 "emotionMode": "subtle",
                 "selectedProfile": "balanced",
                 "detailName": "Balanced Practice",
-                "sizingText": "Typical postflop bet: 45–80% pot",
+                "sizingText": "Typical postflop bet: 45–80% of the pot",
                 "roster": [
                   {
                     "id": 1,
@@ -2265,7 +2265,7 @@
                     "id": 6,
                     "name": "Theo",
                     "offTable": true,
-                    "subtitle": "Not Seated · Steady",
+                    "subtitle": "Not seated · Steady",
                     "assignment": "balanced",
                     "currentStyle": "Not seated yet; uses the saved next-hand setting",
                     "observed": "0 hands · VPIP — · PFR —"
@@ -2274,7 +2274,7 @@
                     "id": 7,
                     "name": "Jade",
                     "offTable": true,
-                    "subtitle": "Not Seated · Steady",
+                    "subtitle": "Not seated · Steady",
                     "assignment": "balanced",
                     "currentStyle": "Not seated yet; uses the saved next-hand setting",
                     "observed": "0 hands · VPIP — · PFR —"
@@ -2283,7 +2283,7 @@
                     "id": 8,
                     "name": "Leo",
                     "offTable": true,
-                    "subtitle": "Not Seated · Steady",
+                    "subtitle": "Not seated · Steady",
                     "assignment": "balanced",
                     "currentStyle": "Not seated yet; uses the saved next-hand setting",
                     "observed": "0 hands · VPIP — · PFR —"
@@ -2305,7 +2305,7 @@
                 "emotionMode": "lively",
                 "selectedProfile": "dwan",
                 "detailName": "Tom Dwan",
-                "sizingText": "Typical postflop bet: 65–120% pot",
+                "sizingText": "Typical postflop bet: 65–120% of the pot",
                 "roster": [
                   {"assignment": "tan"},
                   {"assignment": "balanced"},
@@ -2327,7 +2327,7 @@
             "state": {
               "opponentsDialog": null,
               "opponents": {
-                "text": "Next Hand",
+                "text": "Applies Next Hand",
                 "changePending": true,
                 "changeNote": "Opponent styles saved and will apply next hand. This hand and any replay use the current styles shown at each seat."
               },

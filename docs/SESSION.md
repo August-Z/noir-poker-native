@@ -71,7 +71,7 @@ come from the engine unchanged. Amounts are also given as numbers.
 | `coach: CoachState` | Hints visibility, toggle label, stage and tip (always computed) |
 | `showdown: ShowdownState?` | Context line and one `ShowdownSceneState` per live player: ordered best five, highlight flags, explanation, motion, awards, status and footer. `key` changes once per settled hand, so animate only when it changes |
 | `potDetails: PotDetailsState` | Pot dialog: open flag, title, live note, per-pot cards (awards, split total, eligibility, contributions, odd-chip note, expanded state) and refund rows |
-| `opponents: OpponentsSummary` | Summary chip (`Balanced`, `3 Styled Opponents`, `Next Hand`) and the pending-change note |
+| `opponents: OpponentsSummary` | Summary chip (`Balanced`, `3 Styled Opponents`, `Applies Next Hand`) and the pending-change note |
 | `opponentsDialog: OpponentsDialogState?` | Non-null while the Opponent Styles draft is open: profile cards, detail, comparison table, 8 roster rows |
 | `review: ReviewState` | Review button and dialog state, captured input, status, progress, analysis, selected step, perspective, opponent filter and records |
 | `settings: SettingsState` | Requested seat count, table-change note, difficulty, hints, sound, option labels |
