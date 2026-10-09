@@ -137,12 +137,23 @@ struct TagLabel: View {
     }
 }
 
-/// Button press feedback: scale 0.98, no hover lift.
+/// Button press feedback: scale 0.98, no hover lift. Reduced motion keeps the
+/// scale but drops the animation.
 struct PressScaleStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.98 : 1)
-            .animation(.easeOut(duration: 0.18), value: configuration.isPressed)
+        PressScale(label: configuration.label, isPressed: configuration.isPressed)
+    }
+}
+
+private struct PressScale<Label: View>: View {
+    let label: Label
+    let isPressed: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        label
+            .scaleEffect(isPressed ? 0.98 : 1)
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.18), value: isPressed)
     }
 }
 

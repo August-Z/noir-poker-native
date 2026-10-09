@@ -20,6 +20,7 @@ struct ArenaView: View {
     let model: TableModel
     let width: CGFloat
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var state: TableRenderState { model.state }
 
@@ -50,7 +51,7 @@ struct ArenaView: View {
         // up to a cap (lower for the dense 7–9 seat phone layout), and the arena
         // gets taller at large sizes. Controls outside the felt scale fully.
         .dynamicTypeSize(...(m.dense ? DynamicTypeSize.xLarge : DynamicTypeSize.xxxLarge))
-        .animation(.easeInOut(duration: 0.3), value: m.height)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: m.height)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Texas Hold'em table")
     }
