@@ -99,12 +99,21 @@ extension XCUIApplication {
         return condition()
     }
 
-    /// Scrolls the table until `element` can be tapped.
-    func reveal(_ element: XCUIElement, maxSwipes: Int = 12) {
-        var swipes = 0
-        while !(element.exists && element.isHittable) && swipes < maxSwipes {
-            swipeUp()
-            swipes += 1
+    /// Scrolls until `element` can be tapped, with short drags (no fling)
+    /// toward it. Drags start in the page gutter on phones, where no control
+    /// sits, and beside the element on wide layouts.
+    func reveal(_ element: XCUIElement, maxSteps: Int = 16) {
+        var steps = 0
+        while element.exists && !element.isHittable && steps < maxSteps {
+            let window = windows.firstMatch.frame
+            let frame = element.frame
+            guard window.width > 0, window.height > 0 else { return }
+            let x = window.width > 700 ? max(frame.minX - 10, 30) / window.width : 0.02
+            let start = coordinate(withNormalizedOffset: CGVector(dx: x, dy: 0.5))
+            let towardBottom = frame.midY > window.midY
+            let end = start.withOffset(CGVector(dx: 0, dy: towardBottom ? -160 : 160))
+            start.press(forDuration: 0.05, thenDragTo: end)
+            steps += 1
         }
     }
 

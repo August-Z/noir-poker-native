@@ -13,8 +13,22 @@ struct TableRootView: View {
     @State private var showSettings = false
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.verticalSizeClass) private var verticalSizeClass
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var state: TableRenderState { model.state }
+
+    /// Scroll anchor at the felt.
+    private static let arenaAnchor = "arena"
+
+    /// Changes at the hero's first decision of each deal and when the hand
+    /// settles. With the docked phone action panel, the table scrolls so the
+    /// whole felt (hero cards included) sits just above the dock.
+    private var tableFocusKey: String? {
+        let deal = "\(state.hand)-\(state.replayAttempt)"
+        if state.phase == .done { return "done-" + deal }
+        if state.actions.foldEnabled { return "turn-" + deal }
+        return nil
+    }
 
     var body: some View {
         GeometryReader { geo in
@@ -42,16 +56,28 @@ struct TableRootView: View {
                     .padding(.horizontal, gutter)
                 } else {
                     let docked = width < 600 && !typeSize.isAccessibilitySize
-                    ScrollView {
-                        VStack(spacing: 20) {
-                            mainColumn(width: width - gutter * 2, docked: docked, wide: false)
-                            sidebar(width: width - gutter * 2, sideColumn: false)
+                    ScrollViewReader { proxy in
+                        ScrollView {
+                            VStack(spacing: 20) {
+                                mainColumn(width: width - gutter * 2, docked: docked, wide: false)
+                                sidebar(width: width - gutter * 2, sideColumn: false)
+                            }
+                            .padding(.horizontal, gutter)
+                            .padding(.vertical, 16)
                         }
-                        .padding(.horizontal, gutter)
-                        .padding(.vertical, 16)
-                    }
-                    .safeAreaInset(edge: .bottom, spacing: 0) {
-                        if docked { actionDock }
+                        .safeAreaInset(edge: .bottom, spacing: 0) {
+                            if docked { actionDock }
+                        }
+                        .onChange(of: tableFocusKey) { _, key in
+                            guard docked, key != nil else { return }
+                            if reduceMotion {
+                                proxy.scrollTo(Self.arenaAnchor, anchor: .bottom)
+                            } else {
+                                withAnimation(.easeInOut(duration: 0.35)) {
+                                    proxy.scrollTo(Self.arenaAnchor, anchor: .bottom)
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -106,6 +132,7 @@ struct TableRootView: View {
                     .padding(.top, compact ? 14 : 20)
                     .padding(.bottom, 8)
                 ArenaView(model: model, width: width - 2)
+                    .id(Self.arenaAnchor)
                 if let showdown = state.showdown {
                     ShowdownView(showdown: showdown, columns: width >= 700 ? 2 : 1, compact: compact)
                 }
@@ -124,25 +151,45 @@ struct TableRootView: View {
         }
     }
 
+    @ViewBuilder
     private func footer(showVirtual: Bool) -> some View {
-        HStack(spacing: 12) {
-            HStack(spacing: 6) {
-                Circle().fill(Noir.mint).frame(width: 4, height: 4)
-                Text("Offline computer opponents · No login required")
+        Group {
+            if typeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: 4) {
+                    footerNote
+                    resetButton
+                }
+            } else {
+                HStack(spacing: 12) {
+                    footerNote
+                    if showVirtual {
+                        Spacer(minLength: 8)
+                        Text("Virtual chips only")
+                    }
+                    Spacer(minLength: 8)
+                    resetButton
+                }
             }
-            .accessibilityElement(children: .combine)
-            if showVirtual {
-                Spacer(minLength: 8)
-                Text("Virtual chips only")
-            }
-            Spacer(minLength: 8)
-            Button("Start New Session") { confirmReset = true }
-                .foregroundStyle(Noir.footerButton)
-                .minimumHitTarget()
-                .accessibilityIdentifier("start-new-session")
         }
         .noirFont(11, relativeTo: .caption)
         .foregroundStyle(Noir.footer)
+    }
+
+    private var footerNote: some View {
+        HStack(spacing: 6) {
+            Circle().fill(Noir.mint).frame(width: 4, height: 4)
+            Text("Offline computer opponents · No login required")
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private var resetButton: some View {
+        Button("Start New Session") { confirmReset = true }
+            .foregroundStyle(Noir.footerButton)
+            .fixedSize(horizontal: false, vertical: true)
+            .minimumHitTarget()
+            .accessibilityIdentifier("start-new-session")
     }
 
     private var actionDock: some View {
@@ -219,6 +266,8 @@ private struct HeaderView: View {
     let showSettings: () -> Void
     let showRules: () -> Void
 
+    @Environment(\.dynamicTypeSize) private var typeSize
+
     private var compact: Bool { width < 600 }
 
     var body: some View {
@@ -230,7 +279,7 @@ private struct HeaderView: View {
                 Text("NOIR")
                     .noirFont(compact ? 18 : 22, .heavy, relativeTo: .title3, tracking: compact ? 2 : 3)
                     .foregroundStyle(Noir.text)
-                if width > 360 {
+                if width > 360 && !typeSize.isAccessibilitySize {
                     Text("POKER")
                         .noirFont(compact ? 11 : 15, relativeTo: .footnote, tracking: compact ? 2 : 4)
                         .foregroundStyle(Noir.brandLight)
@@ -303,6 +352,9 @@ private struct HeaderView: View {
         .padding(.horizontal, compact ? 16 : 28)
         .frame(minHeight: compact ? 60 : 76)
         .overlay(alignment: .bottom) { Rectangle().fill(Noir.headerBorder).frame(height: 1) }
+        // The header is app chrome: it grows with Dynamic Type up to a cap so
+        // every control stays on one row; VoiceOver still reads the full labels.
+        .dynamicTypeSize(...(compact ? DynamicTypeSize.xxLarge : DynamicTypeSize.accessibility1))
     }
 }
 

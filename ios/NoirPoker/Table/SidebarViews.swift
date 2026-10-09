@@ -8,11 +8,16 @@ struct SessionStatsCard: View {
 
     var body: some View {
         SidebarCard(compact: compact) {
-            HStack {
-                Text("Your Practice").noirFont(compact ? 12 : 14, .medium, relativeTo: .headline).foregroundStyle(Noir.text)
-                    .accessibilityAddTraits(.isHeader)
-                Spacer(minLength: 6)
-                Text("This Table").noirFont(11, relativeTo: .caption).foregroundStyle(Noir.subtle)
+            ViewThatFits(in: .horizontal) {
+                HStack {
+                    practiceTitle.fixedSize()
+                    Spacer(minLength: 6)
+                    tableCaption.fixedSize()
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    practiceTitle
+                    tableCaption
+                }
             }
             VStack(alignment: .leading, spacing: 4) {
                 Text("Current Stack").noirFont(12, relativeTo: .caption).foregroundStyle(Noir.subtle)
@@ -47,6 +52,15 @@ struct SessionStatsCard: View {
                 }
             }
         }
+    }
+
+    private var practiceTitle: some View {
+        Text("Your Practice").noirFont(compact ? 12 : 14, .medium, relativeTo: .headline).foregroundStyle(Noir.text)
+            .accessibilityAddTraits(.isHeader)
+    }
+
+    private var tableCaption: some View {
+        Text("This Table").noirFont(11, relativeTo: .caption).foregroundStyle(Noir.subtle)
     }
 
     private func stat(_ value: String, _ caption: String, id: String) -> some View {
