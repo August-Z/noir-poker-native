@@ -23,7 +23,7 @@ struct SessionStatsCard: View {
                 Text(UiCopy.sessionStackLabel).noirFont(12, relativeTo: .caption).foregroundStyle(Noir.subtle)
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text(stats.stackText)
-                        .noirFont(compact ? 26 : 32, .semibold, relativeTo: .largeTitle, digits: true, tracking: -1)
+                        .noirFont(compact ? 26 : 35, .semibold, relativeTo: .largeTitle, digits: true, tracking: -1)
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)
                         .foregroundStyle(Noir.text)
@@ -198,7 +198,10 @@ struct ActivityCard: View {
         }
     }
 
+    /// The reference's `li:first-child` rule outranks the type colors, so the
+    /// oldest entry is always the lighter first-line color.
     private func color(_ entry: ActivityEntryState) -> Color {
+        if entry.number == 1 { return Color(hex: "#bfd2d6") }
         if entry.isHero { return Noir.logHero }
         switch entry.type {
         case .result: return Noir.logResult
