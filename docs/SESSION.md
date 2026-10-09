@@ -127,8 +127,19 @@ on background transitions, so a finished review survives them.
 
 `onBackground()` cancels the timer, stops a running Finish Hand loop and
 cancels the review job. A thinking bot keeps its plan. `onForeground()`
-restarts that plan's full delay from the time of return, without new random
-draws, and restarts the review analysis if its dialog is still open.
+resumes that plan without new random draws and restarts the review analysis if
+its dialog is still open. Background time is carried across, not restarted:
+
+- The bot keeps its original `startedAt`. Its deadline moves later by the time
+  spent in the background, so it acts after the rest of its delay, not after a
+  full new delay. The time away accumulates in a `pausedMs` offset, and the
+  recorded `waitedMs` is `now - startedAt - pausedMs`, which counts foreground
+  time only. Repeated background transitions add up.
+- A street advance has no plan to keep. It is scheduled again with its full
+  1,000 ms (or 850 ms) delay on return.
+- Finish Hand is not resumed. Backgrounding cancels the fast-forward, any
+  unexecuted planned decision goes back to normal pacing as above, and the
+  Finish Hand button is offered again so the player can tap it again.
 
 ## Effects
 

@@ -1944,7 +1944,7 @@
       ]
     },
     {
-      "name": "background cancels bot timers and the foreground restarts the same plan",
+      "name": "background cancels bot timers and the foreground resumes the same plan for the rest of its delay",
       "seed": 17,
       "steps": [
         {"do": "start"},
@@ -1984,9 +1984,9 @@
         {
           "expect": {
             "state": {"backgrounded": false},
-            "thinking": {"actor": 3, "delayMs": 4721, "startedAt": 60500, "deadline": 65221},
+            "thinking": {"actor": 3, "delayMs": 4721, "startedAt": 0, "deadline": 64721},
             "pending": 1,
-            "nextDueAt": 65221,
+            "nextDueAt": 64721,
             "draws": 1430,
             "clock": 60500,
             "epoch": 2
@@ -2007,7 +2007,7 @@
               }
             },
             "draws": 4187,
-            "clock": 72855
+            "clock": 72355
           }
         }
       ]

@@ -233,7 +233,7 @@ final class SessionSchedulingTests: XCTestCase {
         XCTAssertTrue(h.hooks.timingRecords().isEmpty)
     }
 
-    func testBackgroundCancelsStaleTimersAndForegroundRestartsTheSamePlan() throws {
+    func testBackgroundCancelsStaleTimersAndForegroundResumesTheSamePlanForTheRestOfItsDelay() throws {
         let h = Harness(seed: 14)
         try h.heroTurn(9)
         h.session.callOrCheck()
@@ -256,12 +256,44 @@ final class SessionSchedulingTests: XCTestCase {
         let resumed = try XCTUnwrap(h.hooks.thinking())
         XCTAssertEqual(resumed.actor, plan.actor)
         XCTAssertEqual(resumed.delayMs, plan.delayMs)
-        XCTAssertEqual(resumed.startedAt, h.scheduler.nowMs)
+        // The original start is kept and the deadline moves by the time spent away.
+        XCTAssertEqual(resumed.startedAt, plan.startedAt)
+        XCTAssertEqual(resumed.deadline, h.scheduler.nowMs + 10)
         XCTAssertEqual(h.random.draws, draws)
-        h.scheduler.advance(by: plan.delayMs - 1)
+        h.scheduler.advance(by: 9)
+        XCTAssertTrue(h.hooks.timingRecords().isEmpty)
+        h.scheduler.advance(by: 1)
+        let records = h.hooks.timingRecords()
+        XCTAssertEqual(records.count, 1)
+        XCTAssertEqual(records.first?.id, plan.actor)
+        let thinking = try XCTUnwrap(records.first?.trace.thinking)
+        // Only foreground time counts as waiting.
+        XCTAssertEqual(thinking.waitedMs, plan.delayMs)
+        XCTAssertEqual(thinking.durationMs, plan.delayMs)
+        XCTAssertFalse(thinking.expedited)
+    }
+
+    func testRepeatedBackgroundTransitionsAddUpTheTimeSpentAway() throws {
+        let h = Harness(seed: 14)
+        try h.heroTurn(9)
+        h.session.callOrCheck()
+        let plan = try XCTUnwrap(h.hooks.thinking())
+        h.scheduler.advance(by: 100)
+        h.session.onBackground()
+        h.scheduler.advance(by: 5_000)
+        h.session.onForeground()
+        h.scheduler.advance(by: 200)
+        h.session.onBackground()
+        h.scheduler.advance(by: 7_000)
+        h.session.onForeground()
+        let resumed = try XCTUnwrap(h.hooks.thinking())
+        XCTAssertEqual(resumed.startedAt, plan.startedAt)
+        XCTAssertEqual(resumed.deadline, plan.deadline + 12_000)
+        h.scheduler.advance(by: plan.delayMs - 301)
         XCTAssertTrue(h.hooks.timingRecords().isEmpty)
         h.scheduler.advance(by: 1)
         XCTAssertEqual(h.hooks.timingRecords().count, 1)
+        XCTAssertEqual(h.hooks.timingRecords().first?.trace.thinking?.waitedMs, plan.delayMs)
     }
 
     func testAStaleCallbackCapturedBeforeTheBackgroundIsANoOp() throws {
@@ -303,10 +335,19 @@ final class SessionSchedulingTests: XCTestCase {
         h.scheduler.advance(by: 10_000)
         XCTAssertTrue(h.hooks.timingRecords().isEmpty)
         XCTAssertFalse(h.session.finishHand())
+        let draws = h.random.draws
         h.session.onForeground()
-        // The unexecuted pending plan is kept, so no decision is re-drawn.
+        // The unexecuted pending plan is kept, so no decision is re-drawn, and
+        // its wait resumes where it stopped.
         XCTAssertEqual(h.hooks.thinking()?.actor, waiting.actor)
         XCTAssertEqual(h.hooks.thinking()?.delayMs, waiting.delayMs)
+        XCTAssertEqual(h.hooks.thinking()?.startedAt, waiting.startedAt)
+        XCTAssertEqual(h.hooks.thinking()?.deadline, waiting.deadline + 10_000)
+        XCTAssertEqual(h.random.draws, draws)
+        // Finish Hand does not resume by itself; it is offered again instead.
+        XCTAssertFalse(h.state.finishing)
+        XCTAssertTrue(h.state.actions.finishHandVisible)
+        XCTAssertTrue(h.session.canFinishHand())
         h.runBots(maxMs: 200_000)
         h.scheduler.runUntilIdle()
         XCTAssertEqual(h.game.phase, .done)

@@ -242,7 +242,7 @@ class SessionSchedulingTest {
     }
 
     @Test
-    fun `background cancels stale timers and foreground restarts the same plan`() {
+    fun `background cancels stale timers and foreground resumes the same plan for the rest of its delay`() {
         val h = Harness(seed = 14)
         h.heroTurn(9)
         h.session.callOrCheck()
@@ -265,12 +265,45 @@ class SessionSchedulingTest {
         val resumed = h.hooks.thinking()!!
         assertEquals(plan.actor, resumed.actor)
         assertEquals(plan.delayMs, resumed.delayMs)
-        assertEquals(h.scheduler.nowMs, resumed.startedAt)
+        // The original start is kept and the deadline moves by the time spent away.
+        assertEquals(plan.startedAt, resumed.startedAt)
+        assertEquals(h.scheduler.nowMs + 10, resumed.deadline)
         assertEquals(draws, h.random.draws)
-        h.scheduler.advanceBy(plan.delayMs - 1L)
+        h.scheduler.advanceBy(9)
         assertTrue(h.hooks.timingRecords().isEmpty())
         h.scheduler.advanceBy(1)
-        assertEquals(1, h.hooks.timingRecords().size)
+        val records = h.hooks.timingRecords()
+        assertEquals(1, records.size)
+        assertEquals(plan.actor, records[0].id)
+        val thinking = records[0].trace.thinking!!
+        // Only foreground time counts as waiting.
+        assertEquals(plan.delayMs.toLong(), thinking.waitedMs.toLong())
+        assertEquals(plan.delayMs, thinking.durationMs)
+        assertFalse(thinking.expedited)
+    }
+
+    @Test
+    fun `repeated background transitions add up the time spent away`() {
+        val h = Harness(seed = 14)
+        h.heroTurn(9)
+        h.session.callOrCheck()
+        val plan = h.hooks.thinking()!!
+        h.scheduler.advanceBy(100)
+        h.session.onBackground()
+        h.scheduler.advanceBy(5_000)
+        h.session.onForeground()
+        h.scheduler.advanceBy(200)
+        h.session.onBackground()
+        h.scheduler.advanceBy(7_000)
+        h.session.onForeground()
+        val resumed = h.hooks.thinking()!!
+        assertEquals(plan.startedAt, resumed.startedAt)
+        assertEquals(plan.deadline + 12_000, resumed.deadline)
+        h.scheduler.advanceBy(plan.delayMs - 301L)
+        assertTrue(h.hooks.timingRecords().isEmpty())
+        h.scheduler.advanceBy(1)
+        val thinking = h.hooks.timingRecords().single().trace.thinking!!
+        assertEquals(plan.delayMs.toLong(), thinking.waitedMs.toLong())
     }
 
     @Test
@@ -285,10 +318,19 @@ class SessionSchedulingTest {
         h.scheduler.advanceBy(10_000)
         assertTrue(h.hooks.timingRecords().isEmpty())
         assertFalse(h.session.finishHand())
+        val draws = h.random.draws
         h.session.onForeground()
-        // The unexecuted pending plan is kept, so no decision is re-drawn.
+        // The unexecuted pending plan is kept, so no decision is re-drawn, and
+        // its wait resumes where it stopped.
         assertEquals(waiting.actor, h.hooks.thinking()!!.actor)
         assertEquals(waiting.delayMs, h.hooks.thinking()!!.delayMs)
+        assertEquals(waiting.startedAt, h.hooks.thinking()!!.startedAt)
+        assertEquals(waiting.deadline + 10_000, h.hooks.thinking()!!.deadline)
+        assertEquals(draws, h.random.draws)
+        // Finish Hand does not resume by itself; it is offered again instead.
+        assertFalse(h.state.finishing)
+        assertTrue(h.state.actions.finishHandVisible)
+        assertTrue(h.session.canFinishHand())
         h.runBots(200_000)
         h.scheduler.runUntilIdle()
         assertEquals(Phase.DONE, h.game.phase)
