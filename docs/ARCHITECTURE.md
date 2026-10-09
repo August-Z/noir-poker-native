@@ -106,3 +106,26 @@ so the table-session scenarios are hand-authored from the UI spec (see
   (`Dispatchers.Default` / detached tasks) on immutable copies of review input,
   carry a job id, check for cancellation between decisions, and never write
   results into a newer hand.
+
+## Android UI tests
+
+Compose instrumented tests live in `android/app/src/androidTest` and run in CI
+(`connectedDebugAndroidTest` on the emulator job). `NoirAppRobot` launches
+`MainActivity` with debug-only intent extras read by `LaunchOptions`: a fixed
+seed for the session's random stream, a private `SharedPreferences` file
+(cleared at the first launch of a test, kept on relaunch), and a time scale for
+`HandlerScheduler`, which runs the session clock and every delay faster without
+changing the random draws. A release build ignores the extras. Tests read the
+session's render state and `publicSnapshot()` on the main thread and use
+`testHooks.fixture` for the reference's `heroTurn` setup (hero first to act).
+
+- `HandFlowTest`: a hand to settlement with chip conservation, fold then Finish
+  Hand, Replay Hand (same hole cards, result reversed once), Next Hand keeps the
+  stacks, Start New Session resets the stats, reveal toggles after settlement
+  cleared by the next hand.
+- `SettingsPersistenceTest`: nine seats apply on the next hand and survive a
+  relaunch.
+- `SheetsTest`: Hand Review with both tabs; Opponent Styles discard and save.
+- `AdaptiveLayoutTest`: the table composed at forced window sizes with
+  `DeviceConfigurationOverride` (360 × 740 at nine seats, 390 × 844 at 2×
+  font scale, tablet portrait 800 × 1280 and landscape 1280 × 800).

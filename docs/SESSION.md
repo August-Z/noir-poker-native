@@ -174,6 +174,16 @@ the main thread. The session drops progress and results from stale jobs: a new
 hand settles, Replay Hand, Start New Session, a seat-count change, or the
 background. The review module's summary type implements `ReviewAnalysis`.
 
+### Review dialog views (Kotlin)
+
+`core/review/ReviewDialog.kt` turns `ReviewState` into render-ready views:
+`presentHeroReview(state)` (header, summary, timeline, step detail with scene,
+routes, simulation table, metrics, model and price notes, public actions) and
+`presentOpponentReview(state)` (filter options, timeline, execution-record
+detail). `ReviewDialogCopy` holds the dialog copy from the review copy catalog.
+The Compose sheet renders these views and formats nothing itself. The Swift
+port does not have this presenter yet.
+
 ## Test hooks
 
 `session.testHooks` mirrors the reference's `window.qa` hooks for debug and
