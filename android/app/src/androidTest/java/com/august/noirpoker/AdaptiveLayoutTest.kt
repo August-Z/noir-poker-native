@@ -1,6 +1,22 @@
 package com.august.noirpoker
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.click
+import androidx.compose.ui.test.isOff
+import androidx.compose.ui.test.isOn
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import com.august.noirpoker.core.Action
+import com.august.noirpoker.core.Game
+import com.august.noirpoker.core.Phase
+import com.august.noirpoker.core.act
+import com.august.noirpoker.core.advanceStreet
+import org.junit.Assert.assertEquals
+import kotlin.math.roundToInt
 import androidx.compose.ui.test.DeviceConfigurationOverride
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.FontScale
@@ -38,8 +54,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * The table at fixed window sizes and text scales: a phone with the largest
- * accessibility text, and tablet portrait and landscape at six and nine seats.
+ * The table at fixed window sizes and text scales: phones with the largest
+ * accessibility text at six and nine seats, and tablet portrait and landscape
+ * at six and nine seats; settled hands for the eye toggles and the showdown
+ * grid; and one pass with full motion.
  * Each case deals a seeded hand where the hero acts first, so the action panel
  * is live and no bot moves while the layout is checked.
  */
@@ -52,20 +70,45 @@ class AdaptiveLayoutTest {
         compose.runOnUiThread { model?.close() }
     }
 
-    private fun show(size: DpSize, fontScale: Float = 1f, seats: Int = 6) {
+    /**
+     * Shows the table at [size] and [fontScale] with a seeded [seats]-handed deal
+     * where the hero acts first. With [settled] every player calls down to a
+     * five-card showdown (no bot is ever scheduled), so the eye toggles and the
+     * showdown stage are on screen. [reducedMotion] false runs the full motion path.
+     */
+    private fun show(
+        size: DpSize,
+        fontScale: Float = 1f,
+        seats: Int = 6,
+        settled: Boolean = false,
+        reducedMotion: Boolean = true,
+    ) {
         lateinit var created: TableModel
         compose.runOnUiThread {
             NoirType.install(ManropeFamily)
             created = TableModel(HandlerScheduler(), InMemoryStorage(), reviewRunner = null, random = SeededRandom(NoirAppRobot.DEFAULT_SEED))
-            created.session.testHooks.fixture(seats, heroFirst = true) { startHand(it, SeededRandom(NoirAppRobot.DEFAULT_SEED)) }
+            created.session.testHooks.fixture(seats, heroFirst = true) { game ->
+                startHand(game, SeededRandom(NoirAppRobot.DEFAULT_SEED))
+                if (settled) callDownToShowdown(game)
+            }
         }
         model = created
         compose.setContent {
             Configured(size, fontScale) {
-                NoirTheme(reducedMotion = true) { NoirTableScreen(created) }
+                NoirTheme(reducedMotion = reducedMotion) { NoirTableScreen(created) }
             }
         }
         compose.waitForIdle()
+    }
+
+    /** Every player checks or calls each street; the river settles at a showdown. */
+    private fun callDownToShowdown(game: Game) {
+        var steps = 0
+        while (game.phase != Phase.DONE) {
+            check(steps++ < 500) { "The call-down did not settle" }
+            if (game.phase == Phase.BETWEEN) advanceStreet(game) else act(game, game.actor, Action.CALL)
+        }
+        check(game.showdown && game.board.size == 5) { "The call-down ends at a five-card showdown" }
     }
 
     @Composable
@@ -132,6 +175,50 @@ class AdaptiveLayoutTest {
         }
     }
 
+    private fun seat(id: Int) = checkNotNull(model).state.seats.first { it.id == id }
+
+    /** Lets the session's render reach the screen (the clock is advanced by hand while auto-advance is off). */
+    private fun settleFrames() {
+        if (compose.mainClock.autoAdvance) compose.waitForIdle() else compose.mainClock.advanceTimeBy(FRAME_MS)
+    }
+
+    /**
+     * Every opponent's eye toggle (tags `[prefix]1` … `[prefix]count-1`) is a
+     * switch with a touch and accessibility target of at least 48 × 48 dp, reports
+     * On / Off, and toggles only its own seat, also when tapped outside the 22 dp
+     * icon but inside the 48 dp target.
+     */
+    private fun assertRevealToggles(count: Int, prefix: String) {
+        for (id in 1 until count) {
+            val tag = "$prefix$id"
+            val node = compose.onNodeWithTag(tag)
+            runCatching { node.performScrollTo() }
+            settleFrames()
+            node.assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Switch))
+            val semantics = node.fetchSemanticsNode()
+            val touch = with(semantics.layoutInfo.density) {
+                semantics.touchBoundsInRoot.let { DpSize(it.width.toDp(), it.height.toDp()) }
+            }
+            assertTrue("$tag touch target is at least 48 dp wide ($touch)", touch.width >= 47.5.dp)
+            assertTrue("$tag touch target is at least 48 dp tall ($touch)", touch.height >= 47.5.dp)
+
+            val before = seat(id).revealed
+            val others = checkNotNull(model).state.seats.filter { it.id != id }.map { it.id to it.revealed }
+            node.assert(if (before) isOn() else isOff())
+            node.performClick()
+            settleFrames()
+            assertEquals("$tag toggles seat $id", !before, seat(id).revealed)
+            compose.onNodeWithTag(tag).assert(if (before) isOff() else isOn())
+            assertEquals("$tag leaves the other seats unchanged", others, checkNotNull(model).state.seats.filter { it.id != id }.map { it.id to it.revealed })
+
+            // 16 dp left of the icon's center is outside the 22 dp icon, inside the 48 dp target.
+            compose.onNodeWithTag(tag).performTouchInput { click(center - Offset(16.dp.toPx(), 0f)) }
+            settleFrames()
+            assertEquals("A tap beside the icon toggles seat $id back", before, seat(id).revealed)
+            compose.onNodeWithTag(tag).assert(if (before) isOn() else isOff())
+        }
+    }
+
     @Test fun largeAccessibilityTextKeepsTheActionButtonsUsable() {
         show(DpSize(390.dp, 844.dp), fontScale = 2f)
         assertActionButtons()
@@ -163,5 +250,91 @@ class AdaptiveLayoutTest {
         assertTrue("The sidebar sits below the table", sidebar.top >= table.bottom)
         assertSeats(6)
         assertActionButtons()
+    }
+
+    @Test fun nineSeatsWithLargeAccessibilityText() {
+        show(DpSize(390.dp, 844.dp), fontScale = 2f, seats = 9)
+        assertActionButtons()
+        assertSeats(9)
+        // The full-size seat list below the arena names every opponent.
+        checkNotNull(model).state.seats.forEach { seat ->
+            assertTrue("${seat.name} appears in the arena and the seat list", compose.onAllNodes(hasText(seat.name)).fetchSemanticsNodes().size >= 2)
+        }
+    }
+
+    @Test fun tabletPortraitSeatsNinePlayers() {
+        show(DpSize(800.dp, 1280.dp), seats = 9)
+        val table = tableBounds()
+        val sidebar = layoutBounds(hasText(UiCopy.sessionTitle))
+        assertTrue("The sidebar sits below the table", sidebar.top >= table.bottom)
+        assertSeats(9)
+        assertActionButtons()
+    }
+
+    @Test fun settledRevealTogglesHaveFullSizeTouchTargets() {
+        show(DpSize(360.dp, 740.dp), seats = 9, settled = true)
+        assertTrue("Every opponent has an eye toggle after settlement", checkNotNull(model).state.seats.all { it.peek != null })
+        assertSeats(9)
+        assertRevealToggles(9, "seat-peek-")
+    }
+
+    @Test fun settledRevealTogglesWithLargeTextInTheSeatList() {
+        show(DpSize(390.dp, 844.dp), fontScale = 2f, seats = 6, settled = true)
+        assertRevealToggles(6, "seat-list-peek-")
+        assertRevealToggles(6, "seat-peek-")
+    }
+
+    @Test fun tabletPortraitShowdownUsesTwoColumns() {
+        show(DpSize(800.dp, 1280.dp), seats = 6, settled = true)
+        assertShowdownColumns(2)
+    }
+
+    @Test fun tabletLandscapeShowdownUsesOneColumnBesideTheSidebar() {
+        show(DpSize(1000.dp, 800.dp), seats = 6, settled = true)
+        assertShowdownColumns(1)
+    }
+
+    /** The scene panels (one per player at showdown) sit in [columns] distinct columns. */
+    private fun assertShowdownColumns(columns: Int) {
+        val scenes = checkNotNull(model).state.showdown!!.scenes
+        val lefts = scenes.map { scene ->
+            val node = compose.onNode(hasContentDescription(scene.a11y))
+            runCatching { node.performScrollTo() }
+            layoutBounds(hasContentDescription(scene.a11y)).left.value.roundToInt()
+        }
+        assertEquals("Showdown columns", columns, lefts.distinct().size)
+    }
+
+    /**
+     * The full motion path (every other test runs with reduced motion): the deal,
+     * the winner motions and the reveal fade play on the test clock, and the
+     * layout, showdown and eye toggles end up the same as with reduced motion.
+     */
+    @Test fun fullMotionPlaysTheShowdownAndKeepsTheLayout() {
+        compose.mainClock.autoAdvance = false
+        show(DpSize(390.dp, 844.dp), seats = 9, settled = true, reducedMotion = false)
+        compose.mainClock.advanceTimeBy(FRAME_MS)
+        compose.onNode(hasContentDescription(UiCopy.showdownRegionA11y)).assertExists()
+        // Mid-motion and after the longest winner motion (2,800 ms).
+        compose.mainClock.advanceTimeBy(400)
+        assertSeats(9)
+        compose.mainClock.advanceTimeBy(3_000)
+        compose.onNode(hasContentDescription(UiCopy.showdownRegionA11y)).assertExists()
+        assertSeats(9)
+        assertRevealToggles(9, "seat-peek-")
+        // Toggle a seat on and let its 180 ms fade finish: its cards are shown.
+        val id = 1
+        if (seat(id).revealed) {
+            compose.onNodeWithTag("seat-peek-$id").performClick()
+            compose.mainClock.advanceTimeBy(FRAME_MS)
+        }
+        compose.onNodeWithTag("seat-peek-$id").performClick()
+        compose.mainClock.advanceTimeBy(300)
+        assertTrue(seat(id).revealed)
+        compose.onNodeWithTag("seat-hand-$id").assertExists()
+    }
+
+    private companion object {
+        const val FRAME_MS = 32L
     }
 }

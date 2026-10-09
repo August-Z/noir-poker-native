@@ -49,6 +49,7 @@ import com.august.noirpoker.ui.components.CardSize
 import com.august.noirpoker.ui.components.PlayingCardView
 import com.august.noirpoker.ui.theme.LocalNoirMetrics
 import com.august.noirpoker.ui.theme.Noir
+import com.august.noirpoker.ui.theme.NoirMetrics
 import com.august.noirpoker.ui.theme.NoirType
 
 /**
@@ -60,6 +61,9 @@ import com.august.noirpoker.ui.theme.NoirType
  */
 /** Longest winner motion (royal flush 2,000 ms + 4 × 60 ms, straight 1,600 + 4 × 140) with margin. */
 private const val END_MS = 2800f
+
+/** Kicker opacity in a scene (`.winning-card.kicker`). */
+private const val KICKER_ALPHA = 0.7f
 
 @Composable
 fun ShowdownStage(showdown: ShowdownState, modifier: Modifier = Modifier) {
@@ -84,7 +88,7 @@ fun ShowdownStage(showdown: ShowdownState, modifier: Modifier = Modifier) {
         LaunchedEffect(showdown.key, reduced) {
             if (reduced) clock.snapTo(END_MS) else clock.animateTo(END_MS, tween(END_MS.toInt(), easing = LinearEasing))
         }
-        val columns = if (metrics.twoPane && !metrics.largeText && !metrics.narrowPane) 2 else 1
+        val columns = showdownColumns(metrics)
         showdown.scenes.chunked(columns).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.height(IntrinsicSize.Max)) {
                 row.forEach { ScenePanel(it, { clock.value }, Modifier.weight(1f).fillMaxHeight()) }
@@ -94,11 +98,23 @@ fun ShowdownStage(showdown: ShowdownState, modifier: Modifier = Modifier) {
     }
 }
 
+/**
+ * Scene grid columns, as in the reference (`showdown.css`, visual spec 10.1): two
+ * columns above 1,150 dp and at 601–900 dp, one column in the 901–1,150 dp
+ * two-pane band (the table shares the width with the sidebar) and on phones
+ * (≤600 dp). Large accessibility text also gets one column, as browser zoom
+ * narrows the reference's CSS viewport into the one-column bands.
+ */
+internal fun showdownColumns(metrics: NoirMetrics): Int =
+    if (metrics.compact || metrics.narrowPane || metrics.largeText) 1 else 2
+
 @Composable
 private fun ScenePanel(scene: ShowdownSceneState, clock: () -> Float, modifier: Modifier) {
     val shape = RoundedCornerShape(11.dp)
     val winner = scene.isWinner
     val metrics = LocalNoirMetrics.current
+    // Reduced motion shows every card at full opacity, kickers included (`showdown.css` reduced-motion block).
+    val reduced = LocalReducedMotion.current
     Column(
         modifier
             .background(
@@ -149,7 +165,7 @@ private fun ScenePanel(scene: ShowdownSceneState, clock: () -> Float, modifier: 
                             rotationY = pose.ry
                             scaleX = pose.scale
                             scaleY = pose.scale
-                            alpha = pose.alpha * (if (match) 1f else 0.7f)
+                            alpha = pose.alpha * (if (match || reduced) 1f else KICKER_ALPHA)
                             cameraDistance = 7f * density
                         }
                         .drawWithContent {

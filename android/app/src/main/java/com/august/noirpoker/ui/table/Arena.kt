@@ -12,6 +12,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -30,8 +31,10 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -61,7 +64,6 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -73,6 +75,7 @@ import com.august.noirpoker.core.MoodKind
 import com.august.noirpoker.core.Phase
 import com.august.noirpoker.core.session.ActionChip
 import com.august.noirpoker.core.session.HeroState
+import com.august.noirpoker.core.session.RankBadge
 import com.august.noirpoker.core.session.SeatState
 import com.august.noirpoker.core.session.SessionEffect
 import com.august.noirpoker.core.session.TableRenderState
@@ -448,6 +451,11 @@ private fun SeatView(seat: SeatState, state: TableRenderState, cards: CardMetric
     val dense = state.playerCount >= 7
     val showAvatar = !metrics.largeText && !metrics.tiny && !(metrics.compact && dense)
     val foldedLive = seat.folded && !done
+    // The reveal toggle as of the previous composition: cards shown now while the seat's
+    // eye was off (hidden after settlement) were just toggled on.
+    val lastPeek = remember(state.hand, state.replayAttempt, seat.id) { arrayOfNulls<Boolean>(1) }
+    val toggledOn = seat.revealed && lastPeek[0] == false
+    SideEffect { lastPeek[0] = seat.peek?.pressed }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.testTag("seat-${seat.id}").alpha(if (foldedLive) 0.4f else 1f),
@@ -456,13 +464,14 @@ private fun SeatView(seat: SeatState, state: TableRenderState, cards: CardMetric
         Box(Modifier.offset(y = if (metrics.compact) 6.dp else 8.dp).padding(horizontal = 4.dp)) {
             if (seat.revealed && seat.cards.isNotEmpty()) {
                 // The eye toggle fades shown cards in from 0.2 over 180 ms (focus stays on the toggle).
+                // Only a toggle-on fades: automatic showdown and runout reveals appear at full opacity.
+                // The branch enters composition on the toggle, so the first frame already draws at 0.2.
                 val reduced = LocalReducedMotion.current
-                val fade = remember(state.hand, state.replayAttempt, seat.id) { Animatable(1f) }
-                LaunchedEffect(seat.revealed, seat.peek?.pressed) {
-                    if (seat.peek?.pressed == true && !reduced) {
-                        fade.snapTo(0.2f)
-                        fade.animateTo(1f, tween(180, easing = androidx.compose.animation.core.LinearOutSlowInEasing))
-                    }
+                val fade = remember(state.hand, state.replayAttempt, seat.id) {
+                    Animatable(if (toggledOn && !reduced) REVEAL_FADE_FROM else 1f)
+                }
+                LaunchedEffect(fade) {
+                    if (fade.value < 1f) fade.animateTo(1f, tween(180, easing = androidx.compose.animation.core.LinearOutSlowInEasing))
                 }
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(if (metrics.compact) 4.dp else 5.dp),
@@ -526,7 +535,8 @@ private fun SeatPlate(seat: SeatState, showAvatar: Boolean, done: Boolean, onTog
     Row(
         modifier = anchor
             .turnGlow(seat.isActor && !done, shape)
-            .then(if (seat.isWinner) Modifier.shadow(12.dp, shape, ambientColor = Noir.GoldSettled, spotColor = Noir.GoldSettled) else Modifier)
+            // No clip: the eye toggle's 48 dp touch target extends past the plate edge.
+            .then(if (seat.isWinner) Modifier.shadow(12.dp, shape, clip = false, ambientColor = Noir.GoldSettled, spotColor = Noir.GoldSettled) else Modifier)
             .background(if (foldedDone) Noir.PlateFoldedBg else Noir.PlateBg, shape)
             .border(1.dp, border, shape)
             .defaultMinSize(minWidth = if (metrics.compact) (if (showAvatar) 84.dp else 78.dp) else 98.dp)
@@ -582,6 +592,15 @@ private fun Avatar(seat: SeatState, size: Dp, modifier: Modifier = Modifier) {
     }
 }
 
+/**
+ * The eye toggle: a 22 dp switch on the seat plate. Its touch and accessibility
+ * target is the 48 dp minimum: Compose extends a smaller clickable's hit area
+ * and its accessibility bounds (`touchBoundsInRoot`) to the view configuration's
+ * minimum touch target, centered on the node, without growing the plate. A
+ * direct hit on a neighbor still wins over this extension, so crowded nine-seat
+ * arenas never toggle the wrong seat. The state is exposed as a toggleable
+ * switch (On / Off), not as a selection.
+ */
 @Composable
 private fun PeekButton(pressed: Boolean, a11y: String, tag: String, onClick: () -> Unit) {
     val shape = RoundedCornerShape(4.dp)
@@ -591,16 +610,22 @@ private fun PeekButton(pressed: Boolean, a11y: String, tag: String, onClick: () 
             .size(22.dp)
             .background(if (pressed) Noir.PeekPressedBg else Color.Transparent, shape)
             .border(1.dp, if (pressed) Noir.PeekPressedBorder else Noir.PeekBorder, shape)
-            .clickable(role = Role.Switch, onClick = onClick)
-            .semantics {
-                contentDescription = a11y
-                selected = pressed
-            },
+            .toggleable(
+                value = pressed,
+                interactionSource = null,
+                indication = ripple(bounded = false, radius = 24.dp),
+                role = Role.Switch,
+                onValueChange = { onClick() },
+            )
+            .semantics { contentDescription = a11y },
         contentAlignment = Alignment.Center,
     ) {
         EyeIcon(15.dp, if (pressed) Noir.Mint else Noir.SeatActionLabel, crossed = false)
     }
 }
+
+/** Opacity a toggled-on seat hand fades in from. */
+private const val REVEAL_FADE_FROM = 0.2f
 
 /** The last-action line under a plate or the hero: label + amount, or blinking `Thinking`. */
 @Composable
@@ -676,7 +701,7 @@ private fun HeroArea(hero: HeroState, state: TableRenderState, cards: CardMetric
         }
         hero.rankBadge?.let {
             Spacer(Modifier.height(6.dp))
-            RankBadgeView(it, metrics.compact, Modifier.testTag("hero-hand-rank"))
+            HeroRankBadge(it, metrics.compact)
         }
         Spacer(Modifier.height(6.dp))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -715,6 +740,23 @@ private fun HeroArea(hero: HeroState, state: TableRenderState, cards: CardMetric
             }
         }
         ActionLine(hero.lastAction, hero.lastActionA11y, winner = false, maxWidth = 200.dp, modifier = Modifier.testTag("hero-last-action"))
+    }
+}
+
+/**
+ * The hero's hand badge: the seat badge with the reference's larger hero text
+ * (`.hero-hand-rank`: 14 px, 13 px on phones, against 12 / 11 on seats). The
+ * text is scaled through the local font scale so padding and the crown keep
+ * the seat badge's sizes.
+ */
+@Composable
+private fun HeroRankBadge(badge: RankBadge, compact: Boolean) {
+    val outer = androidx.compose.ui.platform.LocalDensity.current
+    val heroScale = if (compact) 13f / 11f else 14f / 12f
+    androidx.compose.runtime.CompositionLocalProvider(
+        androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(outer.density, outer.fontScale * heroScale),
+    ) {
+        RankBadgeView(badge, compact, Modifier.testTag("hero-hand-rank"))
     }
 }
 
