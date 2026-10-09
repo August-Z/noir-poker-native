@@ -115,6 +115,9 @@ extension XCUIApplication {
             start.press(forDuration: 0.05, thenDragTo: end)
             steps += 1
         }
+        // Let the scroll view settle: a tap during deceleration only stops
+        // the scroll and never reaches the button.
+        if steps > 0 { Thread.sleep(forTimeInterval: 0.8) }
     }
 
     func tapWhenReady(_ element: XCUIElement, timeout: TimeInterval = 10, file: StaticString = #filePath, line: UInt = #line) {

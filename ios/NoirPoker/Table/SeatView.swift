@@ -177,8 +177,11 @@ struct SeatView: View {
                     .noirFont(metrics.dense ? 10 : 12, relativeTo: .caption)
                     .foregroundStyle(Noir.styleChipText)
                     .multilineTextAlignment(.center)
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
+                    // Multi-word styles wrap between words; a single word
+                    // shrinks instead of breaking mid-word at large sizes.
+                    .lineLimit(seat.styleShort.contains(" ") ? 2 : 1)
+                    .minimumScaleFactor(0.6)
+                    .fixedSize(horizontal: false, vertical: seat.styleShort.contains(" "))
                     .padding(.horizontal, 5)
                     .padding(.vertical, 1)
                     .frame(maxWidth: metrics.compact ? 72 : 120)
