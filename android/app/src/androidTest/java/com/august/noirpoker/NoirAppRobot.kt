@@ -4,10 +4,12 @@ import android.content.Intent
 import androidx.compose.ui.test.ComposeTimeoutException
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteraction
+import androidx.compose.ui.test.doubleClick
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTouchInput
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import com.august.noirpoker.core.Phase
@@ -122,6 +124,37 @@ class NoirAppRobot(private val compose: ComposeTestRule) {
     }
 
     fun tap(tag: String) = tap(hasTestTag(tag))
+
+    /**
+     * Scrolls a node into view and double-taps it: two clicks injected as one
+     * gesture, so the second can land before the table recomposes.
+     */
+    fun doubleTap(tag: String) {
+        val node = compose.onNode(hasTestTag(tag))
+        runCatching { node.performScrollTo() }
+        node.performTouchInput { doubleClick() }
+        compose.waitForIdle()
+    }
+
+    /**
+     * Folds at the hero's first decision of each hand and deals new hands until
+     * one ends before the river after the hero folded (an opponent wins
+     * uncontested). Returns false if no hand does within [maxHands]. The seeded
+     * launch makes the sequence of hands the same on every run.
+     */
+    fun foldUntilFoldWinBeforeRiver(maxHands: Int = 15): Boolean {
+        repeat(maxHands) {
+            waitForHeroTurnOrSettlement()
+            val folded = heroToAct
+            if (folded) tap("fold")
+            waitForSettlement()
+            val snapshot = snapshot()
+            if (folded && snapshot.settlementBoard.size < 5 && !snapshot.practiceRunout) return true
+            tap("next-hand")
+            waitFor("hand ${snapshot.hand + 1}") { it.hand == snapshot.hand + 1 }
+        }
+        return false
+    }
 
     /** Taps the first match, for text that appears more than once (a link and its timeline card). */
     fun tapFirst(matcher: SemanticsMatcher) {

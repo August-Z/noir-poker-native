@@ -6,6 +6,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.august.noirpoker.NoirAppRobot.Companion.FAST
 import com.august.noirpoker.NoirAppRobot.Companion.REAL_TIME
 import com.august.noirpoker.NoirAppRobot.Companion.STARTING_STACK
 import com.august.noirpoker.core.Phase
@@ -21,7 +22,10 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/** Plays real hands through the native table: settlement, Finish Hand, Replay, Next Hand, reset and reveals. */
+/**
+ * Plays real hands through the native table: settlement, Finish Hand (including
+ * after a fold-win), Replay, Next Hand, repeated taps, reset and reveals.
+ */
 @RunWith(AndroidJUnit4::class)
 class HandFlowTest {
     @get:Rule val compose = createEmptyComposeRule()
@@ -172,5 +176,130 @@ class HandFlowTest {
         assertTrue("Reveal toggles clear on the next hand", app.state.seats.all { it.peek == null && !it.revealed })
         assertFalse(app.exists(toggle))
         assertTrue(app.snapshot().players.drop(1).all { it.cards == null })
+    }
+
+    /** Folds at the hero's next decision, if any, and waits for the settlement. */
+    private fun foldToSettlement() {
+        app.waitForHeroTurnOrSettlement()
+        if (app.heroToAct) app.tap("fold")
+        app.waitForSettlement()
+    }
+
+    @Test fun foldWinOffersFinishHandBesideSettledButtons() {
+        app.launch()
+        assertTrue("A seeded hand ends before the river after the hero folds", app.foldUntilFoldWinBeforeRiver())
+        val settled = app.snapshot()
+        val hands = app.state.session.hands
+        val actions = app.state.actions
+        assertTrue(settled.settlementBoard.size < 5)
+        assertFalse(settled.practiceRunout)
+        assertTrue("Finish Hand is offered after a fold-win", actions.finishHandVisible && actions.finishHandEnabled)
+        assertTrue(actions.nextHandVisible)
+        assertTrue(actions.replayVisible)
+        assertTrue(actions.reviewVisible)
+        app.node("continue-deal").assertExists()
+        app.node("next-hand").assertExists()
+        app.node("replay-hand").assertExists()
+        app.node("review-hand").assertExists()
+
+        app.tap("continue-deal")
+        app.waitFor("the practice runout") { !it.actions.finishHandVisible }
+        val runout = app.snapshot()
+        assertTrue(runout.practiceRunout)
+        assertEquals("The practice runout shows all five community cards", 5, runout.board.size)
+        assertEquals("The runout extends the real board", settled.settlementBoard, runout.board.take(settled.settlementBoard.size))
+        assertEquals("The settled board is unchanged", settled.settlementBoard, runout.settlementBoard)
+        assertEquals("The result is unchanged", settled.result, runout.result)
+        assertEquals("The practice runout never moves chips", settled.players.map { it.stack }, runout.players.map { it.stack })
+        assertEquals(settled.hand, runout.hand)
+        assertEquals("The fold-win is counted once", hands, app.state.session.hands)
+        assertFalse(app.exists("continue-deal"))
+        app.node("next-hand").assertExists()
+        app.node("replay-hand").assertExists()
+        assertChipsConserved()
+    }
+
+    /**
+     * Finish Hand can settle the hand between the two taps of a double tap, and
+     * Next Hand can then take the second tap, so the hand number may advance
+     * once, never twice. The hand is settled once either way.
+     */
+    @Test fun doubleTappingFinishHandSettlesOnce() {
+        app.launch(timeScale = REAL_TIME)
+        app.heroFirstHand()
+        val hand = app.state.hand
+        app.tap("fold")
+        assertTrue(app.state.actions.finishHandVisible)
+        app.doubleTap("continue-deal")
+        app.waitFor("the settlement") { it.phase == Phase.DONE || it.hand == hand + 1 }
+
+        val state = app.state
+        assertTrue("The hand number advances at most once", state.hand <= hand + 1)
+        assertEquals("The hand is settled once", 1, state.session.hands)
+        assertChipsConserved()
+    }
+
+    @Test fun doubleTappingNextHandAndReplayHandActsOnce() {
+        app.launch()
+        app.callDown()
+        val hand = app.state.hand
+        assertEquals(1, app.state.session.hands)
+
+        // Real time from here: no bot can act before the new hand is read.
+        app.setTimeScale(REAL_TIME)
+        app.doubleTap("next-hand")
+        assertEquals("Next Hand deals once", hand + 1, app.state.hand)
+        assertEquals(1, app.state.session.hands)
+        assertChipsConserved()
+
+        app.setTimeScale(FAST)
+        foldToSettlement()
+        assertEquals(hand + 1, app.state.hand)
+        assertEquals(2, app.state.session.hands)
+
+        app.setTimeScale(REAL_TIME)
+        app.doubleTap("replay-hand")
+        val replay = app.snapshot()
+        assertEquals("Replay Hand restarts the hand once", 1, replay.replayAttempt)
+        assertEquals(hand + 1, replay.hand)
+        assertEquals("The settlement is reversed once", 1, app.state.session.hands)
+        assertChipsConserved()
+
+        app.setTimeScale(FAST)
+        foldToSettlement()
+        assertEquals(1, app.snapshot().replayAttempt)
+        assertEquals(hand + 1, app.state.hand)
+        assertEquals("The replayed hand is counted once", 2, app.state.session.hands)
+        assertChipsConserved()
+    }
+
+    @Test fun replayingTwiceReturnsToTheSameStart() {
+        app.launch()
+        app.heroFirstHand()
+        val hole = app.snapshot().hole
+        app.callDown()
+
+        app.tap("replay-hand")
+        val first = app.snapshot()
+        assertEquals(1, first.replayAttempt)
+        assertEquals(0, app.state.session.hands)
+        // Play the first replay differently: fold at once.
+        app.waitForHeroTurnOrSettlement()
+        assertTrue(app.heroToAct)
+        app.tap("fold")
+        app.waitForSettlement()
+        assertEquals(1, app.state.session.hands)
+
+        app.tap("replay-hand")
+        val second = app.snapshot()
+        assertEquals(2, second.replayAttempt)
+        assertEquals("Replay keeps the hand number", first.hand, second.hand)
+        assertEquals("Replay deals the same hole cards", hole, second.hole)
+        assertEquals(first.hole, second.hole)
+        assertEquals("Stacks match the first replay", first.players.map { it.stack + it.bet }, second.players.map { it.stack + it.bet })
+        assertEquals(first.stack, second.stack)
+        assertEquals(STARTING_STACK, second.stack)
+        assertEquals("The second settlement is reversed too", 0, app.state.session.hands)
+        assertChipsConserved()
     }
 }

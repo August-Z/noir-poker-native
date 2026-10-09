@@ -10,6 +10,9 @@ import androidx.compose.ui.test.isPopup
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.august.noirpoker.NoirAppRobot.Companion.FAST
+import com.august.noirpoker.NoirAppRobot.Companion.REAL_TIME
+import com.august.noirpoker.NoirAppRobot.Companion.STARTING_STACK
 import com.august.noirpoker.core.review.ReviewDialogCopy
 import com.august.noirpoker.core.review.presentHeroReview
 import com.august.noirpoker.core.review.presentOpponentReview
@@ -29,7 +32,10 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/** The native sheets: Hand Review (both tabs) and Opponent Styles (discard and save). */
+/**
+ * The native sheets: Hand Review (both tabs, and interrupted by Next Hand or
+ * Replay Hand) and Opponent Styles (discard and save).
+ */
 @RunWith(AndroidJUnit4::class)
 class SheetsTest {
     @get:Rule val compose = createEmptyComposeRule()
@@ -70,6 +76,124 @@ class SheetsTest {
 
         app.tap(hasContentDescription(ReviewDialogCopy.closeA11y) and hasClickAction())
         assertFalse(app.state.review.dialogOpen)
+    }
+
+    private fun closeReview() = app.tap(hasContentDescription(ReviewDialogCopy.closeA11y) and hasClickAction())
+
+    private fun assertNoReviewSheet(message: String) {
+        assertFalse(message, app.state.review.dialogOpen)
+        assertFalse(message, app.exists("review-tab-hero"))
+        assertFalse(message, app.exists("review-tab-opponents"))
+    }
+
+    private fun assertChipsConserved() {
+        val snapshot = app.snapshot()
+        assertEquals("Chips are conserved", snapshot.playerCount * STARTING_STACK, snapshot.wealth)
+    }
+
+    /** Opens the settled hand's review, waits for the analysis, and closes it again. */
+    private fun reviewToCompletion() {
+        app.tap("review-hand")
+        assertTrue(app.state.review.dialogOpen)
+        app.waitFor("the review analysis", timeoutMs = 120_000) { it.review.status == ReviewStatus.DONE || it.review.status == ReviewStatus.ERROR }
+        assertEquals(ReviewStatus.DONE, app.state.review.status)
+        closeReview()
+        assertNoReviewSheet("The review closes")
+    }
+
+    @Test fun closingTheReviewMidAnalysisThenNextHandLeavesNoStaleSheet() {
+        app.launch()
+        app.heroFirstHand()
+        app.callDown()
+        val hand = app.state.hand
+
+        app.tap("review-hand")
+        assertTrue(app.state.review.dialogOpen)
+        val firstKey = app.state.review.key
+        // Close at once: the analysis runs off the main thread and may still be going.
+        closeReview()
+        assertNoReviewSheet("Closing hides the review")
+
+        app.setTimeScale(REAL_TIME)
+        app.tap("next-hand")
+        assertEquals(hand + 1, app.state.hand)
+        assertNoReviewSheet("Next Hand leaves no review sheet")
+        // A late analysis result for the previous hand must not reopen the sheet.
+        Thread.sleep(3_000)
+        compose.waitForIdle()
+        assertNoReviewSheet("A late analysis result does not reopen the sheet")
+        assertFalse("Nothing to review while hand ${hand + 1} is live", app.state.actions.reviewVisible)
+        assertEquals(hand + 1, app.state.hand)
+        assertChipsConserved()
+
+        // The next hand's review starts fresh and completes.
+        app.setTimeScale(FAST)
+        app.callDown()
+        assertNotEquals(firstKey, app.state.review.key)
+        reviewToCompletion()
+        assertChipsConserved()
+    }
+
+    /**
+     * A replay that arrives while Hand Review is open closes the sheet and resets
+     * the review. The sheet is modal, so the Replay Hand button sits behind it;
+     * the test sends the request through the same session call the button uses.
+     */
+    @Test fun replayWithTheReviewOpenClosesTheSheetAndResetsTheStatus() {
+        app.launch()
+        app.heroFirstHand()
+        app.callDown()
+        val hand = app.state.hand
+
+        app.tap("review-hand")
+        assertTrue(app.state.review.dialogOpen)
+        app.node("review-tab-hero").assertExists()
+        val firstKey = app.state.review.key
+
+        app.setTimeScale(REAL_TIME)
+        assertTrue("Replay Hand is accepted", app.onTable { it.session.replayHand() })
+        compose.waitForIdle()
+        assertEquals(1, app.snapshot().replayAttempt)
+        assertEquals(hand, app.state.hand)
+        assertNoReviewSheet("Replay closes the review sheet")
+        assertEquals("Replay resets the review status", ReviewStatus.IDLE, app.state.review.status)
+        assertNull(app.state.review.key)
+        assertFalse(app.state.actions.reviewVisible)
+        Thread.sleep(3_000)
+        compose.waitForIdle()
+        assertNoReviewSheet("A late analysis result does not reopen the sheet")
+        assertEquals(ReviewStatus.IDLE, app.state.review.status)
+
+        // The replayed hand gets a fresh review once it settles.
+        app.setTimeScale(FAST)
+        app.callDown()
+        assertEquals(1, app.snapshot().replayAttempt)
+        assertNotEquals(firstKey, app.state.review.key)
+        assertEquals(ReviewStatus.IDLE, app.state.review.status)
+        reviewToCompletion()
+        assertChipsConserved()
+    }
+
+    /**
+     * The same interruption through the visible controls: close the review
+     * while it may still be analyzing, then tap Replay Hand.
+     */
+    @Test fun closingTheReviewThenReplayHandResetsTheStatus() {
+        app.launch()
+        app.heroFirstHand()
+        app.callDown()
+
+        app.tap("review-hand")
+        assertTrue(app.state.review.dialogOpen)
+        closeReview()
+        assertNoReviewSheet("Closing hides the review")
+
+        app.setTimeScale(REAL_TIME)
+        app.tap("replay-hand")
+        assertEquals(1, app.snapshot().replayAttempt)
+        assertEquals(ReviewStatus.IDLE, app.state.review.status)
+        assertNoReviewSheet("Replay leaves no review sheet")
+        assertChipsConserved()
     }
 
     @Test fun opponentStylesDiscardDropsTheDraftAndSaveAppliesNextHand() {
