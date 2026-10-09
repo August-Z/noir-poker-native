@@ -321,6 +321,10 @@ class AdaptiveLayoutTest {
         compose.mainClock.advanceTimeBy(3_000)
         compose.onNode(hasContentDescription(UiCopy.showdownRegionA11y)).assertExists()
         assertSeats(9)
+        // The motions are over and a settled table runs no endless animation, so
+        // the clock can drive itself again: scrolling to each eye toggle waits for
+        // idle, which never comes while the scroll animation sits on a paused clock.
+        compose.mainClock.autoAdvance = true
         assertRevealToggles(9, "seat-peek-")
         // Toggle a seat on and let its 180 ms fade finish: its cards are shown.
         val id = 1
