@@ -39,9 +39,9 @@ these numbers.
 | Style | Range Width | Aggression | Bluffing | Calling Down | Trapping | Typical postflop bet |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | Balanced Practice | 50 | 50 | 40 | 50 | 20 | 45–80% of the pot |
-| Boss Tan · Tan Xuan | 85 | 90 | 82 | 70 | 25 | 65–115% of the pot |
+| Johnny Tan · Tan Xuan | 85 | 90 | 82 | 70 | 25 | 65–115% of the pot |
 | ST Wang | 40 | 65 | 43 | 42 | 78 | 45–90% of the pot |
-| Zang Shunu · Aaron Zang | 63 | 75 | 62 | 63 | 50 | 60–100% of the pot |
+| Aaron Zang | 63 | 75 | 62 | 63 | 50 | 60–100% of the pot |
 | Peter · HCL | 92 | 88 | 72 | 84 | 18 | 75–125% of the pot |
 | A Bao · KPC | 55 | 82 | 72 | 50 | 34 | 50–100% of the pot |
 | Viktor Blom | 90 | 94 | 88 | 70 | 18 | 70–125% of the pot |

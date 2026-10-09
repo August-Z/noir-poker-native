@@ -120,8 +120,8 @@ export const PROFILE_COPY = {
   '基准训练策略，不对应任何真人。':
     'Baseline training strategy; it does not represent any real player.',
   // tan
-  '谈老板 · Tan Xuan': 'Boss Tan · Tan Xuan',
-  谈老板: 'Boss Tan',
+  '谈老板 · Tan Xuan': 'Johnny Tan · Tan Xuan',
+  谈老板: 'Johnny Tan',
   '宽范围 · 多街施压': 'Wide range · Multi-street pressure',
   '更宽地争夺底池，弱牌与强牌共用进攻路线，偏好持续施压。':
     'Contests more pots with a wider range, takes the same aggressive lines with weak and strong hands, and prefers sustained pressure.',
@@ -139,7 +139,7 @@ export const PROFILE_COPY = {
   'Triton · 大输后保持纪律': 'Triton · Discipline after a big loss',
   'Triton · 强牌诱导': 'Triton · Trapping with a strong hand',
   // zang
-  '臧书奴 · Aaron Zang': 'Zang Shunu · Aaron Zang',
+  '臧书奴 · Aaron Zang': 'Aaron Zang',
   臧书奴: 'Aaron Zang',
   '经验进攻 · 河牌争夺': 'Seasoned aggression · River battles',
   '中宽范围，有位置时争夺底池，河牌保留主动加注与抓诈路线。':

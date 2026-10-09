@@ -4213,19 +4213,19 @@
       "number": "1",
       "meta": "Alex · Preflop",
       "action": "2-bet open to 150",
-      "chip": "Boss Tan · Tan Xuan",
+      "chip": "Johnny Tan · Tan Xuan",
       "tone": "pending",
       "selected": true,
-      "a11y": "Public action #1, Alex · Preflop, 2-bet open to 150, Boss Tan · Tan Xuan"
+      "a11y": "Public action #1, Alex · Preflop, 2-bet open to 150, Johnny Tan · Tan Xuan"
      },
      {
       "number": "2",
       "meta": "River · Preflop",
       "action": "Call 150",
-      "chip": "Boss Tan · Tan Xuan",
+      "chip": "Johnny Tan · Tan Xuan",
       "tone": "pending",
       "selected": false,
-      "a11y": "Public action #2, River · Preflop, Call 150, Boss Tan · Tan Xuan"
+      "a11y": "Public action #2, River · Preflop, Call 150, Johnny Tan · Tan Xuan"
      },
      {
       "number": "3",
@@ -4240,10 +4240,10 @@
       "number": "4",
       "meta": "Luna · Preflop",
       "action": "Fold",
-      "chip": "Boss Tan · Tan Xuan",
+      "chip": "Johnny Tan · Tan Xuan",
       "tone": "pending",
       "selected": false,
-      "a11y": "Public action #4, Luna · Preflop, Fold, Boss Tan · Tan Xuan"
+      "a11y": "Public action #4, Luna · Preflop, Fold, Johnny Tan · Tan Xuan"
      },
      {
       "number": "6",
@@ -4267,19 +4267,19 @@
       "number": "9",
       "meta": "Alex · Flop",
       "action": "Check",
-      "chip": "Boss Tan · Tan Xuan",
+      "chip": "Johnny Tan · Tan Xuan",
       "tone": "pending",
       "selected": false,
-      "a11y": "Public action #9, Alex · Flop, Check, Boss Tan · Tan Xuan"
+      "a11y": "Public action #9, Alex · Flop, Check, Johnny Tan · Tan Xuan"
      },
      {
       "number": "10",
       "meta": "River · Flop",
       "action": "Check",
-      "chip": "Boss Tan · Tan Xuan",
+      "chip": "Johnny Tan · Tan Xuan",
       "tone": "pending",
       "selected": false,
-      "a11y": "Public action #10, River · Flop, Check, Boss Tan · Tan Xuan"
+      "a11y": "Public action #10, River · Flop, Check, Johnny Tan · Tan Xuan"
      },
      {
       "number": "11",
@@ -4303,28 +4303,28 @@
       "number": "14",
       "meta": "Alex · Flop",
       "action": "Fold",
-      "chip": "Boss Tan · Tan Xuan",
+      "chip": "Johnny Tan · Tan Xuan",
       "tone": "pending",
       "selected": false,
-      "a11y": "Public action #14, Alex · Flop, Fold, Boss Tan · Tan Xuan"
+      "a11y": "Public action #14, Alex · Flop, Fold, Johnny Tan · Tan Xuan"
      },
      {
       "number": "15",
       "meta": "River · Flop",
       "action": "Call 675",
-      "chip": "Boss Tan · Tan Xuan",
+      "chip": "Johnny Tan · Tan Xuan",
       "tone": "pending",
       "selected": false,
-      "a11y": "Public action #15, River · Flop, Call 675, Boss Tan · Tan Xuan"
+      "a11y": "Public action #15, River · Flop, Call 675, Johnny Tan · Tan Xuan"
      },
      {
       "number": "17",
       "meta": "River · Turn",
       "action": "Check",
-      "chip": "Boss Tan · Tan Xuan",
+      "chip": "Johnny Tan · Tan Xuan",
       "tone": "pending",
       "selected": false,
-      "a11y": "Public action #17, River · Turn, Check, Boss Tan · Tan Xuan"
+      "a11y": "Public action #17, River · Turn, Check, Johnny Tan · Tan Xuan"
      },
      {
       "number": "18",
@@ -4339,10 +4339,10 @@
       "number": "20",
       "meta": "River · River",
       "action": "Check",
-      "chip": "Boss Tan · Tan Xuan",
+      "chip": "Johnny Tan · Tan Xuan",
       "tone": "pending",
       "selected": false,
-      "a11y": "Public action #20, River · River, Check, Boss Tan · Tan Xuan"
+      "a11y": "Public action #20, River · River, Check, Johnny Tan · Tan Xuan"
      },
      {
       "number": "21",
@@ -4383,7 +4383,7 @@
      "choice": "2-bet open to 150",
      "explanationTitle": "Raising range triggered aggression",
      "explanation": "The hand was in the open / isolation raise candidate range (about the top 38.8%), or triggered the premium branch, and the aggression roll hit, so it built the pot. Marginal hands allowed to flat don't automatically re-raise just because the entry range widened, and the label doesn't mean the nuts.",
-     "profileName": "Boss Tan · Tan Xuan",
+     "profileName": "Johnny Tan · Tan Xuan",
      "reasons": [
       "Starting-hand rank: about top 17.2%; this style, position, and the public raising line allow the top 69.8%. It was inside that range. The ranking is a starting-hand heuristic, not a win rate.",
       "It faced 5 opponents still in, needed 50 to call, could win 125 in the model, and needed 40.0% equity to call.",
@@ -4454,19 +4454,19 @@
       "number": "1",
       "meta": "Alex · Preflop",
       "action": "2-bet open to 150",
-      "chip": "Boss Tan · Tan Xuan",
+      "chip": "Johnny Tan · Tan Xuan",
       "tone": "pending",
       "selected": false,
-      "a11y": "Public action #1, Alex · Preflop, 2-bet open to 150, Boss Tan · Tan Xuan"
+      "a11y": "Public action #1, Alex · Preflop, 2-bet open to 150, Johnny Tan · Tan Xuan"
      },
      {
       "number": "2",
       "meta": "River · Preflop",
       "action": "Call 150",
-      "chip": "Boss Tan · Tan Xuan",
+      "chip": "Johnny Tan · Tan Xuan",
       "tone": "pending",
       "selected": false,
-      "a11y": "Public action #2, River · Preflop, Call 150, Boss Tan · Tan Xuan"
+      "a11y": "Public action #2, River · Preflop, Call 150, Johnny Tan · Tan Xuan"
      },
      {
       "number": "3",
@@ -4481,10 +4481,10 @@
       "number": "4",
       "meta": "Luna · Preflop",
       "action": "Fold",
-      "chip": "Boss Tan · Tan Xuan",
+      "chip": "Johnny Tan · Tan Xuan",
       "tone": "pending",
       "selected": false,
-      "a11y": "Public action #4, Luna · Preflop, Fold, Boss Tan · Tan Xuan"
+      "a11y": "Public action #4, Luna · Preflop, Fold, Johnny Tan · Tan Xuan"
      },
      {
       "number": "6",
@@ -4508,19 +4508,19 @@
       "number": "9",
       "meta": "Alex · Flop",
       "action": "Check",
-      "chip": "Boss Tan · Tan Xuan",
+      "chip": "Johnny Tan · Tan Xuan",
       "tone": "pending",
       "selected": false,
-      "a11y": "Public action #9, Alex · Flop, Check, Boss Tan · Tan Xuan"
+      "a11y": "Public action #9, Alex · Flop, Check, Johnny Tan · Tan Xuan"
      },
      {
       "number": "10",
       "meta": "River · Flop",
       "action": "Check",
-      "chip": "Boss Tan · Tan Xuan",
+      "chip": "Johnny Tan · Tan Xuan",
       "tone": "pending",
       "selected": false,
-      "a11y": "Public action #10, River · Flop, Check, Boss Tan · Tan Xuan"
+      "a11y": "Public action #10, River · Flop, Check, Johnny Tan · Tan Xuan"
      },
      {
       "number": "11",
@@ -4544,28 +4544,28 @@
       "number": "14",
       "meta": "Alex · Flop",
       "action": "Fold",
-      "chip": "Boss Tan · Tan Xuan",
+      "chip": "Johnny Tan · Tan Xuan",
       "tone": "pending",
       "selected": false,
-      "a11y": "Public action #14, Alex · Flop, Fold, Boss Tan · Tan Xuan"
+      "a11y": "Public action #14, Alex · Flop, Fold, Johnny Tan · Tan Xuan"
      },
      {
       "number": "15",
       "meta": "River · Flop",
       "action": "Call 675",
-      "chip": "Boss Tan · Tan Xuan",
+      "chip": "Johnny Tan · Tan Xuan",
       "tone": "pending",
       "selected": false,
-      "a11y": "Public action #15, River · Flop, Call 675, Boss Tan · Tan Xuan"
+      "a11y": "Public action #15, River · Flop, Call 675, Johnny Tan · Tan Xuan"
      },
      {
       "number": "17",
       "meta": "River · Turn",
       "action": "Check",
-      "chip": "Boss Tan · Tan Xuan",
+      "chip": "Johnny Tan · Tan Xuan",
       "tone": "pending",
       "selected": false,
-      "a11y": "Public action #17, River · Turn, Check, Boss Tan · Tan Xuan"
+      "a11y": "Public action #17, River · Turn, Check, Johnny Tan · Tan Xuan"
      },
      {
       "number": "18",
@@ -4580,10 +4580,10 @@
       "number": "20",
       "meta": "River · River",
       "action": "Check",
-      "chip": "Boss Tan · Tan Xuan",
+      "chip": "Johnny Tan · Tan Xuan",
       "tone": "pending",
       "selected": false,
-      "a11y": "Public action #20, River · River, Check, Boss Tan · Tan Xuan"
+      "a11y": "Public action #20, River · River, Check, Johnny Tan · Tan Xuan"
      },
      {
       "number": "21",
@@ -5665,19 +5665,19 @@
       "number": "5",
       "meta": "River · Preflop",
       "action": "Fold",
-      "chip": "Boss Tan · Tan Xuan",
+      "chip": "Johnny Tan · Tan Xuan",
       "tone": "pending",
       "selected": false,
-      "a11y": "Public action #5, River · Preflop, Fold, Boss Tan · Tan Xuan"
+      "a11y": "Public action #5, River · Preflop, Fold, Johnny Tan · Tan Xuan"
      },
      {
       "number": "6",
       "meta": "Kai · Preflop",
       "action": "Fold",
-      "chip": "Zang Shunu · Aaron Zang",
+      "chip": "Aaron Zang",
       "tone": "pending",
       "selected": false,
-      "a11y": "Public action #6, Kai · Preflop, Fold, Zang Shunu · Aaron Zang"
+      "a11y": "Public action #6, Kai · Preflop, Fold, Aaron Zang"
      },
      {
       "number": "7",
@@ -5870,19 +5870,19 @@
       "number": "5",
       "meta": "River · Preflop",
       "action": "Fold",
-      "chip": "Boss Tan · Tan Xuan",
+      "chip": "Johnny Tan · Tan Xuan",
       "tone": "pending",
       "selected": false,
-      "a11y": "Public action #5, River · Preflop, Fold, Boss Tan · Tan Xuan"
+      "a11y": "Public action #5, River · Preflop, Fold, Johnny Tan · Tan Xuan"
      },
      {
       "number": "6",
       "meta": "Kai · Preflop",
       "action": "Fold",
-      "chip": "Zang Shunu · Aaron Zang",
+      "chip": "Aaron Zang",
       "tone": "pending",
       "selected": false,
-      "a11y": "Public action #6, Kai · Preflop, Fold, Zang Shunu · Aaron Zang"
+      "a11y": "Public action #6, Kai · Preflop, Fold, Aaron Zang"
      },
      {
       "number": "7",

@@ -2355,10 +2355,10 @@
               "seats": [
                 {
                   "profileId": "tan",
-                  "styleShort": "Boss Tan",
-                  "styleTitle": "Boss Tan · Tan Xuan · Wide range · Multi-street pressure",
+                  "styleShort": "Johnny Tan",
+                  "styleTitle": "Johnny Tan · Tan Xuan · Wide range · Multi-street pressure",
                   "mood": "steady",
-                  "avatarTitle": "Mia · Boss Tan (training archetype) · Simulated mood: Steady"
+                  "avatarTitle": "Mia · Johnny Tan (training archetype) · Simulated mood: Steady"
                 },
                 {
                   "profileId": "balanced",
@@ -2370,7 +2370,7 @@
                 {
                   "profileId": "zang",
                   "styleShort": "Aaron Zang",
-                  "styleTitle": "Zang Shunu · Aaron Zang · Seasoned aggression · River battles",
+                  "styleTitle": "Aaron Zang · Seasoned aggression · River battles",
                   "mood": "steady",
                   "avatarTitle": "River · Aaron Zang (training archetype) · Simulated mood: Steady"
                 },
@@ -2393,12 +2393,12 @@
                 "entries": [
                   {
                     "number": 1,
-                    "text": "Hand 2 begins · Button: Mia (Boss Tan)",
+                    "text": "Hand 2 begins · Button: Mia (Johnny Tan)",
                     "type": "street",
                     "playerId": null,
                     "isHero": false,
                     "street": 0,
-                    "personas": [" (Boss Tan)"]
+                    "personas": [" (Johnny Tan)"]
                   },
                   {
                     "number": 2,

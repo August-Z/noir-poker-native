@@ -227,4 +227,4 @@ Open WP-H items (`.gitignore` secrets are done in `91611f4`):
 
 Done in WP-H: the missing error-code fixture steps (regenerated, `--check` passes) and the `applyDelta` hardening (whole-array `logs`/`history` replacement wins regardless of key order; a missing `snapshot` means an unchanged snapshot) on both platforms.
 
-Other open items: product sign-off on the "Zang Shunu" and "Boss Tan" romanizations (left unchanged in the fixtures).
+Bot names: "Aaron Zang" and "Johnny Tan" are the owner's chosen English names for the two Triton players.

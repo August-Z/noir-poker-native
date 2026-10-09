@@ -36,8 +36,8 @@ val BOT_PROFILES: List<BotProfile> = listOf(
     ),
     BotProfile(
         id = "tan",
-        name = "Boss Tan · Tan Xuan",
-        short = "Boss Tan",
+        name = "Johnny Tan · Tan Xuan",
+        short = "Johnny Tan",
         tag = "Wide range · Multi-street pressure",
         description = "Contests more pots with a wider range, takes the same aggressive lines with weak and strong hands, and prefers sustained pressure.",
         axes = listOf(85, 90, 82, 70, 25),
@@ -64,7 +64,7 @@ val BOT_PROFILES: List<BotProfile> = listOf(
     ),
     BotProfile(
         id = "zang",
-        name = "Zang Shunu · Aaron Zang",
+        name = "Aaron Zang",
         short = "Aaron Zang",
         tag = "Seasoned aggression · River battles",
         description = "Medium-wide range; fights for pots in position and keeps both river raising and bluff-catching lines.",
