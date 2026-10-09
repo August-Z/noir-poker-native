@@ -42,15 +42,22 @@ public final class TableSession {
     public static let streetDelayMs = 1000
     public static let showdownDelayMs = 850
 
+    /// A planned bot decision waiting for its `deadline`. `pausedMs` is the
+    /// time the app spent in the background during the wait, so `waitedMs`
+    /// counts only foreground time.
     private final class BotWait {
         let plan: BotPlan
         let startedAt: Int
         let deadline: Int
-        init(plan: BotPlan, startedAt: Int, deadline: Int) {
+        let pausedMs: Int
+        init(plan: BotPlan, startedAt: Int, deadline: Int, pausedMs: Int = 0) {
             self.plan = plan
             self.startedAt = startedAt
             self.deadline = deadline
+            self.pausedMs = pausedMs
         }
+
+        func waitedMs(_ now: Int) -> Int { now - startedAt - pausedMs }
     }
 
     private struct Animation {
@@ -87,6 +94,7 @@ public final class TableSession {
     private var pendingBotSettings: BotSettings
     private var seatHandVisibility: [Int: Bool] = [:]
     private var backgrounded = false
+    private var backgroundedAt = 0
     private var potDialogOpen = false
     private var potExpanded: Set<Int> = []
     private let opponentsEditor = OpponentSettingsEditor()
@@ -225,6 +233,13 @@ public final class TableSession {
     @discardableResult
     public func nextHand() -> Bool {
         guard game.phase == .idle || game.phase == .done else { return false }
+        // Unlike the reference, the previous hand's review job does not outlive
+        // the hand: cancel it and drop any late result. Its settled input stays
+        // until the new hand settles, but it is no longer reachable (the review
+        // button is hidden during the new hand). An open dialog is closed first,
+        // while the old view token is still current.
+        if review.state().dialogOpen { review.close() }
+        review.pause()
         botWait = nil
         seatHandVisibility.removeAll()
         finishing = false
@@ -328,7 +343,7 @@ public final class TableSession {
         if game.phase == .between {
             engine { try advanceStreet(game) }
         } else if let waiting = finishWaiting, isBotTurnCurrent(game, waiting.plan) {
-            engine { try executeBotTurn(game, waiting.plan, expedited: true, waitedMs: scheduler.nowMs - waiting.startedAt) }
+            engine { try executeBotTurn(game, waiting.plan, expedited: true, waitedMs: waiting.waitedMs(scheduler.nowMs)) }
         } else {
             engine { try playBotTurn(game, random: random, timingRandom: random) }
         }
@@ -480,10 +495,14 @@ public final class TableSession {
 
     /// The app moved to the background: cancel the timer, stop a running Finish
     /// Hand loop and the review job. A thinking bot keeps its plan (no new
-    /// random draws) and restarts its full delay on return.
+    /// random draws); on return it waits only for the rest of its delay, and
+    /// the time spent in the background is excluded from its recorded
+    /// `waitedMs`. A cancelled Finish Hand is not resumed: the player taps it
+    /// again.
     public func onBackground() {
         guard !backgrounded else { return }
         backgrounded = true
+        backgroundedAt = scheduler.nowMs
         cancelTimer()
         cancelFinishLoop()
         epoch += 1
@@ -500,8 +519,13 @@ public final class TableSession {
         guard backgrounded else { return }
         backgrounded = false
         if let waiting = botWait, isBotTurnCurrent(game, waiting.plan) {
-            let now = scheduler.nowMs
-            botWait = BotWait(plan: waiting.plan, startedAt: now, deadline: now + waiting.plan.delayMs)
+            let away = max(0, scheduler.nowMs - backgroundedAt)
+            botWait = BotWait(
+                plan: waiting.plan,
+                startedAt: waiting.startedAt,
+                deadline: waiting.deadline + away,
+                pausedMs: waiting.pausedMs + away
+            )
         } else {
             botWait = nil
         }
@@ -559,7 +583,7 @@ public final class TableSession {
                 }
                 self.botWait = nil
                 let id = self.game.actor
-                let d = engine { try executeBotTurn(self.game, waiting.plan, waitedMs: self.scheduler.nowMs - waiting.startedAt) }
+                let d = engine { try executeBotTurn(self.game, waiting.plan, waitedMs: waiting.waitedMs(self.scheduler.nowMs)) }
                 if d.action != .fold && d.action != .check {
                     self.emit(.chipFlight(seat: id))
                     self.playSound(.chip)

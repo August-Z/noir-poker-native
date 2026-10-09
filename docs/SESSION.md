@@ -71,7 +71,7 @@ come from the engine unchanged. Amounts are also given as numbers.
 | `coach: CoachState` | Hints visibility, toggle label, stage and tip (always computed) |
 | `showdown: ShowdownState?` | Context line and one `ShowdownSceneState` per live player: ordered best five, highlight flags, explanation, motion, awards, status and footer. `key` changes once per settled hand, so animate only when it changes |
 | `potDetails: PotDetailsState` | Pot dialog: open flag, title, live note, per-pot cards (awards, split total, eligibility, contributions, odd-chip note, expanded state) and refund rows |
-| `opponents: OpponentsSummary` | Summary chip (`Balanced`, `3 Styled Opponents`, `Next Hand`) and the pending-change note |
+| `opponents: OpponentsSummary` | Summary chip (`Balanced`, `3 Styled Opponents`, `Applies Next Hand`) and the pending-change note |
 | `opponentsDialog: OpponentsDialogState?` | Non-null while the Opponent Styles draft is open: profile cards, detail, comparison table, 8 roster rows |
 | `review: ReviewState` | Review button and dialog state, captured input, status, progress, analysis, selected step, perspective, opponent filter and records |
 | `settings: SettingsState` | Requested seat count, table-change note, difficulty, hints, sound, option labels |
@@ -127,8 +127,32 @@ on background transitions, so a finished review survives them.
 
 `onBackground()` cancels the timer, stops a running Finish Hand loop and
 cancels the review job. A thinking bot keeps its plan. `onForeground()`
-restarts that plan's full delay from the time of return, without new random
-draws, and restarts the review analysis if its dialog is still open.
+resumes that plan without new random draws and restarts the review analysis if
+its dialog is still open. Background time is carried across, not restarted:
+
+- The bot keeps its original `startedAt`. Its deadline moves later by the time
+  spent in the background, so it acts after the rest of its delay, not after a
+  full new delay. The time away accumulates in a `pausedMs` offset, and the
+  recorded `waitedMs` is `now - startedAt - pausedMs`, which counts foreground
+  time only. Repeated background transitions add up.
+- A street advance has no plan to keep. It is scheduled again with its full
+  1,000 ms (or 850 ms) delay on return.
+- Finish Hand is not resumed. Backgrounding cancels the fast-forward, any
+  unexecuted planned decision goes back to normal pacing as above, and the
+  Finish Hand button is offered again so the player can tap it again.
+
+### Next Hand cancels the previous review (deviation from the reference)
+
+The reference keeps a running review job alive through Next Hand and drops its
+result only when the next hand settles. The native session cancels it at Next
+Hand instead, because stale work must not outlive the hand (project rule). If
+the review dialog is still open, Next Hand closes it first. The job is
+cancelled through the same path as a background transition: the runner's handle
+is cancelled, the job id advances so a late `progress`, `complete` or `fail` is
+dropped, and the entry returns to idle. The settled input itself is kept until
+the next hand settles and replaces it, but the review button is hidden during
+the new hand, so nothing restarts it, not even a later foreground. A seat-count
+change still resets the review completely.
 
 ## Effects
 
@@ -170,9 +194,9 @@ platforms). Opponent execution records are never sent to
 the hero analysis; they stay in `ReviewState.input.opponents` for the opponent
 panel. A typical Android runner launches the analysis on `Dispatchers.Default`,
 checks for cancellation between decisions, and posts each sink call back to
-the main thread. The session drops progress and results from stale jobs: a new
-hand settles, Replay Hand, Start New Session, a seat-count change, or the
-background. The review module's summary type implements `ReviewAnalysis`.
+the main thread. The session drops progress and results from stale jobs: Next
+Hand, a new hand settles, Replay Hand, Start New Session, a seat-count change,
+or the background. The review module's summary type implements `ReviewAnalysis`.
 
 ### Review dialog views (Kotlin)
 

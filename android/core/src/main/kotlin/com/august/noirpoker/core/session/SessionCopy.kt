@@ -190,7 +190,7 @@ object SessionCopy {
     val soundStateOff = "Sound off"
 
     // Opponent settings.
-    val opponentsSummaryPending = "Next Hand"
+    val opponentsSummaryPending = "Applies Next Hand"
     fun opponentsSummaryNamed(n: Int) = if (n == 1) "1 Styled Opponent" else "$n Styled Opponents"
     val opponentsSummaryBalanced = "Balanced"
     val opponentsChangeNote =
@@ -198,9 +198,9 @@ object SessionCopy {
     val opponentsSaveNote =
         "Saved on this device and restored next time. Changes apply from the next hand; replays keep the original opponents."
     val profileBadge = "Training Archetype"
-    fun profileSizing(lo: Int, hi: Int) = "Typical postflop bet: $lo–$hi% pot"
+    fun profileSizing(lo: Int, hi: Int) = "Typical postflop bet: $lo–$hi% of the pot"
     fun profileSizingCell(lo: Int, hi: Int) = "$lo–$hi%"
-    val rosterOffTable = "Not Seated"
+    val rosterOffTable = "Not seated"
     fun rosterSeat(id: Int) = "Seat $id"
     val moodSteady = "Steady"
     fun rosterSelectA11y(name: String) = "$name's training style"

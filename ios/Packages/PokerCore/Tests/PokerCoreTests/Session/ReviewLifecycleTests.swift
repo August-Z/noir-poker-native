@@ -96,6 +96,55 @@ final class ReviewLifecycleTests: XCTestCase {
         XCTAssertNil(h.state.review.analysis)
     }
 
+    func testNextHandCancelsARunningReviewJob() throws {
+        // The dialog is still open when Next Hand runs.
+        let runner = FakeReviewRunner()
+        let h = try settledHand(runner)
+        let settled = try XCTUnwrap(h.state.review.input)
+        h.session.openReview()
+        let job = runner.started[0]
+        XCTAssertTrue(h.session.nextHand())
+        h.hooks.stop()
+        XCTAssertTrue(job.cancelled)
+        XCTAssertFalse(h.state.review.dialogOpen)
+        XCTAssertFalse(h.state.review.buttonVisible)
+        XCTAssertEqual(h.state.review.status, .idle)
+        XCTAssertGreaterThan(h.state.review.jobId, job.job.id)
+        // A late result or failure from the cancelled job is dropped.
+        job.sink.progress(done: 1, total: settled.decisions.count)
+        job.sink.complete(FakeAnalysis(priorityIndex: 0))
+        job.sink.fail(nil)
+        XCTAssertEqual(h.state.review.status, .idle)
+        XCTAssertEqual(h.state.review.progress, 0)
+        XCTAssertNil(h.state.review.analysis)
+        // The settled entry is kept, but nothing restarts it during the new hand.
+        XCTAssertEqual(h.state.review.input, settled)
+        h.session.onBackground()
+        h.session.onForeground()
+        h.hooks.stop()
+        XCTAssertEqual(runner.started.count, 1)
+
+        // The dialog was closed mid-analysis before Next Hand.
+        let closed = FakeReviewRunner()
+        let g = try settledHand(closed, seed: 3)
+        g.session.openReview()
+        g.session.closeReview()
+        let running = closed.started[0]
+        XCTAssertFalse(running.cancelled)
+        g.session.nextHand()
+        g.hooks.stop()
+        XCTAssertTrue(running.cancelled)
+        running.sink.complete(FakeAnalysis(priorityIndex: 0))
+        XCTAssertNil(g.state.review.analysis)
+        // The next settled hand gets a fresh job when its review opens.
+        try g.foldRest()
+        g.session.openReview()
+        XCTAssertEqual(closed.started.count, 2)
+        XCTAssertEqual(closed.started[1].job.input.hand, g.game.hand)
+        closed.started[1].sink.complete(FakeAnalysis(priorityIndex: 0))
+        XCTAssertEqual(g.state.review.status, .done)
+    }
+
     func testStartNewSessionAndSeatChangesResetTheReview() throws {
         let runner = FakeReviewRunner()
         let h = try settledHand(runner)

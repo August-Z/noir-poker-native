@@ -1944,7 +1944,7 @@
       ]
     },
     {
-      "name": "background cancels bot timers and the foreground restarts the same plan",
+      "name": "background cancels bot timers and the foreground resumes the same plan for the rest of its delay",
       "seed": 17,
       "steps": [
         {"do": "start"},
@@ -1984,9 +1984,9 @@
         {
           "expect": {
             "state": {"backgrounded": false},
-            "thinking": {"actor": 3, "delayMs": 4721, "startedAt": 60500, "deadline": 65221},
+            "thinking": {"actor": 3, "delayMs": 4721, "startedAt": 0, "deadline": 64721},
             "pending": 1,
-            "nextDueAt": 65221,
+            "nextDueAt": 64721,
             "draws": 1430,
             "clock": 60500,
             "epoch": 2
@@ -2007,7 +2007,7 @@
               }
             },
             "draws": 4187,
-            "clock": 72855
+            "clock": 72355
           }
         }
       ]
@@ -2214,7 +2214,7 @@
                 "emotionMode": "subtle",
                 "selectedProfile": "balanced",
                 "detailName": "Balanced Practice",
-                "sizingText": "Typical postflop bet: 45–80% pot",
+                "sizingText": "Typical postflop bet: 45–80% of the pot",
                 "roster": [
                   {
                     "id": 1,
@@ -2265,7 +2265,7 @@
                     "id": 6,
                     "name": "Theo",
                     "offTable": true,
-                    "subtitle": "Not Seated · Steady",
+                    "subtitle": "Not seated · Steady",
                     "assignment": "balanced",
                     "currentStyle": "Not seated yet; uses the saved next-hand setting",
                     "observed": "0 hands · VPIP — · PFR —"
@@ -2274,7 +2274,7 @@
                     "id": 7,
                     "name": "Jade",
                     "offTable": true,
-                    "subtitle": "Not Seated · Steady",
+                    "subtitle": "Not seated · Steady",
                     "assignment": "balanced",
                     "currentStyle": "Not seated yet; uses the saved next-hand setting",
                     "observed": "0 hands · VPIP — · PFR —"
@@ -2283,7 +2283,7 @@
                     "id": 8,
                     "name": "Leo",
                     "offTable": true,
-                    "subtitle": "Not Seated · Steady",
+                    "subtitle": "Not seated · Steady",
                     "assignment": "balanced",
                     "currentStyle": "Not seated yet; uses the saved next-hand setting",
                     "observed": "0 hands · VPIP — · PFR —"
@@ -2305,7 +2305,7 @@
                 "emotionMode": "lively",
                 "selectedProfile": "dwan",
                 "detailName": "Tom Dwan",
-                "sizingText": "Typical postflop bet: 65–120% pot",
+                "sizingText": "Typical postflop bet: 65–120% of the pot",
                 "roster": [
                   {"assignment": "tan"},
                   {"assignment": "balanced"},
@@ -2327,7 +2327,7 @@
             "state": {
               "opponentsDialog": null,
               "opponents": {
-                "text": "Next Hand",
+                "text": "Applies Next Hand",
                 "changePending": true,
                 "changeNote": "Opponent styles saved and will apply next hand. This hand and any replay use the current styles shown at each seat."
               },

@@ -78,7 +78,14 @@ class TableSession(
 ) {
     private val preferences = PreferencesStore(storage)
 
-    private class BotWait(val plan: BotPlan, val startedAt: Long, val deadline: Long)
+    /**
+     * A planned bot decision waiting for its [deadline]. [pausedMs] is the time
+     * the app spent in the background during the wait, so [waitedMs] counts only
+     * foreground time.
+     */
+    private class BotWait(val plan: BotPlan, val startedAt: Long, val deadline: Long, val pausedMs: Long = 0) {
+        fun waitedMs(now: Long): Long = now - startedAt - pausedMs
+    }
 
     private var requestedCount: Int
     internal var game: Game
@@ -109,6 +116,7 @@ class TableSession(
     private var pendingBotSettings: BotSettings
     private val seatHandVisibility = HashMap<Int, Boolean>()
     private var backgrounded = false
+    private var backgroundedAt = 0L
     private var potDialogOpen = false
     private val potExpanded = HashSet<Int>()
     private val opponentsEditor = OpponentSettingsEditor()
@@ -248,6 +256,13 @@ class TableSession(
      */
     fun nextHand(): Boolean {
         if (game.phase != Phase.IDLE && game.phase != Phase.DONE) return false
+        // Unlike the reference, the previous hand's review job does not outlive
+        // the hand: cancel it and drop any late result. Its settled input stays
+        // until the new hand settles, but it is no longer reachable (the review
+        // button is hidden during the new hand). An open dialog is closed first,
+        // while the old view token is still current.
+        if (review.state().dialogOpen) review.close()
+        review.pause()
         botWait = null
         seatHandVisibility.clear()
         finishing = false
@@ -353,7 +368,7 @@ class TableSession(
             } else {
                 val waiting = finishWaiting
                 if (waiting != null && isBotTurnCurrent(game, waiting.plan)) {
-                    executeBotTurn(game, waiting.plan, expedited = true, waitedMs = scheduler.nowMs - waiting.startedAt)
+                    executeBotTurn(game, waiting.plan, expedited = true, waitedMs = waiting.waitedMs(scheduler.nowMs))
                 } else {
                     playBotTurn(game, random, random)
                 }
@@ -512,11 +527,14 @@ class TableSession(
     /**
      * The app moved to the background: cancel the timer, stop a running Finish
      * Hand loop and the review job. A thinking bot keeps its plan (no new random
-     * draws) and restarts its full delay on return.
+     * draws); on return it waits only for the rest of its delay, and the time
+     * spent in the background is excluded from its recorded `waitedMs`. A
+     * cancelled Finish Hand is not resumed: the player taps it again.
      */
     fun onBackground() {
         if (backgrounded) return
         backgrounded = true
+        backgroundedAt = scheduler.nowMs
         cancelTimer()
         cancelFinishLoop()
         epoch++
@@ -535,8 +553,8 @@ class TableSession(
         backgrounded = false
         val waiting = botWait
         botWait = if (waiting != null && isBotTurnCurrent(game, waiting.plan)) {
-            val now = scheduler.nowMs
-            BotWait(waiting.plan, now, now + waiting.plan.delayMs)
+            val away = maxOf(0L, scheduler.nowMs - backgroundedAt)
+            BotWait(waiting.plan, waiting.startedAt, waiting.deadline + away, waiting.pausedMs + away)
         } else {
             null
         }
@@ -594,7 +612,7 @@ class TableSession(
                 }
                 botWait = null
                 val id = game.actor
-                val d = executeBotTurn(game, waiting.plan, waitedMs = scheduler.nowMs - waiting.startedAt)
+                val d = executeBotTurn(game, waiting.plan, waitedMs = waiting.waitedMs(scheduler.nowMs))
                 if (d.action != Action.FOLD && d.action != Action.CHECK) {
                     emit(SessionEffect.ChipFlight(id))
                     playSound(SoundKind.CHIP)

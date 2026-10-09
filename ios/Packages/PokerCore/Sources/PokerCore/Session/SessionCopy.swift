@@ -195,7 +195,7 @@ public enum SessionCopy {
     public static let soundStateOff = "Sound off"
 
     // Opponent settings.
-    public static let opponentsSummaryPending = "Next Hand"
+    public static let opponentsSummaryPending = "Applies Next Hand"
     public static func opponentsSummaryNamed(_ n: Int) -> String { n == 1 ? "1 Styled Opponent" : "\(n) Styled Opponents" }
     public static let opponentsSummaryBalanced = "Balanced"
     public static let opponentsChangeNote =
@@ -203,9 +203,9 @@ public enum SessionCopy {
     public static let opponentsSaveNote =
         "Saved on this device and restored next time. Changes apply from the next hand; replays keep the original opponents."
     public static let profileBadge = "Training Archetype"
-    public static func profileSizing(_ lo: Int, _ hi: Int) -> String { "Typical postflop bet: \(lo)–\(hi)% pot" }
+    public static func profileSizing(_ lo: Int, _ hi: Int) -> String { "Typical postflop bet: \(lo)–\(hi)% of the pot" }
     public static func profileSizingCell(_ lo: Int, _ hi: Int) -> String { "\(lo)–\(hi)%" }
-    public static let rosterOffTable = "Not Seated"
+    public static let rosterOffTable = "Not seated"
     public static func rosterSeat(_ id: Int) -> String { "Seat \(id)" }
     public static let moodSteady = "Steady"
     public static func rosterSelectA11y(_ name: String) -> String { "\(name)'s training style" }
