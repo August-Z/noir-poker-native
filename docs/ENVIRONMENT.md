@@ -14,7 +14,7 @@ node scripts/generate-reference-fixtures.mjs --check
 (cd .reference/noir-poker && node --test tests/unit/*.test.js)
 ```
 
-The Android APK is `android/app/build/outputs/apk/debug/app-debug.apk`. It is a development starter, not the completed poker game. An emulator is not required for compilation; UI tests run on GitHub's Android emulator job. Use a real Android device for ongoing interaction and performance checks.
+The Android APK is `android/app/build/outputs/apk/debug/app-debug.apk`. It is a debug build of the practice app; see `docs/PARITY.md` for what is complete. An emulator is not required for compilation; UI tests run on GitHub's Android emulator job. Use a real Android device for ongoing interaction and performance checks.
 
 ## GitHub Actions
 

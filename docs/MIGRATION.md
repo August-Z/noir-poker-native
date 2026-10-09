@@ -17,7 +17,7 @@ Implement the domain twice and use the same behavioral fixtures. No browser runt
 
 ## Current implementation boundary
 
-The starter contains the native app entry points, brand/palette foundations, a rules dialog/sheet, a validated card model on each platform, cloud builds, native UI smoke tests, and deterministic reference hand-ranking fixtures. It does not implement a playable table, hand evaluation, settlement, bots, replay, review, preferences, or original feature parity. The two decorative cards on the starter screen are not a live hand. Do not claim that migration is complete.
+Both apps implement the playable table, the rules engine and settlement, bots and synthetic emotions, replay, decision review, and preferences, with separate Kotlin and Swift domain layers checked against the same fixtures. `docs/PARITY.md` records the status of each item below, the deliberate deviations, and the remaining gaps. Do not claim that migration is complete until every row there is verified.
 
 ## Behavior that must survive migration
 
