@@ -2,6 +2,7 @@ package com.august.noirpoker
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.DeviceConfigurationOverride
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.FontScale
 import androidx.compose.ui.test.ForcedSize
 import androidx.compose.ui.test.assertIsDisplayed
@@ -74,6 +75,29 @@ class AdaptiveLayoutTest {
 
     private fun bounds(tag: String): DpRect = compose.onNodeWithTag(tag).getBoundsInRoot()
 
+    /**
+     * The node's laid-out rectangle in the root, in dp, not clipped to the visible
+     * viewport. `getBoundsInRoot` clips to the scrolling column, so a seat scrolled
+     * below the window edge (a 9-seat arena on a phone, or after scrolling to the
+     * action panel) would report an empty rectangle although it is laid out.
+     */
+    private fun layoutBounds(matcher: SemanticsMatcher): DpRect {
+        val node = compose.onNode(matcher).fetchSemanticsNode()
+        val position = node.positionInRoot
+        return with(node.layoutInfo.density) {
+            DpRect(
+                position.x.toDp(),
+                position.y.toDp(),
+                (position.x + node.size.width).toDp(),
+                (position.y + node.size.height).toDp(),
+            )
+        }
+    }
+
+    private fun layoutBounds(tag: String): DpRect = layoutBounds(hasTestTag(tag))
+
+    private fun tableBounds(): DpRect = layoutBounds(hasContentDescription(UiCopy.tableRegionA11y))
+
     private fun DpRect.overlaps(other: DpRect) = left < other.right && other.left < right && top < other.bottom && other.top < bottom
 
     /** Fold, Check / Call and Raise are on screen, at least 48 dp tall, enabled, labelled and side by side or stacked without overlap. */
@@ -94,8 +118,8 @@ class AdaptiveLayoutTest {
 
     /** Every opponent seat is laid out inside the table, each in its own place. */
     private fun assertSeats(count: Int) {
-        val table = compose.onNode(hasContentDescription(UiCopy.tableRegionA11y)).getBoundsInRoot()
-        val rects = (1 until count).map { id -> bounds("seat-$id") }
+        val table = tableBounds()
+        val rects = (1 until count).map { id -> layoutBounds("seat-$id") }
         rects.forEachIndexed { i, a ->
             val seat = i + 1
             assertTrue("Seat $seat has a size", a.right > a.left && a.bottom > a.top)
@@ -124,8 +148,8 @@ class AdaptiveLayoutTest {
 
     @Test fun tabletLandscapePlacesTheSidebarBesideTheTable() {
         show(DpSize(1280.dp, 800.dp), seats = 9)
-        val table = compose.onNode(hasContentDescription(UiCopy.tableRegionA11y)).getBoundsInRoot()
-        val sidebar = compose.onNodeWithText(UiCopy.sessionTitle).getBoundsInRoot()
+        val table = tableBounds()
+        val sidebar = layoutBounds(hasText(UiCopy.sessionTitle))
         assertTrue("The sidebar sits to the right of the table", sidebar.left >= table.right)
         compose.onNodeWithText(UiCopy.sessionTitle).assertIsDisplayed()
         assertSeats(9)
@@ -134,8 +158,8 @@ class AdaptiveLayoutTest {
 
     @Test fun tabletPortraitStacksTheSidebarBelowTheTable() {
         show(DpSize(800.dp, 1280.dp), seats = 6)
-        val table = compose.onNode(hasContentDescription(UiCopy.tableRegionA11y)).getBoundsInRoot()
-        val sidebar = compose.onNodeWithText(UiCopy.sessionTitle).getBoundsInRoot()
+        val table = tableBounds()
+        val sidebar = layoutBounds(hasText(UiCopy.sessionTitle))
         assertTrue("The sidebar sits below the table", sidebar.top >= table.bottom)
         assertSeats(6)
         assertActionButtons()
