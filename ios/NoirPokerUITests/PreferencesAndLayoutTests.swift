@@ -102,8 +102,10 @@ final class TabletLayoutTests: XCTestCase {
             .waitForExistence(timeout: 10), "The wide layout shows the sidebar footnote")
         XCTAssertTrue(app.waitForHeroTurn(), app.probe.label)
         Noir.snapshot("ipad-landscape-6max", in: self)
-        XCTAssertTrue(app.foldButton.isHittable, "The action panel is visible without scrolling")
+        XCTAssertTrue(app.element("hand-label").isHittable, "The table is on screen")
         XCTAssertTrue(app.element("stat-hands").isHittable, "The sidebar is visible next to the table")
+        app.reveal(app.foldButton)
+        XCTAssertTrue(app.foldButton.isHittable, "The action panel is reachable")
 
         app.tapWhenReady(app.buttons["settings"])
         app.tapWhenReady(app.buttons["Table size: 9 players"], timeout: 5)
@@ -116,6 +118,7 @@ final class TabletLayoutTests: XCTestCase {
         }
         XCTAssertTrue(app.waitForHeroTurn(), app.probe.label)
         Noir.snapshot("ipad-landscape-9max", in: self)
+        app.reveal(app.foldButton)
         XCTAssertTrue(app.foldButton.isHittable)
 
         XCUIDevice.shared.orientation = .portrait

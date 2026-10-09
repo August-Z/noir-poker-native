@@ -38,6 +38,9 @@ struct ArenaView: View {
             }
             HeroView(hero: state.hero, metrics: m, dealKey: dealKey)
                 .anchoredBottomCenter(CGPoint(x: m.width / 2, y: m.heroBottom))
+                // The hero area has no controls; let taps reach the eye
+                // toggles of the lower seats that it overlaps on phones.
+                .allowsHitTesting(false)
                 .zIndex(4)
             ChipFlightLayer(model: model, metrics: m)
                 .zIndex(5)
