@@ -1,5 +1,6 @@
 package com.august.noirpoker.core.fixtures
 
+import com.august.noirpoker.core.BotPlan
 import com.august.noirpoker.core.Difficulty
 import com.august.noirpoker.core.EmotionMode
 import com.august.noirpoker.core.Game
@@ -116,24 +117,34 @@ fun applyPatch(g: Game, step: JsonObject) {
     }
 }
 
-/** Applies a snapshot delta to the previous expected full snapshot. */
+/**
+ * Applies a snapshot delta to the previous expected full snapshot.
+ *
+ * Additions extend the value already merged into `next`, and a whole-array
+ * `logs` / `history` replacement wins over additions in the same delta,
+ * independent of key order (the same rule as the iOS harness).
+ */
 fun applyDelta(previous: JsonObject, delta: JsonObject): JsonObject {
     val next = LinkedHashMap(previous)
     for ((k, v) in delta) {
         when (k) {
             "players" -> {
-                val players = previous.getValue("players").arr.map { LinkedHashMap(it.obj) }.toMutableList()
+                val players = next.getValue("players").arr.map { LinkedHashMap(it.obj) }.toMutableList()
                 for (entry in v.arr) {
-                    val target = players.first { it.getValue("id").i == entry.obj.getValue("id").i }
+                    val id = entry.obj.getValue("id").i
+                    val target = players.firstOrNull { it.getValue("id").i == id }
+                        ?: error("snapshot delta names unknown seat $id")
                     for ((f, value) in entry.obj) target[f] = value
                 }
                 next["players"] = JsonArray(players.map { JsonObject(it) })
             }
-            "logsAdded" -> next["logs"] = JsonArray(v.arr + previous.getValue("logs").arr)
-            "historyAdded" -> next["history"] = JsonArray(previous.getValue("history").arr + v.arr)
+            "logsAdded" -> next["logs"] = JsonArray(v.arr + next.getValue("logs").arr)
+            "historyAdded" -> next["history"] = JsonArray(next.getValue("history").arr + v.arr)
             else -> next[k] = v
         }
     }
+    delta["logs"]?.let { next["logs"] = it }
+    delta["history"]?.let { next["history"] = it }
     return JsonObject(next)
 }
 
@@ -219,6 +230,9 @@ class EngineFixturesTest {
     private class Replay(val seed: Long, val playerCount: Int) {
         val rng = CountingRandom(seed)
         val g: Game = newGame(playerCount)
+
+        /** The plan held by the last `planBotTurn` step, for `executeBotTurn`. */
+        var plan: BotPlan? = null
     }
 
     /** Runs one operation; returns the op's `result` JSON when it has one. */
@@ -263,7 +277,12 @@ class EngineFixturesTest {
                 null
             }
             "planBotTurn" -> {
-                planBotTurn(g, r.rng, r.rng)
+                val plan = planBotTurn(g, r.rng, r.rng)
+                r.plan = plan
+                jObj("delayMs" to j(plan.delayMs))
+            }
+            "executeBotTurn" -> {
+                executeBotTurn(g, r.plan ?: error("executeBotTurn without a held plan"), expedited = false, waitedMs = 0)
                 null
             }
             "botAct" -> {
@@ -339,6 +358,7 @@ class EngineFixturesTest {
                         "expectError" -> {
                             val before = r.g.deepCopy()
                             val draws = r.rng.draws
+                            val heldPlan = r.plan
                             val code = try {
                                 perform(r, step.getValue("step").obj)
                                 null
@@ -348,6 +368,7 @@ class EngineFixturesTest {
                             problem = jsonDiff(step.getValue("error"), j(code), "$label.error")
                             if (problem == null && !r.g.sameState(before)) problem = "$label: rejected call changed the game"
                             if (problem == null && r.rng.draws != draws) problem = "$label: rejected call drew random values"
+                            if (problem == null && r.plan !== heldPlan) problem = "$label: rejected call replaced the held bot plan"
                         }
                         else -> {
                             val result = perform(r, step)
@@ -371,7 +392,8 @@ class EngineFixturesTest {
                         }
                     }
                     if (problem != null) break
-                    expected = applyDelta(expected, step.getValue("snapshot").obj)
+                    // A step without a snapshot delta must leave the public snapshot unchanged.
+                    expected = applyDelta(expected, step.opt("snapshot")?.obj ?: JsonObject(emptyMap()))
                     problem = jsonDiff(expected, snapshotJson(r.g, r.rng.draws), "$label.snapshot")
                 }
                 problem

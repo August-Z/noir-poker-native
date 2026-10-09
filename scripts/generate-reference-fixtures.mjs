@@ -357,6 +357,20 @@ class Scenario {
       return { delayMs: plan.delayMs };
     });
   }
+  // planBotTurn(g) on the case stream; the opaque plan is held for a later
+  // executeBotTurn step. The game itself is unchanged.
+  planBotTurn() {
+    return this.record({ op: 'planBotTurn' }, () => {
+      this.plan = poker.planBotTurn(this.g);
+      return { delayMs: this.plan.delayMs };
+    });
+  }
+  // executeBotTurn(g, heldPlan) without drawing.
+  executeBotTurn() {
+    return this.record({ op: 'executeBotTurn' }, () => {
+      poker.executeBotTurn(this.g, this.plan);
+    });
+  }
   // Runs one of the ops above and requires the reference to throw without
   // changing state.
   expectError(op) {
@@ -374,6 +388,8 @@ class Scenario {
       else if (op.op === 'completeBoardForPractice') poker.completeBoardForPractice(g);
       else if (op.op === 'applyBotSettings') poker.applyBotSettings(g, op.settings);
       else if (op.op === 'planBotTurn') poker.planBotTurn(g);
+      else if (op.op === 'executeBotTurn') poker.executeBotTurn(g, this.plan);
+      else if (op.op === 'botAct') poker.botDecision(g);
       else throw Error(`Unsupported expectError op ${op.op}`);
     } catch (e) {
       code = errorCode(e);
@@ -1191,6 +1207,66 @@ for (let i = 0; i < 42; i++) {
     }
     if (!s.g.showdown && s.g.board.length < 5) s.completeBoardForPractice();
   }
+  add(s);
+}
+
+// --- Engine guards (bot-timing.test.js and defensive invariants) -------------
+// Explicit seeds keep the seeds of every earlier scenario unchanged.
+const untilBotActs = (s) => {
+  while (s.g.actor === 0) s.act(0, 'fold');
+};
+{
+  const s = scenario('bot-timing: planning leaves the game unchanged and an executed plan cannot run again', { seed: 9001 });
+  s.startHand();
+  untilBotActs(s);
+  s.planBotTurn();
+  s.executeBotTurn();
+  s.expectError({ op: 'executeBotTurn' });
+  add(s);
+}
+{
+  const s = scenario('bot-timing: plans are rejected after a difficulty change, another action or a same-hand replay', { seed: 9002 });
+  s.startHand();
+  untilBotActs(s);
+  s.planBotTurn();
+  s.patch({ game: { difficulty: 'hard' } });
+  s.expectError({ op: 'executeBotTurn' });
+  s.patch({ game: { difficulty: 'normal' } });
+  s.act(s.g.actor, 'call');
+  s.expectError({ op: 'executeBotTurn' });
+  s.playing('fold');
+  s.restartHand();
+  s.expectError({ op: 'executeBotTurn' });
+  add(s);
+}
+{
+  const s = scenario('engine guards: the bot executor rejects the hero seat and turns without a legal actor', { seed: 9003 });
+  s.expectError({ op: 'planBotTurn' });
+  s.startHand();
+  while (s.g.actor !== 0) s.act(s.g.actor, 'call');
+  s.expectError({ op: 'planBotTurn' });
+  s.playing('call');
+  s.expectError({ op: 'planBotTurn' });
+  s.expectError({ op: 'botAct' });
+  s.finish('call');
+  s.expectError({ op: 'planBotTurn' });
+  add(s);
+}
+{
+  const s = scenario('engine guards: a showdown settled before the river cannot be completed for practice', { seed: 9004 });
+  s.startHand();
+  s.playing('call');
+  s.advanceStreet();
+  s.playing('check');
+  s.settle(true);
+  s.expectError({ op: 'completeBoardForPractice' });
+  add(s);
+}
+{
+  const s = scenario('engine guards: settlement rejects a contested layer whose contributors have all folded', { seed: 9005 });
+  s.patch(multiFixture([100, 300, 300], [1, 2]));
+  s.expectError({ op: 'settle', showdown: true });
+  s.expectError({ op: 'settle', showdown: false });
   add(s);
 }
 

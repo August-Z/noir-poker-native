@@ -7,6 +7,9 @@ import XCTest
 /// every query result, every hero decision snapshot and bot decision record,
 /// and every expected error (which must leave the game and stream unchanged).
 final class EngineScenarioFixtureTests: XCTestCase {
+    /// The plan held by the last `planBotTurn` step, for `executeBotTurn`.
+    private var heldPlan: BotPlan?
+
     private func int(_ v: Any?) -> Int { fixtureInt(v) }
     private func optInt(_ v: Any?) -> Int? { v == nil || v is NSNull ? nil : fixtureInt(v) }
     private func cardList(_ v: Any?) -> [Card] { (v as! [Any]).map { Card(key: $0 as! String)! } }
@@ -42,7 +45,10 @@ final class EngineScenarioFixtureTests: XCTestCase {
                 var players = s["players"] as! [[String: Any]]
                 for partial in value as! [[String: Any]] {
                     let id = int(partial["id"])
-                    let i = players.firstIndex { int($0["id"]) == id }!
+                    guard let i = players.firstIndex(where: { int($0["id"]) == id }) else {
+                        XCTFail("Snapshot delta names unknown seat \(id)")
+                        continue
+                    }
                     for (k, v) in partial where k != "id" { players[i][k] = v }
                 }
                 s["players"] = players
@@ -137,6 +143,16 @@ final class EngineScenarioFixtureTests: XCTestCase {
             var result: [String: Any] = ["id": actor, "action": d.action.rawValue, "reason": d.trace.reason]
             if let a = d.amount { result["amount"] = a }
             jsonDiff(step["result"], result, "result", &diffs)
+        case "planBotTurn":
+            let plan = try planBotTurn(g, random: rng, timingRandom: rng)
+            heldPlan = plan
+            jsonDiff(step["result"], ["delayMs": plan.delayMs] as [String: Any], "result", &diffs)
+        case "executeBotTurn":
+            guard let plan = heldPlan else {
+                XCTFail("executeBotTurn without a held plan")
+                return .none
+            }
+            try executeBotTurn(g, plan, expedited: false, waitedMs: 0)
         case "botTurn":
             let plan = try planBotTurn(g, random: rng, timingRandom: rng)
             try executeBotTurn(g, plan, expedited: false, waitedMs: 0)
@@ -196,6 +212,7 @@ final class EngineScenarioFixtureTests: XCTestCase {
     private func runCase(_ c: [String: Any], _ name: String) throws -> Bool {
         let rng = CountingRandom(SeededRandom(seed: int(c["seed"])))
         let g = try newGame(int(c["playerCount"]))
+        heldPlan = nil
         var expected = c["initial"] as! [String: Any]
         var diffs: [String] = []
         jsonDiff(expected, snapshot(g, rng), "initial", &diffs)
@@ -220,6 +237,7 @@ final class EngineScenarioFixtureTests: XCTestCase {
                 let inner = step["step"] as! [String: Any]
                 let before = snapshot(g, rng)
                 let beforeState = g.state
+                let planBefore = heldPlan
                 let code = step["error"] as! String
                 do {
                     _ = try perform(inner, g, rng, &diffs)
@@ -231,6 +249,7 @@ final class EngineScenarioFixtureTests: XCTestCase {
                 }
                 jsonDiff(before, snapshot(g, rng), "unchanged", &diffs)
                 if g.state != beforeState { diffs.append("game state changed by a rejected operation") }
+                if heldPlan !== planBefore { diffs.append("rejected operation replaced the held bot plan") }
             default:
                 do {
                     _ = try perform(step, g, rng, &diffs)
@@ -239,8 +258,9 @@ final class EngineScenarioFixtureTests: XCTestCase {
                     return false
                 }
             }
-            if let delta = step["snapshot"] as? [String: Any] {
-                expected = apply(delta, to: expected)
+            if op != "query" {
+                // A step without a snapshot delta must leave the public snapshot unchanged.
+                expected = apply((step["snapshot"] as? [String: Any]) ?? [:], to: expected)
                 jsonDiff(expected, snapshot(g, rng), "snapshot", &diffs)
             }
             if let decision = step["decision"] {

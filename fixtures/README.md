@@ -77,7 +77,7 @@ and must reproduce every value exactly.
   | `already-settled` | `settle` after `done` |
   | `no-eligible-player`, `pot-mismatch` | `partitionPots` / `settle` invariants |
   | `invalid-trials` | `botDecision` with a non-positive trial count |
-  | `bot-cannot-act` | `botDecision` / `chooseBotAction` without a legal actor |
+  | `bot-cannot-act` | `botDecision` / `chooseBotAction` (and so `planBotTurn`) without a legal actor |
   | `hero-bot-executor` | `planBotTurn` for seat 0 |
   | `stale-bot-plan` | `executeBotTurn` with an invalid plan |
 
@@ -139,7 +139,7 @@ Legacy smoke cases: `cases[]` `{name, cards: [{rank, suit}], score, bestCardKeys
 
 | Field | Meaning |
 | --- | --- |
-| `name` | Reference test title (prefixed by its test file), or `random hand N`. |
+| `name` | Reference test title (prefixed by its test file), `random hand N`, or `engine guards: …` for reference engine guards that no reference test throws (bot executor on the hero seat or with no legal actor, practice runout after a short-board showdown, a contested pot layer with only folded contributors). |
 | `seed` | Seed of the case stream `rng = SeededRandom(seed)`. |
 | `playerCount` | `newGame(playerCount)`. |
 | `initial` | Full snapshot right after `newGame`. |
@@ -173,7 +173,9 @@ The generator asserts chip conservation after every non-patch step:
 | `applyBotSettings` | `settings` | `applyBotSettings(g, settings)`. |
 | `botAct` | `result: {id, action, amount?, reason}` | `d = botDecision(g, rng)` (default trials), then `act(g, actor, d.action, d.amount)`. |
 | `botTurn` | `result: {delayMs}` | `plan = planBotTurn(g, rng, timingRandom: rng)`; `executeBotTurn(g, plan, expedited: false, waitedMs: 0)`. |
-| `expectError` | `step`, `error` | Run `step` (any op above, or `{op: "newGame", playerCount}`); it must throw `error` and leave the game (and `rng`) unchanged. |
+| `planBotTurn` | `result: {delayMs}` | `plan = planBotTurn(g, rng, timingRandom: rng)`; keep `plan` as the case's held plan. The game is unchanged. |
+| `executeBotTurn` | | `executeBotTurn(g, heldPlan, expedited: false, waitedMs: 0)` with the plan from the last `planBotTurn` step. Draws nothing. |
+| `expectError` | `step`, `error` | Run `step` (any op above, or `{op: "newGame", playerCount}`); it must throw `error` and leave the game, `rng` and the held plan unchanged. |
 | `query` | `fn`, `args`, `result` | Pure call; compare the return value. No snapshot. |
 
 `act` steps may use the unknown action string `"bet"` inside `expectError`
@@ -240,6 +242,10 @@ Only fields that changed since the previous snapshot are present:
   field instead means replace the whole array (new hand, replay).
 - `historyAdded`: entries to **append** to `history`. A `history` field means
   replace the whole array.
+- A whole-array `logs` / `history` wins over `logsAdded` / `historyAdded` in the
+  same delta, whatever the key order (the generator never emits both).
+- Every non-`query` step carries a delta; harnesses treat a missing one as
+  empty (the public snapshot must be unchanged).
 
 ## `action-labels.json`
 

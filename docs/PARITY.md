@@ -10,7 +10,7 @@ Legend:
 
 "(UI test new; first CI run pending)" marks rows whose only proof is an Android instrumented test or an iOS UI test added after the last green CI run.
 
-Paths: `A/` = `android/`, `I/` = `ios/`. `A/core` tests live under `A/core/src/test/kotlin/com/august/noirpoker/core/`; app sources under `A/app/src/main/java/com/august/noirpoker/`; instrumented tests under `A/app/src/androidTest/java/com/august/noirpoker/`. Swift package tests live under `I/Packages/PokerCore/Tests/PokerCoreTests/`. "F-engine" is `fixtures/engine-scenarios.json` (264 cases, full state snapshot on every step), consumed by `EngineFixturesTest` (Android) and `EngineScenarioFixtureTests` (iOS). "F-session" is `fixtures/session-scenarios.json`, consumed by `SessionScenarioFixtureTest` / `SessionScenarioFixtureTests`. "F-dialog" is `fixtures/review-dialog.json`, consumed by `ReviewDialogTest` / `ReviewPresentationTests`.
+Paths: `A/` = `android/`, `I/` = `ios/`. `A/core` tests live under `A/core/src/test/kotlin/com/august/noirpoker/core/`; app sources under `A/app/src/main/java/com/august/noirpoker/`; instrumented tests under `A/app/src/androidTest/java/com/august/noirpoker/`. Swift package tests live under `I/Packages/PokerCore/Tests/PokerCoreTests/`. "F-engine" is `fixtures/engine-scenarios.json` (269 cases, full state snapshot on every step), consumed by `EngineFixturesTest` (Android) and `EngineScenarioFixtureTests` (iOS). "F-session" is `fixtures/session-scenarios.json`, consumed by `SessionScenarioFixtureTest` / `SessionScenarioFixtureTests`. "F-dialog" is `fixtures/review-dialog.json`, consumed by `ReviewDialogTest` / `ReviewPresentationTests`.
 
 ## 1. Table setup
 
@@ -161,7 +161,7 @@ Paths: `A/` = `android/`, `I/` = `ios/`. `A/core` tests live under `A/core/src/t
 |---|---|---|---|
 | Shared fixtures: short all-ins, reopening, multi-pot, refunds, odd chips, exact replay, stats rollback | ✅ | ✅ | F-engine, same JSON on both platforms |
 | Privacy boundaries | ✅ | ✅ | 3 privacy cases; both assert that variants share public decisions and differ in outcome (`ReviewFixturesTest`, iOS twin) and that the graded hero panel is identical across variants (`ReviewDialogTest:264`, `ReviewPresentationTests:269`) |
-| Engine error codes | 🟡 | 🟡 | All 18 messages are compared; only 11 codes are exercised by `expectError` |
+| Engine error codes | ✅ | ✅ | All 18 messages are compared. 16 codes are exercised by F-engine `expectError` steps, each checking the typed code and an unchanged game, stream and held bot plan; `invalid-trials` (and `bot-cannot-act` again) by the `bot-decisions.json` error cases. `pot-mismatch` guards an internal invariant that no public call can reach once `partitionPots` is correct |
 | Seeded bot decisions, ranges, parameters | ✅ | ✅ | `bot-decisions.json`, `bot-profiles.json`, `mood.json`, `simulations.json`; calibration tests |
 | Decision-review outputs | ✅ | ✅ | `review-decisions.json`, `review-hands.json`, F-dialog. Both skip total-dependent outputs for 2 fractional-chip cases |
 | Session behavior fixture derived from the reference | 🟡 | 🟡 | Provenance now documented in `fixtures/README.md`: hand-authored, recorded from Kotlin (`NOIR_SESSION_RECORD`), timing constants cross-checked against the reference source. It proves cross-platform agreement, not reference equality |
@@ -210,7 +210,7 @@ Rows not yet ✅ on both platforms:
 13. Screen-reader labels: no accessibility audit (both).
 14. Contract terms: only the review title is locked (both).
 15. UI copy parity: `scripts/check-ui-copy.mjs` is not run in CI.
-16. Engine error codes: 5 codes (`showdown-needs-board`, `stale-bot-plan`, `hero-bot-executor`, `no-eligible-player`, `bot-cannot-act`) have no `expectError` fixture step.
+16. ~~Engine error codes~~: closed. The 5 missing codes now have `expectError` steps (`bot-timing:` and `engine guards:` cases in F-engine).
 17. `session-scenarios.json` is not reference-derived (documented).
 18. Android tablet: no tablet AVD; sizes are forced on a phone emulator.
 19. Large text: no tablet or sheet coverage (both).
@@ -223,8 +223,8 @@ Open WP-H items (`.gitignore` secrets are done in `91611f4`):
 - Pin the iOS phone simulator to a compact model (iPhone SE or 16e) and add a large iPhone.
 - Add an Android `pixel_tablet` AVD run of `AdaptiveLayoutTest` without forced sizes; optionally a second API level.
 - Add `assembleRelease` (R8) and an iOS Release build to CI.
-- Add the missing error-code fixture steps and regenerate with `--check`.
-- Harden Android `applyDelta` in `EngineFixturesTest` (whole-array `logs`/`history` replacement, optional `snapshot`).
 - Profiling baselines: hand evaluation, `analyzeDecision`, `botDecision`, startup, frame timing and cancellation latency, recorded in `docs/`.
+
+Done in WP-H: the missing error-code fixture steps (regenerated, `--check` passes) and the `applyDelta` hardening (whole-array `logs`/`history` replacement wins regardless of key order; a missing `snapshot` means an unchanged snapshot) on both platforms.
 
 Other open items: product sign-off on the "Zang Shunu" and "Boss Tan" romanizations (left unchanged in the fixtures).
