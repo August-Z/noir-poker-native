@@ -16,11 +16,18 @@ targets:
   NoirPoker:
     type: application
     platform: iOS
-    sources: [NoirPoker]
+    sources:
+      - NoirPoker
+      # Manrope (SIL Open Font License 1.1) and its license text, copied to
+      # the app bundle root; Config/NoirPoker-Info.plist registers the fonts.
+      - path: Resources
+        buildPhase: resources
     dependencies:
       - package: PokerCore
     settings:
       base:
+        # Merged with the generated Info.plist; it only adds UIAppFonts.
+        INFOPLIST_FILE: Config/NoirPoker-Info.plist
         PRODUCT_BUNDLE_IDENTIFIER: com.august.noirpoker
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: 1

@@ -1,5 +1,28 @@
 import SwiftUI
 
+/// Manrope 400–800, the reference's UI and card-rank face (SIL Open Font
+/// License 1.1). The TTFs and the license ship in the app bundle from
+/// `ios/Resources`, and `Config/NoirPoker-Info.plist` registers them through
+/// `UIAppFonts`. If a face is missing, SwiftUI falls back to the system font.
+enum NoirTypeface {
+    /// Manrope at a fixed point size (callers scale it for Dynamic Type).
+    static func font(size: CGFloat, weight: Font.Weight = .regular) -> Font {
+        Font.custom(postScriptName(weight), fixedSize: size)
+    }
+
+    /// The bundled static face for a weight: lighter weights use Regular and
+    /// heavier ones ExtraBold, the range the reference loads.
+    static func postScriptName(_ weight: Font.Weight) -> String {
+        switch weight {
+        case .medium: return "Manrope-Medium"
+        case .semibold: return "Manrope-SemiBold"
+        case .bold: return "Manrope-Bold"
+        case .heavy, .black: return "Manrope-ExtraBold"
+        default: return "Manrope-Regular"
+        }
+    }
+}
+
 /// NOIR type scale with Dynamic Type: each size is a reference px value scaled
 /// relative to a text style, so large accessibility text grows the UI.
 private struct NoirFont: ViewModifier {
@@ -16,7 +39,7 @@ private struct NoirFont: ViewModifier {
     }
 
     func body(content: Content) -> some View {
-        let font = Font.system(size: size, weight: weight)
+        let font = NoirTypeface.font(size: size, weight: weight)
         return content
             .font(monospacedDigits ? font.monospacedDigit() : font)
             .tracking(tracking)

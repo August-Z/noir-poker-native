@@ -99,9 +99,13 @@ private struct FeltView: View {
 
     private var feltLayer: some View {
         ZStack(alignment: .top) {
-            Ellipse().fill(EllipticalGradient(colors: [Noir.feltCenter, Noir.felt, Noir.feltEdge],
+            // `radial-gradient(ellipse at 50% 60%, …, felt 68%, …)`, with the
+            // same radius as Android: 0.62 of the felt's width and height.
+            Ellipse().fill(EllipticalGradient(stops: [.init(color: Noir.feltCenter, location: 0),
+                                                      .init(color: Noir.felt, location: 0.68),
+                                                      .init(color: Noir.feltEdge, location: 1)],
                                               center: UnitPoint(x: 0.5, y: 0.6), startRadiusFraction: 0,
-                                              endRadiusFraction: 0.75))
+                                              endRadiusFraction: 0.62))
             Canvas { context, size in
                 var dots = Path()
                 var y: CGFloat = 2
@@ -120,10 +124,10 @@ private struct FeltView: View {
             Ellipse().strokeBorder(Noir.feltOutline, lineWidth: 1).padding(metrics.feltOutlineInset)
             VStack(spacing: metrics.compact ? 5 : 7) {
                 Text("N O I R")
-                    .font(.system(size: metrics.compact ? 14 : 18, weight: .bold))
+                    .font(NoirTypeface.font(size: metrics.compact ? 14 : 18, weight: .bold))
                     .tracking(metrics.compact ? 5 : 8)
                 Text("POKER CLUB")
-                    .font(.system(size: metrics.compact ? 8 : 10))
+                    .font(NoirTypeface.font(size: metrics.compact ? 8 : 10))
                     .tracking(metrics.compact ? 2 : 3)
             }
             .foregroundStyle(Noir.watermark)

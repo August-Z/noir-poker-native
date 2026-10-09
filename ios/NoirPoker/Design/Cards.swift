@@ -129,7 +129,7 @@ struct CardFaceView: View {
 
     private func rank(size: CGFloat) -> some View {
         Text(card.rankText)
-            .font(.system(size: size, weight: .bold))
+            .font(NoirTypeface.font(size: size, weight: .bold))
             .tracking(card.rank == 10 ? -0.8 : 0)
             .foregroundStyle(ink)
             .lineLimit(1)
