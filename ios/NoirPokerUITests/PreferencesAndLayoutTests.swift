@@ -266,6 +266,14 @@ final class TabletLayoutTests: XCTestCase {
         app.assertSeatGeometry(count: 6)
         app.foldToSettlement()
         app.assertSeatGeometry(count: 6)
+        Noir.snapshot("ipad-landscape-settled", in: self)
+
+        // Hand Review on the wide sheet, after the analysis finishes.
+        app.tap(app.reviewButton, until: app.element("review-status"))
+        _ = app.waitUntil(timeout: 90) { app.element("review-priority").exists || app.element("review-retry").exists }
+        Noir.snapshot("ipad-landscape-review", in: self)
+        app.reviewCloseButton.tap()
+        XCTAssertTrue(app.waitForReviewClosed(), "The review sheet did not close: \(app.probe.label)")
     }
 
     /// In portrait the sidebar stacks below the table (beside it on the
