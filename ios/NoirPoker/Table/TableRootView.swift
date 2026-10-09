@@ -133,6 +133,13 @@ struct TableRootView: View {
                     .padding(.bottom, 8)
                 ArenaView(model: model, width: width - 2)
                     .id(Self.arenaAnchor)
+                if typeSize.isAccessibilitySize {
+                    // The felt caps its text size; this list carries every
+                    // seat's details at the full accessibility size.
+                    SeatListView(seats: state.seats, done: state.phase == .done) { model.session.toggleReveal($0) }
+                        .padding(.horizontal, compact ? 14 : 24)
+                        .padding(.bottom, 16)
+                }
                 if let showdown = state.showdown {
                     ShowdownView(showdown: showdown,
                                  columns: ShowdownView.columnCount(windowWidth: windowWidth, stageWidth: width,

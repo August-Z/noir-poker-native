@@ -215,6 +215,7 @@ struct SeatView: View {
         .accessibilityLabel("\(seat.name), \(seat.position.name)")
         .accessibilityValue(plateA11yValue)
         .accessibilityHint(seat.avatarTitle)
+        .accessibilityIdentifier("seat-plate-\(seat.id)")
         .overlay(alignment: .bottomTrailing) {
             if let peek = seat.peek {
                 PeekButton(peek: peek, seat: seat.id, action: onPeek)
@@ -260,10 +261,92 @@ extension SeatState {
     }
 }
 
+/// The large-text companion to the arena (accessibility text sizes, where the
+/// felt caps its own text): every opponent as a full-size row with name,
+/// position, style, stack, last action, hand badge and the reveal toggle, so
+/// nothing is only readable on the scaled diagram. Mirrors Android's `SeatList`.
+struct SeatListView: View {
+    let seats: [SeatState]
+    let done: Bool
+    let onPeek: (Int) -> Void
+
+    var body: some View {
+        VStack(spacing: 8) {
+            ForEach(seats) { seat in
+                SeatListRow(seat: seat, done: done) { onPeek(seat.id) }
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("seat-list")
+    }
+}
+
+private struct SeatListRow: View {
+    let seat: SeatState
+    let done: Bool
+    let onPeek: () -> Void
+
+    var body: some View {
+        let border: Color = seat.isWinner ? (done ? Noir.gold : Noir.goldSeat) : seat.isActor ? Noir.mint : Noir.plateBorder
+        HStack(alignment: .center, spacing: 8) {
+            VStack(alignment: .leading, spacing: 4) {
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 6) { name; PositionBadgeView(badge: seat.position) }
+                    VStack(alignment: .leading, spacing: 4) { name; PositionBadgeView(badge: seat.position) }
+                }
+                Text("\(seat.styleShort) · \(seat.stackText)")
+                    .noirFont(13, relativeTo: .subheadline, digits: true)
+                    .foregroundStyle(Noir.seatStack)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(actionText)
+                    .noirFont(13, relativeTo: .subheadline)
+                    .foregroundStyle(seat.action.isDeciding ? Noir.mint : (seat.isWinner ? Noir.goldAction : Noir.seatAction))
+                    .fixedSize(horizontal: false, vertical: true)
+                if let badge = seat.badge {
+                    RankBadgeView(badge: badge)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("\(seat.name), \(seat.position.name)")
+            .accessibilityValue(spoken)
+            .accessibilityIdentifier("seat-list-\(seat.id)")
+            if let peek = seat.peek {
+                PeekButton(peek: peek, seat: seat.id, identifier: "seat-list-peek-\(seat.id)", action: onPeek)
+                    .padding(11.5)
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .opacity(seat.folded && !done ? 0.6 : 1)
+        .background(Noir.plate, in: RoundedRectangle(cornerRadius: 8))
+        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(border, lineWidth: 1))
+    }
+
+    private var name: some View {
+        Text(seat.name)
+            .noirFont(14, .medium, relativeTo: .body)
+            .foregroundStyle(Noir.text)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private var actionText: String {
+        [seat.action.label, seat.action.amountText].compactMap { $0 }.joined(separator: " ")
+    }
+
+    private var spoken: String {
+        var parts = [seat.plateA11yValue, "\(seat.actionA11y): \(seat.actionSpoken)"]
+        if let badge = seat.badge { parts.append(badge.a11y ?? badge.text) }
+        return parts.joined(separator: ". ")
+    }
+}
+
 /// The post-settlement eye toggle (21×21 visual, 44×44 hit area).
 struct PeekButton: View {
     let peek: PeekToggle
     let seat: Int
+    var identifier: String? = nil
     let action: () -> Void
 
     var body: some View {
@@ -281,6 +364,6 @@ struct PeekButton: View {
         .padding(-11.5)
         .accessibilityLabel(peek.a11y)
         .accessibilityAddTraits(peek.pressed ? .isSelected : [])
-        .accessibilityIdentifier("peek-toggle-\(seat)")
+        .accessibilityIdentifier(identifier ?? "peek-toggle-\(seat)")
     }
 }
