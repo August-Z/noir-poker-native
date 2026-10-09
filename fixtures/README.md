@@ -8,9 +8,10 @@ node scripts/generate-reference-fixtures.mjs          # regenerate
 node scripts/generate-reference-fixtures.mjs --check  # CI: every file must match byte for byte
 ```
 
-The one exception is `session-scenarios.json`, which is hand-authored (see its
-section below) because the reference table controller cannot run without a
-browser DOM; the generator neither writes nor checks it.
+The one exception is `session-scenarios.json`, which is hand-authored and
+recorded from the Kotlin session (see its section below) because the reference
+table controller cannot run without a browser DOM; the generator neither writes
+nor checks it, so it is not reference output.
 
 Never edit the generated files by hand, and never bundle any fixture into the apps. The Kotlin
 (`android/core`) and Swift (`ios/Packages/PokerCore`) domain tests both read them
@@ -493,3 +494,36 @@ scenario), optional `storage` (initial key-value pairs) and `reviewRunner`
 check only the listed keys, arrays check their length and every element, and
 numbers compare numerically. The commands and the projected fields are
 documented in `docs/SESSION.md` → "Shared session fixture".
+
+### Provenance
+
+This file is **not** generated from the reference, and it is not reference
+output. It was written in two steps:
+
+1. The scenarios (commands and which fields to check) were written by hand
+   from the UI behavior spec and the English copy catalog.
+2. The expected values were recorded from the Kotlin `TableSession` with
+   `NOIR_SESSION_RECORD=/tmp/dump.json ./gradlew -p android/core test --tests
+   '*SessionScenarioFixtureTest*'`, then checked by hand against the spec and
+   the copy catalog before they were added. The Swift suite must pass on the
+   same file unchanged, which makes the two native sessions agree with each
+   other. It does not by itself prove that they agree with the reference.
+
+Only these timing constants were cross-checked directly against the reference
+source at `referenceCommit`:
+
+| Constant | Value | Reference source |
+| --- | --- | --- |
+| Street advance delay | 1,000 ms | `src/ui/table-controller.js` `schedule()`: `game.board.length === 5 ? 850 : 1000` |
+| Settlement delay after river betting | 850 ms | same expression |
+| Bot thinking time bounds | 1,200–8,000 ms | `src/engine/bot-timing.js` `BOT_THINK_LIMITS = { minimum: 1200, maximum: 8000 }` |
+| Bot deadline | `startedAt + plan.delayMs` | `src/ui/table-controller.js` `schedule()` |
+| Finish Hand step | 0 ms per step | `src/ui/table-controller.js` `continueDeal()` (`setTimeout(resolve, 0)`) |
+
+The thinking-time draws themselves come from the engine and are covered by the
+generated `bot-decisions.json`. Behavior that intentionally differs from the
+reference, such as cancelling the review at Next Hand and carrying the elapsed
+bot wait across a background transition, is described in `docs/SESSION.md`.
+The scenario "background cancels bot timers and the foreground resumes the same
+plan for the rest of its delay" records the native background behavior, not the
+reference's (the reference has no background handling).
