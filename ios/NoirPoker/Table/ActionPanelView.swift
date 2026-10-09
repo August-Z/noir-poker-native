@@ -9,6 +9,7 @@ struct ActionPanelView: View {
     var compact: Bool
     var onReview: () -> Void
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var a: ActionPanelState { model.state.actions }
     private var session: TableSession { model.session }
@@ -61,7 +62,7 @@ struct ActionPanelView: View {
                 settledButtons
             }
         }
-        .animation(.easeInOut(duration: 0.2), value: a.controlsVisible)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: a.controlsVisible)
     }
 
     // MARK: Bet controls
