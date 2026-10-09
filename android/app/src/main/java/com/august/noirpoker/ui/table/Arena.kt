@@ -75,6 +75,7 @@ import com.august.noirpoker.core.MoodKind
 import com.august.noirpoker.core.Phase
 import com.august.noirpoker.core.session.ActionChip
 import com.august.noirpoker.core.session.HeroState
+import com.august.noirpoker.core.session.RankBadge
 import com.august.noirpoker.core.session.SeatState
 import com.august.noirpoker.core.session.SessionEffect
 import com.august.noirpoker.core.session.TableRenderState
@@ -700,7 +701,7 @@ private fun HeroArea(hero: HeroState, state: TableRenderState, cards: CardMetric
         }
         hero.rankBadge?.let {
             Spacer(Modifier.height(6.dp))
-            RankBadgeView(it, metrics.compact, Modifier.testTag("hero-hand-rank"))
+            HeroRankBadge(it, metrics.compact)
         }
         Spacer(Modifier.height(6.dp))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -739,6 +740,23 @@ private fun HeroArea(hero: HeroState, state: TableRenderState, cards: CardMetric
             }
         }
         ActionLine(hero.lastAction, hero.lastActionA11y, winner = false, maxWidth = 200.dp, modifier = Modifier.testTag("hero-last-action"))
+    }
+}
+
+/**
+ * The hero's hand badge: the seat badge with the reference's larger hero text
+ * (`.hero-hand-rank`: 14 px, 13 px on phones, against 12 / 11 on seats). The
+ * text is scaled through the local font scale so padding and the crown keep
+ * the seat badge's sizes.
+ */
+@Composable
+private fun HeroRankBadge(badge: RankBadge, compact: Boolean) {
+    val outer = androidx.compose.ui.platform.LocalDensity.current
+    val heroScale = if (compact) 13f / 11f else 14f / 12f
+    androidx.compose.runtime.CompositionLocalProvider(
+        androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(outer.density, outer.fontScale * heroScale),
+    ) {
+        RankBadgeView(badge, compact, Modifier.testTag("hero-hand-rank"))
     }
 }
 
