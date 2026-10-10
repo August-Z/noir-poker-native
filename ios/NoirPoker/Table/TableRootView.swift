@@ -142,7 +142,6 @@ struct TableRootView: View {
                 sidebar(width: 560, sideColumn: false)
                 footer(showVirtual: true)
             }
-            .accessibilityIdentifier("table-info-sheet")
         }
         .sheet(isPresented: $showSettings) {
             SettingsSheet(model: model) { showSettings = false }
@@ -198,7 +197,7 @@ struct TableRootView: View {
                           maxHeight: size.height - Self.consoleBarHeight, console: true)
             }
             .frame(width: tableWidth, alignment: .top)
-            consoleRail(height: size.height - 12)
+            consoleRail(width: railWidth, height: size.height - 12)
                 .frame(width: railWidth)
                 .padding(.vertical, 6)
         }
@@ -266,7 +265,7 @@ struct TableRootView: View {
 
     /// The decision strip, bet controls and buttons, bottom-aligned so the
     /// buttons always sit at the same place under the right thumb.
-    private func consoleRail(height: CGFloat) -> some View {
+    private func consoleRail(width: CGFloat, height: CGFloat) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
                 Spacer(minLength: 0)
@@ -278,10 +277,10 @@ struct TableRootView: View {
                 }
                 if let showdown = state.showdown {
                     ShowdownView(showdown: showdown, columns: 1, compact: true)
-                        .padding(.horizontal, -14)
                 }
                 ActionPanelView(model: model, compact: true, rail: true) { model.session.openReview() }
             }
+            .frame(width: width - 28)
             .padding(14)
             .frame(minHeight: height, alignment: .bottom)
         }

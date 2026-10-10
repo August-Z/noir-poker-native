@@ -167,7 +167,8 @@ extension XCUIApplication {
         let dockFrame = dock.frame
         let frame = element.frame
         if dockFrame.contains(frame) { return true }
-        return frame.maxY <= dockFrame.minY + 1 || frame.minY >= dockFrame.maxY - 1
+        // The phone dock spans the bottom edge; the landscape rail sits beside the felt.
+        return !frame.intersects(dockFrame.insetBy(dx: 1, dy: 1))
     }
 
     /// Taps `element` until `result` appears (up to three tries). A tap can

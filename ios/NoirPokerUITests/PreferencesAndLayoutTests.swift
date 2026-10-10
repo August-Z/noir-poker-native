@@ -7,6 +7,11 @@ import XCTest
 final class PreferencesAndLayoutTests: XCTestCase {
     override func setUp() {
         continueAfterFailure = false
+        XCUIDevice.shared.orientation = .portrait
+    }
+
+    override func tearDown() {
+        XCUIDevice.shared.orientation = .portrait
     }
 
     /// Choosing 9 players keeps the current hand at 6, deals 9 on the next
@@ -115,7 +120,6 @@ final class PreferencesAndLayoutTests: XCTestCase {
     func testPhoneLandscapeConsole() throws {
         try XCTSkipIf(UIDevice.current.userInterfaceIdiom == .pad, "The console layout is for phones")
         XCUIDevice.shared.orientation = .landscapeLeft
-        defer { XCUIDevice.shared.orientation = .portrait }
         let app = Noir.launch()
         XCTAssertTrue(app.waitForHeroTurn(), app.probe.label)
         let window = app.windows.firstMatch.frame
@@ -140,6 +144,9 @@ final class PreferencesAndLayoutTests: XCTestCase {
         Noir.snapshot("phone-landscape-info", in: self)
         app.buttons["Close table and session"].firstMatch.tap()
         XCTAssertTrue(app.waitUntil(timeout: 5) { !app.element("stat-hands").exists })
+        app.tapWhenReady(app.buttons["settings"])
+        XCTAssertTrue(app.switches["settings-hints"].waitForExistence(timeout: 5), "Settings open from the console bar")
+        app.buttons["Close settings"].firstMatch.tap()
         app.terminate()
 
         let nine = Noir.launch(extra: ["-noir-player-count", "9"])

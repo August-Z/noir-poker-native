@@ -19,7 +19,7 @@ struct HeroView: View {
     }
 
     private var cards: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: metrics.console ? 6 : 10) {
             ForEach(Array(hero.cards.enumerated()), id: \.offset) { i, face in
                 CardFaceView(card: face.card, width: metrics.heroCard.width, height: metrics.heroCard.height,
                              best: face.best, dimmed: hero.folded)
@@ -38,6 +38,14 @@ struct HeroView: View {
 
     private var details: some View {
         VStack(alignment: metrics.console ? .leading : .center, spacing: metrics.console ? 4 : 6) {
+            detailRows
+        }
+        .frame(maxWidth: metrics.console ? 150 : nil, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private var detailRows: some View {
+        Group {
 
             if let badge = hero.rankBadge {
                 RankBadgeView(badge: badge, compact: metrics.compact, hero: true)
