@@ -36,8 +36,8 @@ struct TableMetrics {
         let floor: CGFloat
         switch count {
         case ...6: floor = compact ? (done ? 600 : 470) : (done ? 600 : 480)
-        case 7: floor = compact ? 560 : 540
-        default: floor = 580
+        case 7: floor = compact ? 560 : (done ? 560 : 520)
+        default: floor = compact ? 580 : (done ? 580 : 520)
         }
         return min(full, max(floor, maxHeight))
     }
@@ -92,9 +92,9 @@ struct TableMetrics {
     static let consoleLayouts: [Int: [(x: Double, y: Double)]] = [
         5: [(15, 55), (25, 0), (75, 0), (85, 55)],
         6: [(14, 55), (17, 12), (50, 0), (83, 12), (86, 55)],
-        7: [(15, 66), (6, 27), (33, 0), (67, 0), (94, 27), (85, 66)],
-        8: [(15, 66), (6, 27), (25, 0), (50, 0), (75, 0), (94, 27), (85, 66)],
-        9: [(15, 66), (6, 27), (24, 0), (41.5, 0), (58.5, 0), (76, 0), (94, 27), (85, 66)],
+        7: [(15, 64), (6, 22), (33, 0), (67, 0), (94, 22), (85, 64)],
+        8: [(15, 64), (6, 22), (25, 0), (50, 0), (75, 0), (94, 22), (85, 64)],
+        9: [(15, 64), (6, 22), (24, 0), (41.5, 0), (58.5, 0), (76, 0), (94, 22), (85, 64)],
     ]
 
     func seatPoint(_ x: Double, _ y: Double) -> CGPoint {

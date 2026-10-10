@@ -92,9 +92,14 @@ struct SeatView: View {
                     .padding(.top, 6)
                     .transition(.opacity)
             }
+            // The short landscape felt has no room under a settled seat for
+            // both lines; the rank badge wins and the action stays spoken.
+            let roomForAction = !(metrics.console && seat.badge != nil)
             ActionLine(chip: seat.action, winner: seat.isWinner, compact: metrics.compact,
                        maxWidth: done ? 106 : max(metrics.plateMinWidth + 20, 100))
                 .padding(.top, 3)
+                .frame(height: roomForAction ? nil : 0)
+                .opacity(roomForAction ? 1 : 0)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(seat.actionA11y)
                 .accessibilityValue(actionSpoken)

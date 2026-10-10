@@ -50,33 +50,17 @@ struct TableRootView: View {
                 if wide {
                     let mainWidth = width - sidebarWidth - gap - gutter * 2
                     // Tablets in landscape (and other wide windows shorter than the
-                    // full table) dock the action panel under the table column, so
-                    // the felt and the controls share one screen like a console.
+                    // full table) fit the felt and the docked action panel to the
+                    // window; taller windows keep the scrolling page.
                     let tableDock = !landscapePhone && !typeSize.isAccessibilitySize && geo.size.height < 1000
+                    if tableDock {
+                        tabletConsole(mainWidth: mainWidth, sidebarWidth: sidebarWidth, gap: gap)
+                            .padding(.horizontal, gutter)
+                    } else {
                     HStack(alignment: .top, spacing: gap) {
-                        ScrollViewReader { proxy in
-                            ScrollView {
-                                mainColumn(width: mainWidth, windowWidth: width, docked: tableDock, wide: true,
-                                           arenaMaxHeight: tableDock ? geo.size.height - wideChromeHeight : nil)
-                                    .padding(.vertical, 20)
-                            }
-                            .safeAreaInset(edge: .bottom, spacing: 0) {
-                                if tableDock { wideActionDock(width: mainWidth) }
-                            }
-                            .onChange(of: tableFocusKey) { _, key in
-                                guard tableDock, key != nil else { return }
-                                scrollToArena(proxy)
-                            }
-                            // Also on launch and on rotation into the docked layout,
-                            // when the hero is already deciding or the hand is over.
-                            .onAppear {
-                                guard tableDock, tableFocusKey != nil else { return }
-                                DispatchQueue.main.async { scrollToArena(proxy, animated: false) }
-                            }
-                            .onChange(of: tableDock) { _, docked in
-                                guard docked, tableFocusKey != nil else { return }
-                                DispatchQueue.main.async { scrollToArena(proxy, animated: false) }
-                            }
+                        ScrollView {
+                            mainColumn(width: mainWidth, windowWidth: width, docked: false, wide: true)
+                                .padding(.vertical, 20)
                         }
                         ScrollView {
                             sidebar(width: sidebarWidth, sideColumn: true)
@@ -85,6 +69,7 @@ struct TableRootView: View {
                         .frame(width: sidebarWidth)
                     }
                     .padding(.horizontal, gutter)
+                    }
                 } else {
                     let docked = width < 600 && !typeSize.isAccessibilitySize
                     ScrollViewReader { proxy in
@@ -157,10 +142,53 @@ struct TableRootView: View {
         }
     }
 
-    /// Header, scroll padding and the docked wide action panel: the height left
-    /// for the felt is the window height minus this. The settled panel is a
-    /// single row of buttons, so a finished hand gives the felt more room.
-    private var wideChromeHeight: CGFloat { state.phase == .done ? 200 : 270 }
+    /// Tablets in landscape: the game surface fills the height with the felt
+    /// over the docked action panel, like a console, and the table controls
+    /// move to the top of the sidebar. The felt scrolls only on windows too
+    /// short for its minimum height (the smallest iPads), and then the hero's
+    /// turn scrolls it down to the hero.
+    private func tabletConsole(mainWidth: CGFloat, sidebarWidth: CGFloat, gap: CGFloat) -> some View {
+        HStack(alignment: .top, spacing: gap) {
+            VStack(spacing: 0) {
+                GeometryReader { g in
+                    ScrollViewReader { proxy in
+                        ScrollView {
+                            ArenaView(model: model, width: mainWidth - 2, maxHeight: g.size.height)
+                                .id(Self.arenaAnchor)
+                                .frame(maxWidth: .infinity, minHeight: g.size.height)
+                        }
+                        .scrollBounceBehavior(.basedOnSize)
+                        .onChange(of: tableFocusKey) { _, key in
+                            guard key != nil else { return }
+                            scrollToArena(proxy)
+                        }
+                        .onAppear {
+                            guard tableFocusKey != nil else { return }
+                            DispatchQueue.main.async { scrollToArena(proxy, animated: false) }
+                        }
+                    }
+                }
+                wideActionDock(width: mainWidth)
+            }
+            .frame(width: mainWidth)
+            .background(NoirSurface.game, in: RoundedRectangle(cornerRadius: 18))
+            .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(Noir.surfaceBorder, lineWidth: 1))
+            .clipShape(RoundedRectangle(cornerRadius: 18))
+            .padding(.vertical, 16)
+            ScrollView {
+                VStack(spacing: 18) {
+                    SurfaceTopBar(model: model, compact: true)
+                        .padding(16)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(NoirSurface.game, in: RoundedRectangle(cornerRadius: 18))
+                        .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(Noir.surfaceBorder, lineWidth: 1))
+                    sidebar(width: sidebarWidth, sideColumn: true)
+                }
+                .padding(.vertical, 16)
+            }
+            .frame(width: sidebarWidth)
+        }
+    }
 
     /// Phone header and docked action panel: a tall table (seven to nine
     /// seats) shrinks toward the space between them so the top row stays in
