@@ -86,6 +86,17 @@ struct TableMetrics {
     var plateMinWidth: CGFloat { dense ? (tiny ? 72 : 78) : (tiny ? 77 : (compact ? 84 : 98)) }
     var avatarSize: CGFloat { compact ? 24 : 30 }
 
+    /// Landscape phone seat places (x %, y %), by seat id 1...count-1. The
+    /// felt is short and wide there, so the side seats spread outward and
+    /// the top row widens instead of stacking three plates per side.
+    static let consoleLayouts: [Int: [(x: Double, y: Double)]] = [
+        5: [(15, 55), (25, 0), (75, 0), (85, 55)],
+        6: [(14, 55), (17, 12), (50, 0), (83, 12), (86, 55)],
+        7: [(15, 66), (6, 27), (33, 0), (67, 0), (94, 27), (85, 66)],
+        8: [(15, 66), (6, 27), (25, 0), (50, 0), (75, 0), (94, 27), (85, 66)],
+        9: [(15, 66), (6, 27), (24, 0), (41.5, 0), (58.5, 0), (76, 0), (94, 27), (85, 66)],
+    ]
+
     func seatPoint(_ x: Double, _ y: Double) -> CGPoint {
         CGPoint(x: width * x / 100, y: height * y / 100)
     }
@@ -93,6 +104,10 @@ struct TableMetrics {
     /// The seat's top-center anchor. A settled 6-max table on a phone lifts
     /// seats 2 and 4 by 20 pt so revealed cards clear the board.
     func seatAnchor(_ seat: SeatState) -> CGPoint {
+        if console, let layout = Self.consoleLayouts[count], layout.indices.contains(seat.id - 1) {
+            let place = layout[seat.id - 1]
+            return seatPoint(place.x, place.y)
+        }
         var point = seatPoint(seat.layoutX, seat.layoutY)
         if compact && done && count == 6 && (seat.id == 2 || seat.id == 4) { point.y -= 20 }
         return point

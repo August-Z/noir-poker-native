@@ -254,8 +254,8 @@ struct ActionPanelView: View {
 
     @ViewBuilder
     private var settledButtons: some View {
-        if large {
-            VStack(spacing: 10) {
+        if large || rail {
+            VStack(spacing: rail ? 8 : 10) {
                 nextButton
                 replayButton
                 reviewButton
