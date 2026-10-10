@@ -246,11 +246,11 @@ jobs:
         run: |
           # Small JPEG previews in the log, for reviewers without artifact access.
           mkdir -p .build/shot-previews
-          for name in phone-hero-turn phone-settled phone-large-text-actions ipad-landscape-6max ipad-landscape-9max ipad-portrait-6max ipad-portrait-9max ipad-landscape-settled ipad-landscape-review; do
+          for name in phone-hero-turn phone-9max phone-showdown phone-settled phone-fold-win phone-review-hero phone-opponents phone-large-text-actions ipad-landscape-6max ipad-landscape-9max ipad-portrait-6max ipad-portrait-9max ipad-landscape-settled ipad-landscape-review; do
             shot=".build/shots/$name.png"
             [ -f "$shot" ] || continue
-            # iPad layouts get larger previews so spacing and type can be reviewed.
-            case "$name" in ipad-*) size=1200 ;; *) size=420 ;; esac
+            # Previews large enough to review spacing and type.
+            case "$name" in ipad-*) size=1200 ;; *) size=900 ;; esac
             sips -s format jpeg -s formatOptions 40 -Z "$size" "$shot" --out ".build/shot-previews/$name.jpg" >/dev/null
             echo "NOIR-SHOT-BEGIN $name"
             base64 -i ".build/shot-previews/$name.jpg" -b 0
