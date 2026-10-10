@@ -4,7 +4,8 @@ cd "$(dirname "$0")/.."
 git config user.name August-Z
 git config user.email zoushicheng0911@gmail.com
 chmod +x gradlew scripts/*.sh
-bash scripts/fetch-reference.sh
+# The pinned reference is no longer public; fetch it only when access exists.
+bash scripts/fetch-reference.sh || echo 'Reference unavailable; the committed fixtures are the source of truth.'
 bash scripts/doctor.sh
 ./gradlew -p android/core test
 ./gradlew :android:app:testDebugUnitTest :android:app:assembleDebug

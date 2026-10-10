@@ -165,7 +165,7 @@ Paths: `A/` = `android/`, `I/` = `ios/`. `A/core` tests live under `A/core/src/t
 | Seeded bot decisions, ranges, parameters | ✅ | ✅ | `bot-decisions.json`, `bot-profiles.json`, `mood.json`, `simulations.json`; calibration tests |
 | Decision-review outputs | ✅ | ✅ | `review-decisions.json`, `review-hands.json`, F-dialog. Both skip total-dependent outputs for 2 fractional-chip cases |
 | Session behavior fixture derived from the reference | 🟡 | 🟡 | Provenance now documented in `fixtures/README.md`: hand-authored, recorded from Kotlin (`NOIR_SESSION_RECORD`), timing constants cross-checked against the reference source. It proves cross-platform agreement, not reference equality |
-| Original unit tests and `generate-reference-fixtures.mjs --check` | ✅ | ✅ | `reference` CI job; `--check` passes locally (11 fixture files) |
+| Original unit tests and `generate-reference-fixtures.mjs --check` | ✅ | ✅ | Passed while the reference was public; it went private on 2026-10-10, so CI now runs `check-fixtures.mjs` (parse, pin, checksums) on the committed fixtures |
 | UI: compact phone, 6 seats | ✅ | ✅ | Android emulator is `pixel_6` (412 dp). The iOS phone model is still the first available iPhone (`native.yml`), not pinned to a compact one |
 | UI: compact phone, 9 seats | ✅ | ✅ | Android `AdaptiveLayoutTest:230` (forced 360×740). iOS `PreferencesAndLayoutTests:98` with geometry (UI test new; first CI run pending) |
 | UI: tablet, 6 and 9 seats | 🟡 | ✅ | Android forces tablet sizes on the phone emulator (`AdaptiveLayoutTest:236,246,265`); no tablet AVD. iOS iPad landscape and portrait at 6 and 9 seats (`TabletLayoutTests`, `PreferencesAndLayoutTests:227-274`) (UI test new; first CI run pending) |

@@ -104,7 +104,9 @@ jobs:
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
   reference:
-    name: Pinned reference tests and fixtures
+    # The pinned reference repository is no longer public, so the committed
+    # fixtures are the source of truth: verify them instead of regenerating.
+    name: Shared fixtures
     needs: source
     runs-on: ubuntu-24.04
     steps:
@@ -114,10 +116,7 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: '22'
-      - run: bash scripts/fetch-reference.sh
-      - run: node scripts/generate-reference-fixtures.mjs --check
-      - run: node --test tests/unit/*.test.js
-        working-directory: .reference/noir-poker
+      - run: node scripts/check-fixtures.mjs
 
   android:
     name: Android build and Kotlin tests

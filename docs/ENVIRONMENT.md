@@ -9,10 +9,10 @@ If a codespace was created before this configuration was committed, use **Codesp
 ```bash
 bash scripts/doctor.sh
 ./gradlew :android:app:testDebugUnitTest :android:app:assembleDebug
-bash scripts/fetch-reference.sh
-node scripts/generate-reference-fixtures.mjs --check
-(cd .reference/noir-poker && node --test tests/unit/*.test.js)
+node scripts/check-fixtures.mjs
 ```
+
+The reference repository is no longer public (2026-10-10). The committed fixtures in `fixtures/` are now the source of truth; CI verifies them with `node scripts/check-fixtures.mjs`, and `generate-reference-fixtures.mjs` runs only where a local checkout of the pinned commit still exists. With a local checkout, `node scripts/generate-reference-fixtures.mjs --check` and the reference's own unit tests still work.
 
 The Android APK is `android/app/build/outputs/apk/debug/app-debug.apk`. It is a debug build of the practice app; see `docs/PARITY.md` for what is complete. An emulator is not required for compilation; UI tests run on GitHub's Android emulator job. Use a real Android device for ongoing interaction and performance checks.
 

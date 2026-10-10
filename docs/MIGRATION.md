@@ -4,7 +4,7 @@ Reference repository: https://github.com/JessieZJZ/noir-poker
 
 Reference commit: `03c78233f9454de54e378c5c81ba1dd25fa9b14e`.
 
-Run `bash scripts/fetch-reference.sh` to obtain an ignored, read-only checkout under `.reference/noir-poker`. This does not create a GitHub fork. The reference is an input to development, not an application dependency. New product code and documentation are English; the original Chinese source stays outside the tracked product tree.
+The reference repository is no longer public (2026-10-10). The committed fixtures in `fixtures/` are now the source of truth; CI verifies them with `node scripts/check-fixtures.mjs`, and `generate-reference-fixtures.mjs` runs only where a local checkout of the pinned commit still exists. Where access exists, run `bash scripts/fetch-reference.sh` to obtain an ignored, read-only checkout under `.reference/noir-poker`. This does not create a GitHub fork. The reference is an input to development, not an application dependency. New product code and documentation are English; the original Chinese source stays outside the tracked product tree.
 
 ## Architecture
 

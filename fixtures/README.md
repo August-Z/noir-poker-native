@@ -4,9 +4,13 @@ Every file in this directory is generated from the pinned reference
 (`.reference/noir-poker` at `referenceCommit`) by
 
 ```bash
-node scripts/generate-reference-fixtures.mjs          # regenerate
-node scripts/generate-reference-fixtures.mjs --check  # CI: every file must match byte for byte
+node scripts/generate-reference-fixtures.mjs          # regenerate (needs a local reference checkout)
+node scripts/check-fixtures.mjs                       # CI: parse, pin and checksum every file
 ```
+
+The reference repository is no longer public, so these committed files are
+the source of truth. `SHA256SUMS` covers every generated file; a deliberate
+change updates its line in the same commit.
 
 The one exception is `session-scenarios.json`, which is hand-authored and
 recorded from the Kotlin session (see its section below) because the reference
