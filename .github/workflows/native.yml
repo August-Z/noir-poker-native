@@ -251,7 +251,7 @@ jobs:
         run: |
           # Small JPEG previews in the log, for reviewers without artifact access.
           mkdir -p .build/shot-previews
-          for name in phone-hero-turn phone-9max phone-showdown phone-settled phone-fold-win phone-review-hero phone-opponents phone-large-text-actions ipad-landscape-6max ipad-landscape-9max ipad-portrait-6max ipad-portrait-9max ipad-landscape-settled ipad-landscape-review; do
+          for name in phone-hero-turn phone-9max phone-landscape-6max phone-landscape-settled phone-landscape-9max phone-landscape-9max-settled phone-landscape-info ipad-landscape-6max ipad-landscape-9max ipad-landscape-settled; do
             shot=".build/shots/$name.png"
             [ -f "$shot" ] || continue
             # Previews large enough to review spacing and type.

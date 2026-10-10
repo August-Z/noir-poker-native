@@ -2,29 +2,42 @@ import SwiftUI
 import PokerCore
 
 /// The hero area: hole cards, hand-rank badge, YOU row with status pill, and
-/// the retained last action.
+/// the retained last action. The landscape phone table sets the details
+/// beside the cards so the hero takes less of the felt's height.
 struct HeroView: View {
     let hero: HeroState
     let metrics: TableMetrics
     let dealKey: String
 
     var body: some View {
-        VStack(spacing: 6) {
-            HStack(spacing: 10) {
-                ForEach(Array(hero.cards.enumerated()), id: \.offset) { i, face in
-                    CardFaceView(card: face.card, width: metrics.heroCard.width, height: metrics.heroCard.height,
-                                 best: face.best, dimmed: hero.folded)
-                        .rotationEffect(.degrees(i == 0 ? -4 : 4))
-                        .dealIn(style: .deal, animate: face.animate, delayMs: face.delayMs)
-                }
+        let layout = metrics.console ? AnyLayout(HStackLayout(alignment: .center, spacing: 12))
+                                     : AnyLayout(VStackLayout(spacing: 6))
+        layout {
+            cards
+            details
+        }
+    }
+
+    private var cards: some View {
+        HStack(spacing: 10) {
+            ForEach(Array(hero.cards.enumerated()), id: \.offset) { i, face in
+                CardFaceView(card: face.card, width: metrics.heroCard.width, height: metrics.heroCard.height,
+                             best: face.best, dimmed: hero.folded)
+                    .rotationEffect(.degrees(i == 0 ? -4 : 4))
+                    .dealIn(style: .deal, animate: face.animate, delayMs: face.delayMs)
             }
-            .id("hero-\(dealKey)")
-            .frame(minHeight: metrics.compact ? 79 : 94)
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel("Your hole cards")
-            .accessibilityValue(hero.cards.map { CardNames.spoken($0.card) }.joined(separator: ", ")
-                                + (hero.folded ? ". Folded" : ""))
-            .accessibilityIdentifier("hero-cards")
+        }
+        .id("hero-\(dealKey)")
+        .frame(minHeight: metrics.console ? metrics.heroCard.height + 4 : (metrics.compact ? 79 : 94))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Your hole cards")
+        .accessibilityValue(hero.cards.map { CardNames.spoken($0.card) }.joined(separator: ", ")
+                            + (hero.folded ? ". Folded" : ""))
+        .accessibilityIdentifier("hero-cards")
+    }
+
+    private var details: some View {
+        VStack(alignment: metrics.console ? .leading : .center, spacing: metrics.console ? 4 : 6) {
 
             if let badge = hero.rankBadge {
                 RankBadgeView(badge: badge, compact: metrics.compact, hero: true)

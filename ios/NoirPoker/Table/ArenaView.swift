@@ -33,6 +33,8 @@ struct ArenaView: View {
     /// The height left for the felt in a docked wide layout; nil keeps the
     /// reference height.
     var maxHeight: CGFloat? = nil
+    /// The landscape phone table: the felt is exactly `maxHeight` tall.
+    var console = false
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -41,7 +43,7 @@ struct ArenaView: View {
     var body: some View {
         let m = TableMetrics(width: width, count: state.playerCount, done: state.phase == .done,
                              longNames: state.hasFullPlayerNames, largeText: typeSize >= .xxLarge,
-                             maxHeight: maxHeight)
+                             maxHeight: maxHeight, console: console)
         ZStack(alignment: .topLeading) {
             FeltView(metrics: m)
             CenterView(model: model, metrics: m)

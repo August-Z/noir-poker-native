@@ -1,16 +1,19 @@
 import SwiftUI
 import PokerCore
 
-/// The table screen. Phones in portrait use one scrolling column with the
-/// action panel docked above the home indicator; tablets wider than 900 pt and
-/// phones in landscape use two panes (table + sidebar), as in the reference
-/// desktop layout. Large accessibility text keeps the action panel inline so it
-/// never covers the table.
+/// The table screen. Phones in landscape use a console: the felt fills the
+/// screen beside a fixed action rail, with no scrolling, and session stats sit
+/// in a sheet. Phones in portrait use one scrolling column with the action
+/// panel docked above the home indicator; tablets wider than 900 pt use two
+/// panes (table + sidebar), as in the reference desktop layout. Large
+/// accessibility text keeps the action panel inline so it never covers the
+/// table.
 struct TableRootView: View {
     let model: TableModel
     @State private var showRules = false
     @State private var confirmReset = false
     @State private var showSettings = false
+    @State private var showTableInfo = false
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -39,6 +42,9 @@ struct TableRootView: View {
             let gap: CGFloat = width >= 1150 ? 28 : 20
             let gutter: CGFloat = width < 600 ? 12 : (width < 1150 ? 16 : 24)
             VStack(spacing: 0) {
+                if landscapePhone && !typeSize.isAccessibilitySize {
+                    consoleLayout(size: geo.size)
+                } else {
                 HeaderView(state: state, width: width, toggleSound: { model.session.toggleSound() },
                            showSettings: { showSettings = true }, showRules: { showRules = true })
                 if wide {
@@ -100,6 +106,7 @@ struct TableRootView: View {
                         }
                     }
                 }
+                }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
@@ -127,6 +134,15 @@ struct TableRootView: View {
             OpponentsSheet(model: model)
                 .presentationDetents([.large])
                 .widePresentation()
+        }
+        .sheet(isPresented: $showTableInfo) {
+            NoirSheet(eyebrow: "THE PRACTICE ROOM", title: "Table and Session",
+                      closeLabel: "Close table and session", onClose: { showTableInfo = false }) {
+                SurfaceTopBar(model: model, compact: true)
+                sidebar(width: 560, sideColumn: false)
+                footer(showVirtual: true)
+            }
+            .accessibilityIdentifier("table-info-sheet")
         }
         .sheet(isPresented: $showSettings) {
             SettingsSheet(model: model) { showSettings = false }
@@ -160,6 +176,122 @@ struct TableRootView: View {
                 proxy.scrollTo(Self.arenaAnchor, anchor: .bottom)
             }
         }
+    }
+
+    // MARK: Landscape phone console
+
+    /// Height of the console's top bar; the felt takes the rest of the height.
+    private static let consoleBarHeight: CGFloat = 40
+
+    /// The felt on the left at the full height under a slim bar, and the
+    /// action rail on the right under the thumb. Nothing scrolls except the
+    /// rail's own content when a settled hand lists every showdown hand.
+    private func consoleLayout(size: CGSize) -> some View {
+        let railWidth: CGFloat = size.width >= 780 ? 264 : 236
+        let gap: CGFloat = 10
+        let tableWidth = size.width - railWidth - gap
+        return HStack(alignment: .top, spacing: gap) {
+            VStack(spacing: 0) {
+                consoleBar
+                    .frame(height: Self.consoleBarHeight)
+                ArenaView(model: model, width: tableWidth,
+                          maxHeight: size.height - Self.consoleBarHeight, console: true)
+            }
+            .frame(width: tableWidth, alignment: .top)
+            consoleRail(height: size.height - 12)
+                .frame(width: railWidth)
+                .padding(.vertical, 6)
+        }
+    }
+
+    private var consoleBar: some View {
+        HStack(spacing: 10) {
+            SuitShape(suit: 0).fill(Noir.mint)
+                .frame(width: 15, height: 17)
+                .accessibilityHidden(true)
+            Text("NOIR")
+                .noirFont(14, .heavy, relativeTo: .headline, tracking: 2)
+                .foregroundStyle(Noir.text)
+                .accessibilityLabel("NOIR Poker")
+                .accessibilityAddTraits(.isHeader)
+            HStack(spacing: 6) {
+                Text(state.handHeading).foregroundStyle(Noir.text)
+                Text("·").foregroundStyle(Noir.subtle)
+                Text(state.streetLabel).foregroundStyle(Noir.surfaceTopText)
+                if let badge = state.replayBadge {
+                    TagLabel(text: badge, foreground: Noir.replayText, border: Noir.replayBorder, background: Noir.replayBg)
+                }
+            }
+            .noirFont(12, relativeTo: .footnote, digits: true)
+            .lineLimit(1)
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("hand-label")
+            Spacer(minLength: 6)
+            consoleIcon("person.2", tint: Noir.muted, label: "Table and Session", id: "table-info") {
+                showTableInfo = true
+            }
+            consoleIcon(state.settings.sound ? "speaker.wave.2" : "speaker.slash",
+                        tint: state.settings.sound ? Noir.mint : Noir.muted,
+                        label: state.settings.soundA11y, id: "sound-toggle") { model.session.toggleSound() }
+                .accessibilityValue(state.settings.soundTitle)
+            consoleIcon("slider.horizontal.3", tint: Noir.muted, label: "Settings", id: "settings") {
+                showSettings = true
+            }
+            consoleIcon("questionmark", tint: Noir.muted, label: "How to Play") {
+                showRules = true
+            }
+        }
+        .padding(.horizontal, 4)
+        .dynamicTypeSize(...DynamicTypeSize.xLarge)
+    }
+
+    private func consoleIcon(_ symbol: String, tint: Color, label: String, id: String? = nil,
+                             action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(tint)
+                .frame(width: 30, height: 30)
+                .overlay(Circle().strokeBorder(Noir.line, lineWidth: 1))
+                .minimumHitTarget()
+        }
+        .buttonStyle(PressScaleStyle())
+        .accessibilityLabel(label)
+        .accessibilityIdentifier(id ?? "")
+    }
+
+    private var tableNotes: [String] {
+        [state.settings.tableChangeNote, state.opponents.changeNote, state.replayNote].compactMap { $0 }
+    }
+
+    /// The decision strip, bet controls and buttons, bottom-aligned so the
+    /// buttons always sit at the same place under the right thumb.
+    private func consoleRail(height: CGFloat) -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                Spacer(minLength: 0)
+                ForEach(tableNotes, id: \.self) { note in
+                    Text(note)
+                        .noirFont(11, relativeTo: .caption)
+                        .foregroundStyle(Noir.note)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                if let showdown = state.showdown {
+                    ShowdownView(showdown: showdown, columns: 1, compact: true)
+                        .padding(.horizontal, -14)
+                }
+                ActionPanelView(model: model, compact: true, rail: true) { model.session.openReview() }
+            }
+            .padding(14)
+            .frame(minHeight: height, alignment: .bottom)
+        }
+        .defaultScrollAnchor(.bottom)
+        .scrollBounceBehavior(.basedOnSize)
+        .background(Noir.panel, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Noir.surfaceBorder, lineWidth: 1))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("action-dock")
     }
 
     // MARK: Main column

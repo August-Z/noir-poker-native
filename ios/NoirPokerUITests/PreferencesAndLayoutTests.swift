@@ -109,6 +109,50 @@ final class PreferencesAndLayoutTests: XCTestCase {
         app.assertSeatGeometry(count: 9)
     }
 
+    /// Phones in landscape show the console: the felt and the action rail
+    /// share the screen without scrolling, at six and nine seats, and the
+    /// session stats open in a sheet.
+    func testPhoneLandscapeConsole() throws {
+        try XCTSkipIf(UIDevice.current.userInterfaceIdiom == .pad, "The console layout is for phones")
+        XCUIDevice.shared.orientation = .landscapeLeft
+        defer { XCUIDevice.shared.orientation = .portrait }
+        let app = Noir.launch()
+        XCTAssertTrue(app.waitForHeroTurn(), app.probe.label)
+        let window = app.windows.firstMatch.frame
+        XCTAssertGreaterThan(window.width, window.height, "The phone is in landscape")
+        let rail = app.element("action-dock")
+        XCTAssertTrue(rail.waitForExistence(timeout: 5), "Landscape phones show the action rail")
+        let arena = app.element("arena").frame
+        XCTAssertLessThanOrEqual(arena.maxX, rail.frame.minX + 1, "The felt sits left of the rail")
+        XCTAssertLessThanOrEqual(arena.maxY, window.maxY + 1, "The whole felt is on screen: \(arena) in \(window)")
+        for button in [app.foldButton, app.callButton, app.raiseButton] {
+            XCTAssertTrue(button.isHittable, "\(button) is reachable without scrolling")
+        }
+        app.assertSeatGeometry(count: 6)
+        Noir.snapshot("phone-landscape-6max", in: self)
+        app.foldToSettlement()
+        app.assertSeatGeometry(count: 6)
+        Noir.snapshot("phone-landscape-settled", in: self)
+        XCTAssertTrue(app.nextButton.isHittable, "Next Hand is on screen")
+
+        app.tapWhenReady(app.buttons["table-info"])
+        XCTAssertTrue(app.element("stat-hands").waitForExistence(timeout: 5), "The sheet shows session stats")
+        Noir.snapshot("phone-landscape-info", in: self)
+        app.buttons["Close table and session"].firstMatch.tap()
+        XCTAssertTrue(app.waitUntil(timeout: 5) { !app.element("stat-hands").exists })
+        app.terminate()
+
+        let nine = Noir.launch(extra: ["-noir-player-count", "9"])
+        XCTAssertTrue(nine.waitUntil { nine.state.players == 9 }, nine.probe.label)
+        XCTAssertTrue(nine.waitForHeroTurn(), nine.probe.label)
+        nine.assertSeatGeometry(count: 9)
+        Noir.snapshot("phone-landscape-9max", in: self)
+        XCTAssertTrue(nine.foldButton.isHittable, "Fold is reachable with nine seats")
+        nine.foldToSettlement()
+        nine.assertSeatGeometry(count: 9)
+        Noir.snapshot("phone-landscape-9max-settled", in: self)
+    }
+
     /// At the largest accessibility size with nine seats, every opponent's
     /// name, position, style, stack and last action is in a full-size row
     /// below the felt, and the row's eye toggle works once the hand settles.

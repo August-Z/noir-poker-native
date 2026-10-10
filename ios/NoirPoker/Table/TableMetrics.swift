@@ -14,12 +14,16 @@ struct TableMetrics {
     /// Docked wide layouts fit the felt to the window, down to a floor that
     /// keeps plates, revealed cards and the board apart.
     var maxHeight: CGFloat? = nil
+    /// Phone landscape: the felt fills the height beside the action rail, so
+    /// it uses its own flatter geometry and smaller cards.
+    var console: Bool = false
 
-    var compact: Bool { width <= 600 }
+    var compact: Bool { width <= 600 || console }
     var dense: Bool { compact && count >= 7 }
     var tiny: Bool { width <= 360 }
 
     var height: CGFloat {
+        if console, let maxHeight { return max(maxHeight, 250) }
         let base: CGFloat
         switch count {
         case ...6: base = compact ? (done ? 600 : 490) : (done ? 620 : 550)
@@ -40,6 +44,7 @@ struct TableMetrics {
 
     /// Rail ellipse insets: top, horizontal, bottom.
     var railInsets: (top: CGFloat, side: CGFloat, bottom: CGFloat) {
+        if console { return (height * 0.11, width * 0.07, height * 0.12) }
         if count >= 8 {
             return compact ? (56, width * 0.015, 75) : (56, width * 0.05, 74)
         }
@@ -50,14 +55,16 @@ struct TableMetrics {
     var feltOutlineInset: CGFloat { compact ? 7 : 10 }
 
     var centerTop: CGFloat {
+        if console { return height * (count >= 8 ? 0.27 : 0.25) }
         if count >= 8 { return height * 0.33 }
         if done && count <= 6 { return height * (compact ? 0.34 : 0.36) }
         return height * 0.30
     }
 
-    var heroBottom: CGFloat { height - 20 }
+    var heroBottom: CGFloat { height - (console ? 6 : 20) }
 
     var boardCard: CGSize {
+        if console { return dense ? CGSize(width: 33, height: 47) : CGSize(width: 37, height: 53) }
         if dense {
             if tiny { return done && count == 9 ? CGSize(width: 26, height: 38) : CGSize(width: 32, height: 47) }
             let w = min(max(28, width * 0.09), 37)
@@ -69,10 +76,13 @@ struct TableMetrics {
     }
 
     var boardGap: CGFloat { dense ? 4 : (compact ? 5 : 8) }
-    var heroCard: CGSize { compact ? CGSize(width: 55, height: 79) : CGSize(width: 63, height: 91) }
-    var cardBack: CGSize { compact ? CGSize(width: 25, height: 36) : CGSize(width: 29, height: 41) }
-    var seatCard: CGSize { compact ? CGSize(width: 33, height: 46) : CGSize(width: 38, height: 53) }
-    var showAvatars: Bool { !dense && !tiny && !largeText }
+    var heroCard: CGSize {
+        if console { return CGSize(width: 44, height: 63) }
+        return compact ? CGSize(width: 55, height: 79) : CGSize(width: 63, height: 91)
+    }
+    var cardBack: CGSize { console ? CGSize(width: 21, height: 30) : compact ? CGSize(width: 25, height: 36) : CGSize(width: 29, height: 41) }
+    var seatCard: CGSize { console ? CGSize(width: 28, height: 40) : compact ? CGSize(width: 33, height: 46) : CGSize(width: 38, height: 53) }
+    var showAvatars: Bool { !console && !dense && !tiny && !largeText }
     var plateMinWidth: CGFloat { dense ? (tiny ? 72 : 78) : (tiny ? 77 : (compact ? 84 : 98)) }
     var avatarSize: CGFloat { compact ? 24 : 30 }
 

@@ -7,6 +7,9 @@ import PokerCore
 struct ActionPanelView: View {
     let model: TableModel
     var compact: Bool
+    /// The narrow side rail of the landscape phone table: the bet amount sits
+    /// over the slider and the presets wrap two by two.
+    var rail = false
     var onReview: () -> Void
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -85,7 +88,7 @@ struct ActionPanelView: View {
     @ViewBuilder
     private var betControls: some View {
         Group {
-            if compact && !large {
+            if compact && !large && !rail {
                 // Phone grid: label and amount on the left, slider over presets on the right.
                 HStack(alignment: .top, spacing: 10) {
                     VStack(alignment: .leading, spacing: 2) {
@@ -108,7 +111,7 @@ struct ActionPanelView: View {
                     }
                     .accessibilityHidden(true)
                     slider
-                    if large {
+                    if large || rail {
                         Grid(horizontalSpacing: 6, verticalSpacing: 6) {
                             GridRow {
                                 ForEach(a.presets.prefix(2), id: \.preset) { presetButton($0) }
