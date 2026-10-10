@@ -179,37 +179,38 @@ struct TableRootView: View {
 
     // MARK: Landscape phone console
 
-    /// Height of the console's top bar; the felt takes the rest of the height.
-    private static let consoleBarHeight: CGFloat = 40
+    /// Height of the console's title line; the felt takes the rest of the height.
+    private static let consoleBarHeight: CGFloat = 28
 
-    /// The felt on the left at the full height under a slim bar, and the
-    /// action rail on the right under the thumb. Nothing scrolls except the
-    /// rail's own content when a settled hand lists every showdown hand.
+    /// The felt on the left at the full height under a slim title line, and
+    /// the rail on the right under the thumb: table controls on top, the
+    /// decision strip, bet controls and buttons at the bottom. Nothing
+    /// scrolls unless the rail's content outgrows the screen.
     private func consoleLayout(size: CGSize) -> some View {
-        let railWidth: CGFloat = size.width >= 780 ? 264 : 236
+        let railWidth: CGFloat = size.width >= 780 ? 264 : 240
         let gap: CGFloat = 10
         let tableWidth = size.width - railWidth - gap
         return HStack(alignment: .top, spacing: gap) {
             VStack(spacing: 0) {
-                consoleBar
+                consoleTitle
                     .frame(height: Self.consoleBarHeight)
                 ArenaView(model: model, width: tableWidth,
                           maxHeight: size.height - Self.consoleBarHeight, console: true)
             }
             .frame(width: tableWidth, alignment: .top)
-            consoleRail(width: railWidth, height: size.height - 12)
-                .frame(width: railWidth)
+            consoleRail(width: railWidth)
+                .frame(width: railWidth, height: size.height - 12)
                 .padding(.vertical, 6)
         }
     }
 
-    private var consoleBar: some View {
+    private var consoleTitle: some View {
         HStack(spacing: 10) {
             SuitShape(suit: 0).fill(Noir.mint)
-                .frame(width: 15, height: 17)
+                .frame(width: 13, height: 15)
                 .accessibilityHidden(true)
             Text("NOIR")
-                .noirFont(14, .heavy, relativeTo: .headline, tracking: 2)
+                .noirFont(13, .heavy, relativeTo: .headline, tracking: 2)
                 .foregroundStyle(Noir.text)
                 .accessibilityLabel("NOIR Poker")
                 .accessibilityAddTraits(.isHeader)
@@ -225,22 +226,31 @@ struct TableRootView: View {
             .lineLimit(1)
             .accessibilityElement(children: .combine)
             .accessibilityIdentifier("hand-label")
-            Spacer(minLength: 6)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 4)
+        .dynamicTypeSize(...DynamicTypeSize.xLarge)
+    }
+
+    private var consoleIcons: some View {
+        HStack(spacing: 0) {
             consoleIcon("person.2", tint: Noir.muted, label: "Table and Session", id: "table-info") {
                 showTableInfo = true
             }
+            Spacer(minLength: 0)
             consoleIcon(state.settings.sound ? "speaker.wave.2" : "speaker.slash",
                         tint: state.settings.sound ? Noir.mint : Noir.muted,
                         label: state.settings.soundA11y, id: "sound-toggle") { model.session.toggleSound() }
                 .accessibilityValue(state.settings.soundTitle)
+            Spacer(minLength: 0)
             consoleIcon("slider.horizontal.3", tint: Noir.muted, label: "Settings", id: "settings") {
                 showSettings = true
             }
+            Spacer(minLength: 0)
             consoleIcon("questionmark", tint: Noir.muted, label: "How to Play") {
                 showRules = true
             }
         }
-        .padding(.horizontal, 4)
         .dynamicTypeSize(...DynamicTypeSize.xLarge)
     }
 
@@ -250,7 +260,7 @@ struct TableRootView: View {
             Image(systemName: symbol)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(tint)
-                .frame(width: 30, height: 30)
+                .frame(width: 32, height: 32)
                 .overlay(Circle().strokeBorder(Noir.line, lineWidth: 1))
                 .minimumHitTarget()
         }
@@ -263,29 +273,34 @@ struct TableRootView: View {
         [state.settings.tableChangeNote, state.opponents.changeNote, state.replayNote].compactMap { $0 }
     }
 
-    /// The decision strip, bet controls and buttons, bottom-aligned so the
-    /// buttons always sit at the same place under the right thumb.
-    private func consoleRail(width: CGFloat, height: CGFloat) -> some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 12) {
-                Spacer(minLength: 0)
-                ForEach(tableNotes, id: \.self) { note in
-                    Text(note)
-                        .noirFont(11, relativeTo: .caption)
-                        .foregroundStyle(Noir.note)
-                        .fixedSize(horizontal: false, vertical: true)
+    /// Table controls on top; the decision strip, bet controls and buttons
+    /// bottom-aligned so the buttons always sit under the right thumb.
+    private func consoleRail(width: CGFloat) -> some View {
+        VStack(spacing: 0) {
+            consoleIcons
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+            Rectangle().fill(Noir.stripDivider).frame(height: 1)
+            GeometryReader { inner in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Spacer(minLength: 0)
+                        ForEach(tableNotes, id: \.self) { note in
+                            Text(note)
+                                .noirFont(11, relativeTo: .caption)
+                                .foregroundStyle(Noir.note)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        ActionPanelView(model: model, compact: true, rail: true) { model.session.openReview() }
+                    }
+                    .frame(width: width - 28)
+                    .padding(14)
+                    .frame(minHeight: inner.size.height, alignment: .bottom)
                 }
-                if let showdown = state.showdown {
-                    ShowdownView(showdown: showdown, columns: 1, compact: true)
-                }
-                ActionPanelView(model: model, compact: true, rail: true) { model.session.openReview() }
+                .defaultScrollAnchor(.bottom)
+                .scrollBounceBehavior(.basedOnSize)
             }
-            .frame(width: width - 28)
-            .padding(14)
-            .frame(minHeight: height, alignment: .bottom)
         }
-        .defaultScrollAnchor(.bottom)
-        .scrollBounceBehavior(.basedOnSize)
         .background(Noir.panel, in: RoundedRectangle(cornerRadius: 16))
         .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Noir.surfaceBorder, lineWidth: 1))
         .clipShape(RoundedRectangle(cornerRadius: 16))

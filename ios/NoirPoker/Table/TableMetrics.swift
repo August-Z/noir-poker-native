@@ -55,7 +55,7 @@ struct TableMetrics {
     var feltOutlineInset: CGFloat { compact ? 7 : 10 }
 
     var centerTop: CGFloat {
-        if console { return height * (count >= 7 ? 0.34 : 0.33) }
+        if console { return height * (count >= 7 ? 0.37 : 0.36) }
         if count >= 8 { return height * 0.33 }
         if done && count <= 6 { return height * (compact ? 0.34 : 0.36) }
         return height * 0.30

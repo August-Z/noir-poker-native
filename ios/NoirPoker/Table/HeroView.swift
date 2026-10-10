@@ -77,7 +77,7 @@ struct HeroView: View {
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel("\(hero.name), \(hero.position.name)")
                 .accessibilityValue("\(hero.stackText) chips")
-                if let turn = hero.turnText, !metrics.tiny {
+                if let turn = hero.turnText, !metrics.tiny, !metrics.console {
                     Text(turn)
                         .noirFont(metrics.compact ? 10 : 12, .medium, relativeTo: .caption)
                         .foregroundStyle(hero.isActive ? Noir.mint : Noir.subtle)
