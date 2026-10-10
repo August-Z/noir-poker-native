@@ -84,7 +84,8 @@ struct TableRootView: View {
                     ScrollViewReader { proxy in
                         ScrollView {
                             VStack(spacing: 20) {
-                                mainColumn(width: width - gutter * 2, windowWidth: width, docked: docked, wide: false)
+                                mainColumn(width: width - gutter * 2, windowWidth: width, docked: docked, wide: false,
+                                           arenaMaxHeight: docked ? geo.size.height - Self.phoneChromeHeight : nil)
                                 sidebar(width: width - gutter * 2, sideColumn: false)
                             }
                             .padding(.horizontal, gutter)
@@ -145,6 +146,11 @@ struct TableRootView: View {
     /// for the felt is the window height minus this. The settled panel is a
     /// single row of buttons, so a finished hand gives the felt more room.
     private var wideChromeHeight: CGFloat { state.phase == .done ? 200 : 270 }
+
+    /// Phone header and docked action panel: a tall table (seven to nine
+    /// seats) shrinks toward the space between them so the top row stays in
+    /// view at the hero's turn.
+    private static let phoneChromeHeight: CGFloat = 240
 
     private func scrollToArena(_ proxy: ScrollViewProxy, animated: Bool = true) {
         if reduceMotion || !animated {
@@ -247,7 +253,7 @@ struct TableRootView: View {
             .padding(.vertical, 16)
             .frame(width: width)
             .background(
-                Noir.panel.opacity(0.97)
+                Noir.panel
                     .overlay(alignment: .top) { Rectangle().fill(Noir.stripDivider).frame(height: 1) }
             )
             .clipShape(UnevenRoundedRectangle(topLeadingRadius: 18, topTrailingRadius: 18))
@@ -264,7 +270,8 @@ struct TableRootView: View {
             .padding(.top, 12)
             .padding(.bottom, 8)
             .background(
-                Noir.panel.opacity(0.97)
+                // Opaque: the table scrolls underneath and must not show through.
+                Noir.panel
                     .overlay(alignment: .top) { Rectangle().fill(Noir.stripDivider).frame(height: 1) }
                     .ignoresSafeArea(edges: .bottom)
             )

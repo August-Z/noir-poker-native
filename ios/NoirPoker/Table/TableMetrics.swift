@@ -28,11 +28,11 @@ struct TableMetrics {
             if compact && longNames { base = count == 8 ? 800 : 900 } else { base = compact ? 720 : 690 }
         }
         let full = base + (largeText ? 90 : 0)
-        guard let maxHeight, !compact else { return full }
+        guard let maxHeight, !(compact && longNames) else { return full }
         let floor: CGFloat
         switch count {
-        case ...6: floor = done ? 600 : 480
-        case 7: floor = 540
+        case ...6: floor = compact ? (done ? 600 : 470) : (done ? 600 : 480)
+        case 7: floor = compact ? 560 : 540
         default: floor = 580
         }
         return min(full, max(floor, maxHeight))
