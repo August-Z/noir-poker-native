@@ -16,6 +16,16 @@ android {
         // Fail a hung instrumented test after two minutes instead of stalling the CI job.
         testInstrumentationRunnerArguments["timeout_msec"] = "120000"
     }
+    buildTypes {
+        release {
+            // Optimized, shrunk build for real-device play; debug builds of Compose are not representative of scroll performance.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
+            // Signed with the local debug key so testers can sideload it; store signing stays out of the repo.
+            signingConfig = signingConfigs.getByName("debug")
+        }
+    }
     buildFeatures { compose = true }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
     kotlinOptions { jvmTarget = "17" }

@@ -142,11 +142,16 @@ jobs:
           chmod +x gradlew
           ./gradlew -p android/core test --stacktrace
       - name: Test and build native Android
-        run: ./gradlew :android:app:testDebugUnitTest :android:app:assembleDebug --stacktrace
+        run: ./gradlew :android:app:testDebugUnitTest :android:app:assembleDebug :android:app:assembleRelease --stacktrace
       - uses: actions/upload-artifact@v7
         with:
           name: noir-poker-android-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v7
+        with:
+          name: noir-poker-android-release
+          path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
 
   android-ui:
