@@ -1,0 +1,2053 @@
+{
+  "referenceCommit": "03c78233f9454de54e378c5c81ba1dd25fa9b14e",
+  "generator": "scripts/generate-reference-fixtures.mjs",
+  "description": "Bot profile data, English display copy, settings sanitization and starting-hand percentiles.",
+  "profiles": [
+    {
+      "id": "balanced",
+      "name": "Balanced Practice",
+      "short": "Balanced",
+      "tag": "Steady baseline opponent",
+      "description": "Medium range and standard sizing, mixing value bets with occasional bluffs.",
+      "axes": [
+        50,
+        50,
+        40,
+        50,
+        20
+      ],
+      "sizing": [
+        0.45,
+        0.8
+      ],
+      "evidence": "Baseline training strategy; it does not represent any real player.",
+      "sources": []
+    },
+    {
+      "id": "tan",
+      "name": "Johnny Tan · Tan Xuan",
+      "short": "Johnny Tan",
+      "tag": "Wide range · Multi-street pressure",
+      "description": "Contests more pots with a wider range, takes the same aggressive lines with weak and strong hands, and prefers sustained pressure.",
+      "axes": [
+        85,
+        90,
+        82,
+        70,
+        25
+      ],
+      "sizing": [
+        0.65,
+        1.15
+      ],
+      "evidence": "Triton cash-game coverage documents a light 4-bet and multi-street bluffs; in a short deck interview he also says he likes playing loose and bluffing. Short deck frequencies are not carried over to this table.",
+      "sources": [
+        {
+          "label": "Triton · Cash-game aggression sample",
+          "url": "https://tritonpokerseries.com/en-US/news/headlines/st-wang-shows-million-dollar-class-as-cash-game-invitational-raises-stakes"
+        },
+        {
+          "label": "Triton · Player interview (short deck)",
+          "url": "https://tritonpokerseries.com/en-US/news/headlines/tan-xuan-completes-short-deck-double-with-jeju-main-event-success"
+        }
+      ]
+    },
+    {
+      "id": "st",
+      "name": "ST Wang",
+      "short": "ST Wang",
+      "tag": "Selective aggression · Value traps",
+      "description": "Tightens up marginal entries, slow-plays strong hands on safe boards, and still cuts losses against big bets.",
+      "axes": [
+        40,
+        65,
+        43,
+        42,
+        78
+      ],
+      "sizing": [
+        0.45,
+        0.9
+      ],
+      "evidence": "In official coverage he still folded AQ on the river right after losing a big pot; in another hand he set a river check-shove value trap with AA.",
+      "sources": [
+        {
+          "label": "Triton · Discipline after a big loss",
+          "url": "https://tritonpokerseries.com/en-US/news/headlines/ferdinand-takes-most-as-phil-ivey-and-dan-cates-land-big-cash-game-profits"
+        },
+        {
+          "label": "Triton · Trapping with a strong hand",
+          "url": "https://tritonpokerseries.com/en-US/news/headlines/more-brilliance-from-elton-tsang-as-cash-game-invitational-gets-serious"
+        }
+      ]
+    },
+    {
+      "id": "zang",
+      "name": "Aaron Zang",
+      "short": "Aaron Zang",
+      "tag": "Seasoned aggression · River battles",
+      "description": "Medium-wide range; fights for pots in position and keeps both river raising and bluff-catching lines.",
+      "axes": [
+        63,
+        75,
+        62,
+        63,
+        50
+      ],
+      "sizing": [
+        0.6,
+        1
+      ],
+      "evidence": "Triton recorded a river bluff that raised a 23k bet to 105k. A single hand says nothing about long-run frequencies.",
+      "sources": [
+        {
+          "label": "Triton · River aggression sample",
+          "url": "https://tritonpokerseries.com/en-US/news/headlines/brilliant-rui-cao-and-steady-andy-ni-win-big-on-day-2-in-jeju"
+        }
+      ]
+    },
+    {
+      "id": "peter",
+      "name": "Peter · HCL",
+      "short": "Peter",
+      "tag": "Wide range · Big-bet brawler",
+      "description": "More willing to call in, extracts big-bet value with strong hands, and occasionally fights back hard with small pocket pairs.",
+      "axes": [
+        92,
+        88,
+        72,
+        84,
+        18
+      ],
+      "sizing": [
+        0.75,
+        1.25
+      ],
+      "evidence": "HCL footage shows a pot-sized river re-raise with a set; another session shows a big shove with a small pocket pair. The latter was played under a Stand-Up side-game rule, so its frequencies cannot be copied over. \"Peter\" here refers to the HCL regular.",
+      "sources": [
+        {
+          "label": "HCL · River value raise",
+          "url": "https://hustlercasinolive.com/2024/06/12/the-rematch-we-didnt-know-we-needed/"
+        },
+        {
+          "label": "PokerNews · Small-pair counterattack (side-game rule)",
+          "url": "https://www.pokernews.com/news/2025/01/poker-player-goes-all-in-for-thousands-47684.htm"
+        }
+      ]
+    },
+    {
+      "id": "abao",
+      "name": "A Bao · KPC",
+      "short": "A Bao",
+      "tag": "Selective pressure · Semi-bluffs",
+      "description": "More aggressive with draw equity; can follow a small flop bet with a big turn bet to keep up the pressure.",
+      "axes": [
+        55,
+        82,
+        72,
+        50,
+        34
+      ],
+      "sizing": [
+        0.5,
+        1
+      ],
+      "evidence": "In detailed KPC hand coverage, suited AJ bet about 31% pot on the flop and semi-bluffed 90% pot on the turn; another sample shows a shove with a 98 flush draw. The player's real name has not been reliably confirmed.",
+      "sources": [
+        {
+          "label": "Pokerati · AJ semi-bluff hand",
+          "url": "https://pokerati.com/2026/08/top-streamed-hands-of-the-week-winston-sets-the-perfect-trap-a-bao-bluffs-big/"
+        },
+        {
+          "label": "Pokerati · Flush-draw counterattack",
+          "url": "https://pokerati.com/2026/08/top-streamed-hands-of-the-week-malinowski-and-dwan-take-on-the-kpc-high-rollers/"
+        }
+      ]
+    },
+    {
+      "id": "viktor",
+      "name": "Viktor Blom",
+      "short": "Viktor Blom",
+      "tag": "Loose-aggressive pressure · Wide-range battles",
+      "description": "Contests late-position and cheap pots more widely, takes the same aggressive lines with draws and value hands, and prefers larger sizes.",
+      "axes": [
+        90,
+        94,
+        88,
+        70,
+        18
+      ],
+      "sizing": [
+        0.7,
+        1.25
+      ],
+      "evidence": "An original PokerStars interview and an official retrospective support his historical loose-aggressive style. This is a training archetype, not his current play or real frequencies; heads-up experience is not translated directly into precise multiway parameters.",
+      "sources": [
+        {
+          "label": "PokerStars · Original Viktor interview",
+          "url": "https://www.pokerstars.com/poker/learn/news/finding-isildur1-viktor-blom-cops-to-his-077269/"
+        },
+        {
+          "label": "PokerStars · Historic bluffs retrospective",
+          "url": "https://www.pokerstars.com/poker/learn/news/the-best-and-worst-poker-bluffs-ever/"
+        }
+      ]
+    },
+    {
+      "id": "jungleman",
+      "name": "Daniel Cates",
+      "short": "Daniel Cates",
+      "tag": "Calculated aggression · Trapping strong hands",
+      "description": "Defends when the price is right and balances proactive pressure with trapping strong hands; large continues must still pass the equity and stack-pressure checks.",
+      "axes": [
+        65,
+        82,
+        66,
+        64,
+        72
+      ],
+      "sizing": [
+        0.45,
+        0.95
+      ],
+      "evidence": "His own interviews stress calculation, watching what opponents actually do, and adjusting rather than balancing mechanically. This bot approximates those ideas with ranges and prices; it does not reproduce professional-level reads or dynamic learning.",
+      "sources": [
+        {
+          "label": "Card Player · Daniel Cates interview",
+          "url": "https://www.cardplayer.com/cardplayer-poker-magazines/65799-poker-hall-of-fame-23-20/articles/19757-capture-the-flag-daniel-jungleman12-cates"
+        },
+        {
+          "label": "Card Player · Interview on adjusting to opponents",
+          "url": "https://www.cardplayer.com/cardplayer-poker-magazines/66315-jason-mercier-28-23/articles/22601-head-games-heads-up-cash-game-advice-from-the-best-in-the-world"
+        }
+      ]
+    },
+    {
+      "id": "dwan",
+      "name": "Tom Dwan",
+      "short": "Tom Dwan",
+      "tag": "Creative pressure · Multi-street bluffs",
+      "description": "Fights harder for pots in position, mixes in multi-street pressure when he has a credible story or a draw, and can keep opponents' ranges wide with strong hands.",
+      "axes": [
+        85,
+        90,
+        85,
+        75,
+        55
+      ],
+      "sizing": [
+        0.65,
+        1.2
+      ],
+      "evidence": "Original interviews, peer assessments, and a PokerStars retrospective support his historical creative, multi-street bluffing style. The parameters are only adjustable simulation tendencies; they do not infer the real player's VPIP or state of mind.",
+      "sources": [
+        {
+          "label": "Card Player · Original Dwan interview",
+          "url": "https://www.cardplayer.com/cardplayer-poker-magazines/65739-tom-dwan-6-4/articles/18288-the-won-39-durrrr-39-ful-life-of-tom-dwan"
+        },
+        {
+          "label": "PokerStars · Historic bluffs retrospective",
+          "url": "https://www.pokerstars.com/poker/learn/news/the-best-and-worst-poker-bluffs-ever/"
+        }
+      ]
+    }
+  ],
+  "axes": [
+    "Range Width",
+    "Aggression",
+    "Bluffing",
+    "Calling Down",
+    "Trapping"
+  ],
+  "emotionModes": [
+    {
+      "id": "off",
+      "label": "Off"
+    },
+    {
+      "id": "subtle",
+      "label": "Subtle"
+    },
+    {
+      "id": "lively",
+      "label": "Pronounced"
+    }
+  ],
+  "moodLabels": [
+    {
+      "kind": "steady",
+      "label": "Steady"
+    },
+    {
+      "kind": "frustrated",
+      "label": "Chasing Losses"
+    },
+    {
+      "kind": "cautious",
+      "label": "Playing Safe"
+    },
+    {
+      "kind": "confident",
+      "label": "On a Heater"
+    },
+    {
+      "kind": "reactive",
+      "label": "Fighting Back"
+    }
+  ],
+  "defaultBotSettings": {
+    "emotionMode": "subtle",
+    "assignments": {
+      "1": "balanced",
+      "2": "balanced",
+      "3": "balanced",
+      "4": "balanced",
+      "5": "balanced",
+      "6": "balanced",
+      "7": "balanced",
+      "8": "balanced"
+    }
+  },
+  "freshBotMood": {
+    "kind": "steady",
+    "remaining": 0,
+    "cooldown": 0,
+    "reason": "",
+    "losses": 0,
+    "wins": 0,
+    "pressureFolds": {},
+    "lastPressureRaiser": null
+  },
+  "freshBotStats": {
+    "hands": 0,
+    "vpip": 0,
+    "pfr": 0,
+    "postActions": 0,
+    "postRaises": 0,
+    "postCalls": 0
+  },
+  "botThinkLimits": {
+    "minimum": 1200,
+    "maximum": 8000
+  },
+  "sanitizeBotSettings": [
+    {
+      "input": null,
+      "output": {
+        "emotionMode": "subtle",
+        "assignments": {
+          "1": "balanced",
+          "2": "balanced",
+          "3": "balanced",
+          "4": "balanced",
+          "5": "balanced",
+          "6": "balanced",
+          "7": "balanced",
+          "8": "balanced"
+        }
+      }
+    },
+    {
+      "input": 42,
+      "output": {
+        "emotionMode": "subtle",
+        "assignments": {
+          "1": "balanced",
+          "2": "balanced",
+          "3": "balanced",
+          "4": "balanced",
+          "5": "balanced",
+          "6": "balanced",
+          "7": "balanced",
+          "8": "balanced"
+        }
+      }
+    },
+    {
+      "input": "lively",
+      "output": {
+        "emotionMode": "subtle",
+        "assignments": {
+          "1": "balanced",
+          "2": "balanced",
+          "3": "balanced",
+          "4": "balanced",
+          "5": "balanced",
+          "6": "balanced",
+          "7": "balanced",
+          "8": "balanced"
+        }
+      }
+    },
+    {
+      "input": [],
+      "output": {
+        "emotionMode": "subtle",
+        "assignments": {
+          "1": "balanced",
+          "2": "balanced",
+          "3": "balanced",
+          "4": "balanced",
+          "5": "balanced",
+          "6": "balanced",
+          "7": "balanced",
+          "8": "balanced"
+        }
+      }
+    },
+    {
+      "input": {},
+      "output": {
+        "emotionMode": "subtle",
+        "assignments": {
+          "1": "balanced",
+          "2": "balanced",
+          "3": "balanced",
+          "4": "balanced",
+          "5": "balanced",
+          "6": "balanced",
+          "7": "balanced",
+          "8": "balanced"
+        }
+      }
+    },
+    {
+      "input": {
+        "emotionMode": "off"
+      },
+      "output": {
+        "emotionMode": "off",
+        "assignments": {
+          "1": "balanced",
+          "2": "balanced",
+          "3": "balanced",
+          "4": "balanced",
+          "5": "balanced",
+          "6": "balanced",
+          "7": "balanced",
+          "8": "balanced"
+        }
+      }
+    },
+    {
+      "input": {
+        "emotionMode": "lively"
+      },
+      "output": {
+        "emotionMode": "lively",
+        "assignments": {
+          "1": "balanced",
+          "2": "balanced",
+          "3": "balanced",
+          "4": "balanced",
+          "5": "balanced",
+          "6": "balanced",
+          "7": "balanced",
+          "8": "balanced"
+        }
+      }
+    },
+    {
+      "input": {
+        "emotionMode": "subtle"
+      },
+      "output": {
+        "emotionMode": "subtle",
+        "assignments": {
+          "1": "balanced",
+          "2": "balanced",
+          "3": "balanced",
+          "4": "balanced",
+          "5": "balanced",
+          "6": "balanced",
+          "7": "balanced",
+          "8": "balanced"
+        }
+      }
+    },
+    {
+      "input": {
+        "emotionMode": "loud"
+      },
+      "output": {
+        "emotionMode": "subtle",
+        "assignments": {
+          "1": "balanced",
+          "2": "balanced",
+          "3": "balanced",
+          "4": "balanced",
+          "5": "balanced",
+          "6": "balanced",
+          "7": "balanced",
+          "8": "balanced"
+        }
+      }
+    },
+    {
+      "input": {
+        "emotionMode": "toString"
+      },
+      "output": {
+        "emotionMode": "subtle",
+        "assignments": {
+          "1": "balanced",
+          "2": "balanced",
+          "3": "balanced",
+          "4": "balanced",
+          "5": "balanced",
+          "6": "balanced",
+          "7": "balanced",
+          "8": "balanced"
+        }
+      }
+    },
+    {
+      "input": {
+        "emotionMode": null
+      },
+      "output": {
+        "emotionMode": "subtle",
+        "assignments": {
+          "1": "balanced",
+          "2": "balanced",
+          "3": "balanced",
+          "4": "balanced",
+          "5": "balanced",
+          "6": "balanced",
+          "7": "balanced",
+          "8": "balanced"
+        }
+      }
+    },
+    {
+      "input": {
+        "emotionMode": 1
+      },
+      "output": {
+        "emotionMode": "subtle",
+        "assignments": {
+          "1": "balanced",
+          "2": "balanced",
+          "3": "balanced",
+          "4": "balanced",
+          "5": "balanced",
+          "6": "balanced",
+          "7": "balanced",
+          "8": "balanced"
+        }
+      }
+    },
+    {
+      "input": {
+        "assignments": null
+      },
+      "output": {
+        "emotionMode": "subtle",
+        "assignments": {
+          "1": "balanced",
+          "2": "balanced",
+          "3": "balanced",
+          "4": "balanced",
+          "5": "balanced",
+          "6": "balanced",
+          "7": "balanced",
+          "8": "balanced"
+        }
+      }
+    },
+    {
+      "input": {
+        "assignments": {
+          "1": "tan",
+          "2": "st",
+          "3": "zang",
+          "4": "peter",
+          "5": "abao",
+          "6": "viktor",
+          "7": "jungleman",
+          "8": "dwan"
+        }
+      },
+      "output": {
+        "emotionMode": "subtle",
+        "assignments": {
+          "1": "tan",
+          "2": "st",
+          "3": "zang",
+          "4": "peter",
+          "5": "abao",
+          "6": "viktor",
+          "7": "jungleman",
+          "8": "dwan"
+        }
+      }
+    },
+    {
+      "input": {
+        "assignments": {
+          "0": "tan",
+          "9": "dwan",
+          "10": "st"
+        }
+      },
+      "output": {
+        "emotionMode": "subtle",
+        "assignments": {
+          "1": "balanced",
+          "2": "balanced",
+          "3": "balanced",
+          "4": "balanced",
+          "5": "balanced",
+          "6": "balanced",
+          "7": "balanced",
+          "8": "balanced"
+        }
+      }
+    },
+    {
+      "input": {
+        "assignments": {
+          "1": "unknown",
+          "2": "TAN",
+          "3": "",
+          "4": null,
+          "5": 7,
+          "6": "toString"
+        }
+      },
+      "output": {
+        "emotionMode": "subtle",
+        "assignments": {
+          "1": "balanced",
+          "2": "balanced",
+          "3": "balanced",
+          "4": "balanced",
+          "5": "balanced",
+          "6": "balanced",
+          "7": "balanced",
+          "8": "balanced"
+        }
+      }
+    },
+    {
+      "input": {
+        "emotionMode": "off",
+        "assignments": {
+          "2": "peter",
+          "8": "viktor"
+        }
+      },
+      "output": {
+        "emotionMode": "off",
+        "assignments": {
+          "1": "balanced",
+          "2": "peter",
+          "3": "balanced",
+          "4": "balanced",
+          "5": "balanced",
+          "6": "balanced",
+          "7": "balanced",
+          "8": "viktor"
+        }
+      }
+    },
+    {
+      "input": {
+        "emotionMode": "lively",
+        "assignments": {
+          "1": "balanced",
+          "3": "dwan",
+          "5": "jungleman"
+        }
+      },
+      "output": {
+        "emotionMode": "lively",
+        "assignments": {
+          "1": "balanced",
+          "2": "balanced",
+          "3": "dwan",
+          "4": "balanced",
+          "5": "jungleman",
+          "6": "balanced",
+          "7": "balanced",
+          "8": "balanced"
+        }
+      }
+    },
+    {
+      "input": {
+        "emotionMode": "Lively",
+        "assignments": {
+          "4": "abao"
+        }
+      },
+      "output": {
+        "emotionMode": "subtle",
+        "assignments": {
+          "1": "balanced",
+          "2": "balanced",
+          "3": "balanced",
+          "4": "abao",
+          "5": "balanced",
+          "6": "balanced",
+          "7": "balanced",
+          "8": "balanced"
+        }
+      }
+    }
+  ],
+  "startingPercentile": [
+    {
+      "hand": "AA",
+      "hole": [
+        "0-14",
+        "1-14"
+      ],
+      "percentile": 0
+    },
+    {
+      "hand": "AKs",
+      "hole": [
+        "0-14",
+        "0-13"
+      ],
+      "percentile": 0.02262443438914027
+    },
+    {
+      "hand": "AKo",
+      "hole": [
+        "0-14",
+        "1-13"
+      ],
+      "percentile": 0.03770739064856712
+    },
+    {
+      "hand": "AQs",
+      "hole": [
+        "0-14",
+        "0-12"
+      ],
+      "percentile": 0.03469079939668175
+    },
+    {
+      "hand": "AQo",
+      "hole": [
+        "0-14",
+        "1-12"
+      ],
+      "percentile": 0.06787330316742081
+    },
+    {
+      "hand": "AJs",
+      "hole": [
+        "0-14",
+        "0-11"
+      ],
+      "percentile": 0.05128205128205128
+    },
+    {
+      "hand": "AJo",
+      "hole": [
+        "0-14",
+        "1-11"
+      ],
+      "percentile": 0.09351432880844646
+    },
+    {
+      "hand": "ATs",
+      "hole": [
+        "0-14",
+        "0-10"
+      ],
+      "percentile": 0.05429864253393665
+    },
+    {
+      "hand": "ATo",
+      "hole": [
+        "0-14",
+        "1-10"
+      ],
+      "percentile": 0.10558069381598793
+    },
+    {
+      "hand": "A9s",
+      "hole": [
+        "0-14",
+        "0-9"
+      ],
+      "percentile": 0.06485671191553545
+    },
+    {
+      "hand": "A9o",
+      "hole": [
+        "0-14",
+        "1-9"
+      ],
+      "percentile": 0.13423831070889894
+    },
+    {
+      "hand": "A8s",
+      "hole": [
+        "0-14",
+        "0-8"
+      ],
+      "percentile": 0.07692307692307693
+    },
+    {
+      "hand": "A8o",
+      "hole": [
+        "0-14",
+        "1-8"
+      ],
+      "percentile": 0.1493212669683258
+    },
+    {
+      "hand": "A7s",
+      "hole": [
+        "0-14",
+        "0-7"
+      ],
+      "percentile": 0.08446455505279035
+    },
+    {
+      "hand": "A7o",
+      "hole": [
+        "0-14",
+        "1-7"
+      ],
+      "percentile": 0.17194570135746606
+    },
+    {
+      "hand": "A6s",
+      "hole": [
+        "0-14",
+        "0-6"
+      ],
+      "percentile": 0.10256410256410256
+    },
+    {
+      "hand": "A6o",
+      "hole": [
+        "0-14",
+        "1-6"
+      ],
+      "percentile": 0.20512820512820512
+    },
+    {
+      "hand": "A5s",
+      "hole": [
+        "0-14",
+        "0-5"
+      ],
+      "percentile": 0.12368024132730016
+    },
+    {
+      "hand": "A5o",
+      "hole": [
+        "0-14",
+        "1-5"
+      ],
+      "percentile": 0.22624434389140272
+    },
+    {
+      "hand": "A4s",
+      "hole": [
+        "0-14",
+        "0-4"
+      ],
+      "percentile": 0.14328808446455504
+    },
+    {
+      "hand": "A4o",
+      "hole": [
+        "0-14",
+        "1-4"
+      ],
+      "percentile": 0.2549019607843137
+    },
+    {
+      "hand": "A3s",
+      "hole": [
+        "0-14",
+        "0-3"
+      ],
+      "percentile": 0.16440422322775264
+    },
+    {
+      "hand": "A3o",
+      "hole": [
+        "0-14",
+        "1-3"
+      ],
+      "percentile": 0.2971342383107089
+    },
+    {
+      "hand": "A2s",
+      "hole": [
+        "0-14",
+        "0-2"
+      ],
+      "percentile": 0.20211161387631976
+    },
+    {
+      "hand": "A2o",
+      "hole": [
+        "0-14",
+        "1-2"
+      ],
+      "percentile": 0.32428355957767724
+    },
+    {
+      "hand": "KK",
+      "hole": [
+        "0-13",
+        "1-13"
+      ],
+      "percentile": 0.004524886877828055
+    },
+    {
+      "hand": "KQs",
+      "hole": [
+        "0-13",
+        "0-12"
+      ],
+      "percentile": 0.05731523378582202
+    },
+    {
+      "hand": "KQo",
+      "hole": [
+        "0-13",
+        "1-12"
+      ],
+      "percentile": 0.11463046757164404
+    },
+    {
+      "hand": "KJs",
+      "hole": [
+        "0-13",
+        "0-11"
+      ],
+      "percentile": 0.09049773755656108
+    },
+    {
+      "hand": "KJo",
+      "hole": [
+        "0-13",
+        "1-11"
+      ],
+      "percentile": 0.19306184012066366
+    },
+    {
+      "hand": "KTs",
+      "hole": [
+        "0-13",
+        "0-10"
+      ],
+      "percentile": 0.13122171945701358
+    },
+    {
+      "hand": "KTo",
+      "hole": [
+        "0-13",
+        "1-10"
+      ],
+      "percentile": 0.2458521870286576
+    },
+    {
+      "hand": "K9s",
+      "hole": [
+        "0-13",
+        "0-9"
+      ],
+      "percentile": 0.1493212669683258
+    },
+    {
+      "hand": "K9o",
+      "hole": [
+        "0-13",
+        "1-9"
+      ],
+      "percentile": 0.2790346907993967
+    },
+    {
+      "hand": "K8s",
+      "hole": [
+        "0-13",
+        "0-8"
+      ],
+      "percentile": 0.17194570135746606
+    },
+    {
+      "hand": "K8o",
+      "hole": [
+        "0-13",
+        "1-8"
+      ],
+      "percentile": 0.3152337858220211
+    },
+    {
+      "hand": "K7s",
+      "hole": [
+        "0-13",
+        "0-7"
+      ],
+      "percentile": 0.20512820512820512
+    },
+    {
+      "hand": "K7o",
+      "hole": [
+        "0-13",
+        "1-7"
+      ],
+      "percentile": 0.34841628959276016
+    },
+    {
+      "hand": "K6s",
+      "hole": [
+        "0-13",
+        "0-6"
+      ],
+      "percentile": 0.22021116138763197
+    },
+    {
+      "hand": "K6o",
+      "hole": [
+        "0-13",
+        "1-6"
+      ],
+      "percentile": 0.3755656108597285
+    },
+    {
+      "hand": "K5s",
+      "hole": [
+        "0-13",
+        "0-5"
+      ],
+      "percentile": 0.2549019607843137
+    },
+    {
+      "hand": "K5o",
+      "hole": [
+        "0-13",
+        "1-5"
+      ],
+      "percentile": 0.42081447963800905
+    },
+    {
+      "hand": "K4s",
+      "hole": [
+        "0-13",
+        "0-4"
+      ],
+      "percentile": 0.2971342383107089
+    },
+    {
+      "hand": "K4o",
+      "hole": [
+        "0-13",
+        "1-4"
+      ],
+      "percentile": 0.4539969834087481
+    },
+    {
+      "hand": "K3s",
+      "hole": [
+        "0-13",
+        "0-3"
+      ],
+      "percentile": 0.32428355957767724
+    },
+    {
+      "hand": "K3o",
+      "hole": [
+        "0-13",
+        "1-3"
+      ],
+      "percentile": 0.48717948717948717
+    },
+    {
+      "hand": "K2s",
+      "hole": [
+        "0-13",
+        "0-2"
+      ],
+      "percentile": 0.3665158371040724
+    },
+    {
+      "hand": "K2o",
+      "hole": [
+        "0-13",
+        "1-2"
+      ],
+      "percentile": 0.5384615384615384
+    },
+    {
+      "hand": "QQ",
+      "hole": [
+        "0-12",
+        "1-12"
+      ],
+      "percentile": 0.00904977375565611
+    },
+    {
+      "hand": "QJs",
+      "hole": [
+        "0-12",
+        "0-11"
+      ],
+      "percentile": 0.08748114630467571
+    },
+    {
+      "hand": "QJo",
+      "hole": [
+        "0-12",
+        "1-11"
+      ],
+      "percentile": 0.18401206636500755
+    },
+    {
+      "hand": "QTs",
+      "hole": [
+        "0-12",
+        "0-10"
+      ],
+      "percentile": 0.1493212669683258
+    },
+    {
+      "hand": "QTo",
+      "hole": [
+        "0-12",
+        "1-10"
+      ],
+      "percentile": 0.2790346907993967
+    },
+    {
+      "hand": "Q9s",
+      "hole": [
+        "0-12",
+        "0-9"
+      ],
+      "percentile": 0.2171945701357466
+    },
+    {
+      "hand": "Q9o",
+      "hole": [
+        "0-12",
+        "1-9"
+      ],
+      "percentile": 0.3574660633484163
+    },
+    {
+      "hand": "Q8s",
+      "hole": [
+        "0-12",
+        "0-8"
+      ],
+      "percentile": 0.23529411764705882
+    },
+    {
+      "hand": "Q8o",
+      "hole": [
+        "0-12",
+        "1-8"
+      ],
+      "percentile": 0.40271493212669685
+    },
+    {
+      "hand": "Q7s",
+      "hole": [
+        "0-12",
+        "0-7"
+      ],
+      "percentile": 0.2669683257918552
+    },
+    {
+      "hand": "Q7o",
+      "hole": [
+        "0-12",
+        "1-7"
+      ],
+      "percentile": 0.4298642533936652
+    },
+    {
+      "hand": "Q6s",
+      "hole": [
+        "0-12",
+        "0-6"
+      ],
+      "percentile": 0.3092006033182504
+    },
+    {
+      "hand": "Q6o",
+      "hole": [
+        "0-12",
+        "1-6"
+      ],
+      "percentile": 0.46304675716440424
+    },
+    {
+      "hand": "Q5s",
+      "hole": [
+        "0-12",
+        "0-5"
+      ],
+      "percentile": 0.33634992458521873
+    },
+    {
+      "hand": "Q5o",
+      "hole": [
+        "0-12",
+        "1-5"
+      ],
+      "percentile": 0.4962292609351433
+    },
+    {
+      "hand": "Q4s",
+      "hole": [
+        "0-12",
+        "0-4"
+      ],
+      "percentile": 0.3695324283559578
+    },
+    {
+      "hand": "Q4o",
+      "hole": [
+        "0-12",
+        "1-4"
+      ],
+      "percentile": 0.55052790346908
+    },
+    {
+      "hand": "Q3s",
+      "hole": [
+        "0-12",
+        "0-3"
+      ],
+      "percentile": 0.4117647058823529
+    },
+    {
+      "hand": "Q3o",
+      "hole": [
+        "0-12",
+        "1-3"
+      ],
+      "percentile": 0.5806938159879337
+    },
+    {
+      "hand": "Q2s",
+      "hole": [
+        "0-12",
+        "0-2"
+      ],
+      "percentile": 0.43891402714932126
+    },
+    {
+      "hand": "Q2o",
+      "hole": [
+        "0-12",
+        "1-2"
+      ],
+      "percentile": 0.6138763197586727
+    },
+    {
+      "hand": "JJ",
+      "hole": [
+        "0-11",
+        "1-11"
+      ],
+      "percentile": 0.013574660633484163
+    },
+    {
+      "hand": "JTs",
+      "hole": [
+        "0-11",
+        "0-10"
+      ],
+      "percentile": 0.14630467571644043
+    },
+    {
+      "hand": "JTo",
+      "hole": [
+        "0-11",
+        "1-10"
+      ],
+      "percentile": 0.26998491704374056
+    },
+    {
+      "hand": "J9s",
+      "hole": [
+        "0-11",
+        "0-9"
+      ],
+      "percentile": 0.23529411764705882
+    },
+    {
+      "hand": "J9o",
+      "hole": [
+        "0-11",
+        "1-9"
+      ],
+      "percentile": 0.3936651583710407
+    },
+    {
+      "hand": "J8s",
+      "hole": [
+        "0-11",
+        "0-8"
+      ],
+      "percentile": 0.31221719457013575
+    },
+    {
+      "hand": "J8o",
+      "hole": [
+        "0-11",
+        "1-8"
+      ],
+      "percentile": 0.4720965309200603
+    },
+    {
+      "hand": "J7s",
+      "hole": [
+        "0-11",
+        "0-7"
+      ],
+      "percentile": 0.34238310708898945
+    },
+    {
+      "hand": "J7o",
+      "hole": [
+        "0-11",
+        "1-7"
+      ],
+      "percentile": 0.5143288084464555
+    },
+    {
+      "hand": "J6s",
+      "hole": [
+        "0-11",
+        "0-6"
+      ],
+      "percentile": 0.37254901960784315
+    },
+    {
+      "hand": "J6o",
+      "hole": [
+        "0-11",
+        "1-6"
+      ],
+      "percentile": 0.5595776772247361
+    },
+    {
+      "hand": "J5s",
+      "hole": [
+        "0-11",
+        "0-5"
+      ],
+      "percentile": 0.41478129713423834
+    },
+    {
+      "hand": "J5o",
+      "hole": [
+        "0-11",
+        "1-5"
+      ],
+      "percentile": 0.5897435897435898
+    },
+    {
+      "hand": "J4s",
+      "hole": [
+        "0-11",
+        "0-4"
+      ],
+      "percentile": 0.4419306184012066
+    },
+    {
+      "hand": "J4o",
+      "hole": [
+        "0-11",
+        "1-4"
+      ],
+      "percentile": 0.6229260935143288
+    },
+    {
+      "hand": "J3s",
+      "hole": [
+        "0-11",
+        "0-3"
+      ],
+      "percentile": 0.48114630467571645
+    },
+    {
+      "hand": "J3o",
+      "hole": [
+        "0-11",
+        "1-3"
+      ],
+      "percentile": 0.665158371040724
+    },
+    {
+      "hand": "J2s",
+      "hole": [
+        "0-11",
+        "0-2"
+      ],
+      "percentile": 0.5324283559577677
+    },
+    {
+      "hand": "J2o",
+      "hole": [
+        "0-11",
+        "1-2"
+      ],
+      "percentile": 0.6953242835595776
+    },
+    {
+      "hand": "TT",
+      "hole": [
+        "0-10",
+        "1-10"
+      ],
+      "percentile": 0.01809954751131222
+    },
+    {
+      "hand": "T9s",
+      "hole": [
+        "0-10",
+        "0-9"
+      ],
+      "percentile": 0.22021116138763197
+    },
+    {
+      "hand": "T9o",
+      "hole": [
+        "0-10",
+        "1-9"
+      ],
+      "percentile": 0.3755656108597285
+    },
+    {
+      "hand": "T8s",
+      "hole": [
+        "0-10",
+        "0-8"
+      ],
+      "percentile": 0.34238310708898945
+    },
+    {
+      "hand": "T8o",
+      "hole": [
+        "0-10",
+        "1-8"
+      ],
+      "percentile": 0.5143288084464555
+    },
+    {
+      "hand": "T7s",
+      "hole": [
+        "0-10",
+        "0-7"
+      ],
+      "percentile": 0.4177978883861237
+    },
+    {
+      "hand": "T7o",
+      "hole": [
+        "0-10",
+        "1-7"
+      ],
+      "percentile": 0.5987933634992458
+    },
+    {
+      "hand": "T6s",
+      "hole": [
+        "0-10",
+        "0-6"
+      ],
+      "percentile": 0.4479638009049774
+    },
+    {
+      "hand": "T6o",
+      "hole": [
+        "0-10",
+        "1-6"
+      ],
+      "percentile": 0.6410256410256411
+    },
+    {
+      "hand": "T5s",
+      "hole": [
+        "0-10",
+        "0-5"
+      ],
+      "percentile": 0.4841628959276018
+    },
+    {
+      "hand": "T5o",
+      "hole": [
+        "0-10",
+        "1-5"
+      ],
+      "percentile": 0.6742081447963801
+    },
+    {
+      "hand": "T4s",
+      "hole": [
+        "0-10",
+        "0-4"
+      ],
+      "percentile": 0.5354449472096531
+    },
+    {
+      "hand": "T4o",
+      "hole": [
+        "0-10",
+        "1-4"
+      ],
+      "percentile": 0.7043740573152338
+    },
+    {
+      "hand": "T3s",
+      "hole": [
+        "0-10",
+        "0-3"
+      ],
+      "percentile": 0.5686274509803921
+    },
+    {
+      "hand": "T3o",
+      "hole": [
+        "0-10",
+        "1-3"
+      ],
+      "percentile": 0.7254901960784313
+    },
+    {
+      "hand": "T2s",
+      "hole": [
+        "0-10",
+        "0-2"
+      ],
+      "percentile": 0.6078431372549019
+    },
+    {
+      "hand": "T2o",
+      "hole": [
+        "0-10",
+        "1-2"
+      ],
+      "percentile": 0.7677224736048266
+    },
+    {
+      "hand": "99",
+      "hole": [
+        "0-9",
+        "1-9"
+      ],
+      "percentile": 0.02564102564102564
+    },
+    {
+      "hand": "98s",
+      "hole": [
+        "0-9",
+        "0-8"
+      ],
+      "percentile": 0.33634992458521873
+    },
+    {
+      "hand": "98o",
+      "hole": [
+        "0-9",
+        "1-8"
+      ],
+      "percentile": 0.4962292609351433
+    },
+    {
+      "hand": "97s",
+      "hole": [
+        "0-9",
+        "0-7"
+      ],
+      "percentile": 0.4479638009049774
+    },
+    {
+      "hand": "97o",
+      "hole": [
+        "0-9",
+        "1-7"
+      ],
+      "percentile": 0.6410256410256411
+    },
+    {
+      "hand": "96s",
+      "hole": [
+        "0-9",
+        "0-6"
+      ],
+      "percentile": 0.5384615384615384
+    },
+    {
+      "hand": "96o",
+      "hole": [
+        "0-9",
+        "1-6"
+      ],
+      "percentile": 0.7134238310708899
+    },
+    {
+      "hand": "95s",
+      "hole": [
+        "0-9",
+        "0-5"
+      ],
+      "percentile": 0.5776772247360482
+    },
+    {
+      "hand": "95o",
+      "hole": [
+        "0-9",
+        "1-5"
+      ],
+      "percentile": 0.7526395173453997
+    },
+    {
+      "hand": "94s",
+      "hole": [
+        "0-9",
+        "0-4"
+      ],
+      "percentile": 0.6108597285067874
+    },
+    {
+      "hand": "94o",
+      "hole": [
+        "0-9",
+        "1-4"
+      ],
+      "percentile": 0.7767722473604827
+    },
+    {
+      "hand": "93s",
+      "hole": [
+        "0-9",
+        "0-3"
+      ],
+      "percentile": 0.6591251885369532
+    },
+    {
+      "hand": "93o",
+      "hole": [
+        "0-9",
+        "1-3"
+      ],
+      "percentile": 0.7948717948717948
+    },
+    {
+      "hand": "92s",
+      "hole": [
+        "0-9",
+        "0-2"
+      ],
+      "percentile": 0.6832579185520362
+    },
+    {
+      "hand": "92o",
+      "hole": [
+        "0-9",
+        "1-2"
+      ],
+      "percentile": 0.8159879336349924
+    },
+    {
+      "hand": "88",
+      "hole": [
+        "0-8",
+        "1-8"
+      ],
+      "percentile": 0.030165912518853696
+    },
+    {
+      "hand": "87s",
+      "hole": [
+        "0-8",
+        "0-7"
+      ],
+      "percentile": 0.4419306184012066
+    },
+    {
+      "hand": "87o",
+      "hole": [
+        "0-8",
+        "1-7"
+      ],
+      "percentile": 0.6229260935143288
+    },
+    {
+      "hand": "86s",
+      "hole": [
+        "0-8",
+        "0-6"
+      ],
+      "percentile": 0.5746606334841629
+    },
+    {
+      "hand": "86o",
+      "hole": [
+        "0-8",
+        "1-6"
+      ],
+      "percentile": 0.7435897435897436
+    },
+    {
+      "hand": "85s",
+      "hole": [
+        "0-8",
+        "0-5"
+      ],
+      "percentile": 0.6621417797888386
+    },
+    {
+      "hand": "85o",
+      "hole": [
+        "0-8",
+        "1-5"
+      ],
+      "percentile": 0.803921568627451
+    },
+    {
+      "hand": "84s",
+      "hole": [
+        "0-8",
+        "0-4"
+      ],
+      "percentile": 0.6892911010558069
+    },
+    {
+      "hand": "84o",
+      "hole": [
+        "0-8",
+        "1-4"
+      ],
+      "percentile": 0.8340874811463047
+    },
+    {
+      "hand": "83s",
+      "hole": [
+        "0-8",
+        "0-3"
+      ],
+      "percentile": 0.722473604826546
+    },
+    {
+      "hand": "83o",
+      "hole": [
+        "0-8",
+        "1-3"
+      ],
+      "percentile": 0.8552036199095022
+    },
+    {
+      "hand": "82s",
+      "hole": [
+        "0-8",
+        "0-2"
+      ],
+      "percentile": 0.7616892911010558
+    },
+    {
+      "hand": "82o",
+      "hole": [
+        "0-8",
+        "1-2"
+      ],
+      "percentile": 0.8733031674208145
+    },
+    {
+      "hand": "77",
+      "hole": [
+        "0-7",
+        "1-7"
+      ],
+      "percentile": 0.04675716440422323
+    },
+    {
+      "hand": "76s",
+      "hole": [
+        "0-7",
+        "0-6"
+      ],
+      "percentile": 0.5686274509803921
+    },
+    {
+      "hand": "76o",
+      "hole": [
+        "0-7",
+        "1-6"
+      ],
+      "percentile": 0.7254901960784313
+    },
+    {
+      "hand": "75s",
+      "hole": [
+        "0-7",
+        "0-5"
+      ],
+      "percentile": 0.6923076923076923
+    },
+    {
+      "hand": "75o",
+      "hole": [
+        "0-7",
+        "1-5"
+      ],
+      "percentile": 0.8431372549019608
+    },
+    {
+      "hand": "74s",
+      "hole": [
+        "0-7",
+        "0-4"
+      ],
+      "percentile": 0.7647058823529411
+    },
+    {
+      "hand": "74o",
+      "hole": [
+        "0-7",
+        "1-4"
+      ],
+      "percentile": 0.8823529411764706
+    },
+    {
+      "hand": "73s",
+      "hole": [
+        "0-7",
+        "0-3"
+      ],
+      "percentile": 0.7888386123680241
+    },
+    {
+      "hand": "73o",
+      "hole": [
+        "0-7",
+        "1-3"
+      ],
+      "percentile": 0.9004524886877828
+    },
+    {
+      "hand": "72s",
+      "hole": [
+        "0-7",
+        "0-2"
+      ],
+      "percentile": 0.8129713423831071
+    },
+    {
+      "hand": "72o",
+      "hole": [
+        "0-7",
+        "1-2"
+      ],
+      "percentile": 0.9215686274509803
+    },
+    {
+      "hand": "66",
+      "hole": [
+        "0-6",
+        "1-6"
+      ],
+      "percentile": 0.06033182503770739
+    },
+    {
+      "hand": "65s",
+      "hole": [
+        "0-6",
+        "0-5"
+      ],
+      "percentile": 0.6832579185520362
+    },
+    {
+      "hand": "65o",
+      "hole": [
+        "0-6",
+        "1-5"
+      ],
+      "percentile": 0.8159879336349924
+    },
+    {
+      "hand": "64s",
+      "hole": [
+        "0-6",
+        "0-4"
+      ],
+      "percentile": 0.7888386123680241
+    },
+    {
+      "hand": "64o",
+      "hole": [
+        "0-6",
+        "1-4"
+      ],
+      "percentile": 0.9095022624434389
+    },
+    {
+      "hand": "63s",
+      "hole": [
+        "0-6",
+        "0-3"
+      ],
+      "percentile": 0.8521870286576169
+    },
+    {
+      "hand": "63o",
+      "hole": [
+        "0-6",
+        "1-3"
+      ],
+      "percentile": 0.9366515837104072
+    },
+    {
+      "hand": "62s",
+      "hole": [
+        "0-6",
+        "0-2"
+      ],
+      "percentile": 0.8672699849170438
+    },
+    {
+      "hand": "62o",
+      "hole": [
+        "0-6",
+        "1-2"
+      ],
+      "percentile": 0.9547511312217195
+    },
+    {
+      "hand": "55",
+      "hole": [
+        "0-5",
+        "1-5"
+      ],
+      "percentile": 0.07993966817496229
+    },
+    {
+      "hand": "54s",
+      "hole": [
+        "0-5",
+        "0-4"
+      ],
+      "percentile": 0.7858220211161387
+    },
+    {
+      "hand": "54o",
+      "hole": [
+        "0-5",
+        "1-4"
+      ],
+      "percentile": 0.8914027149321267
+    },
+    {
+      "hand": "53s",
+      "hole": [
+        "0-5",
+        "0-3"
+      ],
+      "percentile": 0.8672699849170438
+    },
+    {
+      "hand": "53o",
+      "hole": [
+        "0-5",
+        "1-3"
+      ],
+      "percentile": 0.9547511312217195
+    },
+    {
+      "hand": "52s",
+      "hole": [
+        "0-5",
+        "0-2"
+      ],
+      "percentile": 0.918552036199095
+    },
+    {
+      "hand": "52o",
+      "hole": [
+        "0-5",
+        "1-2"
+      ],
+      "percentile": 0.9728506787330317
+    },
+    {
+      "hand": "44",
+      "hole": [
+        "0-4",
+        "1-4"
+      ],
+      "percentile": 0.12669683257918551
+    },
+    {
+      "hand": "43s",
+      "hole": [
+        "0-4",
+        "0-3"
+      ],
+      "percentile": 0.8642533936651584
+    },
+    {
+      "hand": "43o",
+      "hole": [
+        "0-4",
+        "1-3"
+      ],
+      "percentile": 0.9457013574660633
+    },
+    {
+      "hand": "42s",
+      "hole": [
+        "0-4",
+        "0-2"
+      ],
+      "percentile": 0.9336349924585219
+    },
+    {
+      "hand": "42o",
+      "hole": [
+        "0-4",
+        "1-2"
+      ],
+      "percentile": 0.9909502262443439
+    },
+    {
+      "hand": "33",
+      "hole": [
+        "0-3",
+        "1-3"
+      ],
+      "percentile": 0.167420814479638
+    },
+    {
+      "hand": "32s",
+      "hole": [
+        "0-3",
+        "0-2"
+      ],
+      "percentile": 0.9306184012066365
+    },
+    {
+      "hand": "32o",
+      "hole": [
+        "0-3",
+        "1-2"
+      ],
+      "percentile": 0.9819004524886877
+    },
+    {
+      "hand": "22",
+      "hole": [
+        "0-2",
+        "1-2"
+      ],
+      "percentile": 0.23529411764705882
+    }
+  ]
+}

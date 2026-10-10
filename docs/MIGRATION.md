@@ -4,7 +4,7 @@ Reference repository: https://github.com/JessieZJZ/noir-poker
 
 Reference commit: `03c78233f9454de54e378c5c81ba1dd25fa9b14e`.
 
-Run `bash scripts/fetch-reference.sh` to obtain an ignored, read-only checkout under `.reference/noir-poker`. This does not create a GitHub fork. The reference is an input to development, not an application dependency. New product code and documentation are English; the original Chinese source stays outside the tracked product tree.
+The reference repository is no longer public (2026-10-10). The committed fixtures in `fixtures/` are now the source of truth; CI verifies them with `node scripts/check-fixtures.mjs`, and `generate-reference-fixtures.mjs` runs only where a local checkout of the pinned commit still exists. Where access exists, run `bash scripts/fetch-reference.sh` to obtain an ignored, read-only checkout under `.reference/noir-poker`. This does not create a GitHub fork. The reference is an input to development, not an application dependency. New product code and documentation are English; the original Chinese source stays outside the tracked product tree.
 
 ## Architecture
 
@@ -17,7 +17,7 @@ Implement the domain twice and use the same behavioral fixtures. No browser runt
 
 ## Current implementation boundary
 
-The starter contains the native app entry points, brand/palette foundations, a rules dialog/sheet, a validated card model on each platform, cloud builds, native UI smoke tests, and deterministic reference hand-ranking fixtures. It does not implement a playable table, hand evaluation, settlement, bots, replay, review, preferences, or original feature parity. The two decorative cards on the starter screen are not a live hand. Do not claim that migration is complete.
+Both apps implement the playable table, the rules engine and settlement, bots and synthetic emotions, replay, decision review, and preferences, with separate Kotlin and Swift domain layers checked against the same fixtures. `docs/PARITY.md` records the status of each item below, the deliberate deviations, and the remaining gaps. Do not claim that migration is complete until every row there is verified.
 
 ## Behavior that must survive migration
 

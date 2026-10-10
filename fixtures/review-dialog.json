@@ -1,0 +1,6475 @@
+{
+ "description": "Expected Hand Review dialog presenter output (Kotlin presentHeroReview/presentOpponentReview, Swift presentReviewDialog) in a platform-neutral shape: the static copy table, templated copy, and the hero and opponent panels of settled hands from review-hands.json in idle, running, error, done and empty states. Analyses use `trials` samples per decision with the default rollout count.",
+ "generator": "Hand-authored case list. Outputs recorded from Kotlin with NOIR_REVIEW_DIALOG_RECORD=<path> ./gradlew -p android/core test --tests '*ReviewDialogTest*', then reviewed by hand.",
+ "trials": 60,
+ "copy": {
+  "eyebrow": "HAND REVIEW",
+  "closeA11y": "Close review",
+  "titleDefault": "Hand Review",
+  "tabsA11y": "Review perspective",
+  "tabHero": "Your Decisions",
+  "tabOpponents": "Opponent Decisions",
+  "tabOpponentsSubtitle": "Why they played it that way",
+  "timelineA11y": "Decision timeline for this hand",
+  "timelineTitle": "Your Decisions",
+  "contextFolded": "You folded this hand",
+  "contextPartialWin": "Won part of the pot, net loss for the hand",
+  "contextWon": "You won the pot",
+  "contextLost": "You didn't win the pot",
+  "stateError": "Analysis didn't finish. You can try again.",
+  "statePreparing": "Preparing this hand's decision snapshots…",
+  "summaryTitleDefault": "Back to the decisions as they were",
+  "priorityButton": "Go to the priority decision",
+  "fromFirstButton": "Review from step 1",
+  "retry": "Analyze Again",
+  "empty": "You made no decisions this hand, so there's nothing to evaluate. Blinds are forced bets and never count as mistakes.",
+  "statusAttention": "Needs Work",
+  "statusConsider": "Worth Discussing",
+  "statusSound": "Well Reasoned",
+  "statusPending": "Pending",
+  "statusAnalyzing": "Analyzing",
+  "holeLabel": "Your hole cards",
+  "boardLabel": "Community cards at the time",
+  "noBoard": "No community cards yet",
+  "positionLabel": "Position",
+  "potLabel": "Pot at the time",
+  "stackLabel": "Stack remaining",
+  "yourChoice": "Your choice",
+  "suggestedLine": "Suggested Line",
+  "suggestionPending": "Comparing available actions…",
+  "routesA11y": "Conditions and trade-offs for both lines",
+  "routePrimary": "When the main line holds",
+  "routeSecondary": "Conditional alternative",
+  "simA11y": "Candidate action simulation comparison",
+  "simHeading": "Candidate Action Simulation",
+  "simStable": "In this sample, one line clearly led under both ranges; it still depends on assumptions about later play.",
+  "simUnstable": "Ranges or sampling error could change the order; no single best action has been shown.",
+  "simColumns": [
+   "Action",
+   "Random Range",
+   "Action-Weighted"
+  ],
+  "simDetailsSummary": "How the simulation handles later action",
+  "simDetailsBody": "Results include immediate folds, calls, later raises, and showdowns; the real hidden hole cards, the actual card order that followed, and the final winners are never used. The two range results are not a range of optimal returns.",
+  "simUnavailable": "This older snapshot lacks the full action state, so later action can't be simulated; the range and price analysis from public information still applies.",
+  "simRunning": "Simulating each legal action and the rest of the hand…",
+  "decisionTitleDefault": "Analysis based on what you knew then",
+  "reasonDefault": "Uses your hole cards, the community cards, public actions, and stacks at the time, never opponents' hidden cards or cards dealt later.",
+  "evidenceHeading": "Key factors at the time",
+  "confidenceDefault": "Waiting for analysis",
+  "lessonHeading": "Focus for next practice",
+  "lessonDefault": "Judge the decision separately from the result; a specific practice focus appears when the review is done.",
+  "planHeading": "Plan for later streets",
+  "planDefault": "The follow-up plan appears when analysis finishes.",
+  "metricRequired": "Equity needed to call",
+  "metricEquity": "Two-range estimate",
+  "metricContestable": "Winnable after calling",
+  "pricePending": "…",
+  "priceNoCall": "No call needed",
+  "equityNone": "—",
+  "priceNoteSidePots": "Estimated separately for each pot you're eligible for; side pots beyond your all-in amount are excluded.",
+  "priceNoteClosing": "The call price uses the amount you can currently win, after removing uncalled refunds.",
+  "priceNoteDefault": "The price is only a guide; later bets, other players' actions, and potential winnings aren't included.",
+  "publicActionsSummary": "Earlier public actions",
+  "publicActionsEmpty": "No other actions yet this round.",
+  "previous": "Previous",
+  "next": "Next",
+  "scope": "Reviewed with the information available at each decision · Ranges are assumptions, and winning or losing doesn't decide whether a choice was good.",
+  "methodSummary": "How the analysis works",
+  "methodParagraphs": [
+   "Only the hole cards, community cards, public actions, and stacks at the moment of each decision are used. Opponents' hidden cards, later cards, and the final winners play no part in grading decisions.",
+   "Required equity = effective call cost ÷ the pot you can win after calling. The Main Pot and Side Pots are estimated separately by eligibility, and uncalled refunds don't count as winnings.",
+   "The \"two-range estimate\" comes from sampling a random range and a stronger range for whoever bet or raised. These range assumptions are not the opponents' actual hands, and they are not an error interval. Later betting, fold rates, and potential winnings are not fully modeled. The analysis accounts for hand type, kicker, draws, position, board texture, number of players, and betting pressure. Direct completion cards are not guaranteed winning outs; only the chance of hitting on the next card is shown, because seeing both the turn and the river from the flop usually costs more than one payment. Heads-up on the river, every legal hole-card combo is enumerated; everything else uses fixed-seed sampling. Enumeration removes sampling error but not the error in the range assumptions. Candidate bet sizes are practice lines, not a GTO solution."
+  ],
+  "methodReferencesLabel": "References:",
+  "methodReferences": [
+   [
+    "Pot Odds",
+    "https://www.pokerstars.com/poker/learn/lesson/pot-odds/"
+   ],
+   [
+    "Starting Hands and Position",
+    "https://www.pokerstars.com/poker/learn/lesson/poker-starting-hands/"
+   ]
+  ],
+  "methodClosingParagraphs": [
+   "The candidate action simulation samples the unknown cards from the position at the time and plays the hand out with the rules engine, including further bets, folds, side pots, and refunds. Your later decisions use a balanced simulated strategy, opponents keep their public styles, and each simulated decision uses 8 equity samples. It compares chip results under these strategies, not the value of an optimal follow-up strategy, and sampling error doesn't cover range or model errors.",
+   "Opponent explanations read the actual decision records after settlement and show the price, range, mood, and random branches each bot used at the time. These private records never feed into grading your decisions."
+  ],
+  "backToTable": "Back to Table",
+  "oppEmpty": "No bot decision records for this hand. Reasons are never invented for actions that can't be reconstructed; the next hand will record the actual decisions.",
+  "oppIntro": "Step through how each bot decided at the time. Hole cards enter this panel only after the hand ends; your own decision ratings still use only the public information at the time.",
+  "oppFilterLabel": "Show opponent",
+  "oppFilterAll": "All Opponents",
+  "oppTimelineA11y": "Opponent decision timeline",
+  "oppTimelineTitle": "What Opponents Actually Did",
+  "oppRecordStatus": "Actual decision record",
+  "oppEvidenceHeading": "What it actually used",
+  "oppBranchesSummary": "Show the actual random branches (0–1 rolls)",
+  "oppBranchesEmpty": "No extra random branches on this step."
+ },
+ "templates": [
+  {
+   "fn": "title",
+   "args": [
+    12
+   ],
+   "result": "Hand #12 · Review"
+  },
+  {
+   "fn": "change",
+   "args": [
+    -150
+   ],
+   "result": "-150 chips"
+  },
+  {
+   "fn": "change",
+   "args": [
+    1200
+   ],
+   "result": "+1,200 chips"
+  },
+  {
+   "fn": "change",
+   "args": [
+    0
+   ],
+   "result": "0 chips"
+  },
+  {
+   "fn": "stateProgress",
+   "args": [
+    1,
+    3
+   ],
+   "result": "Analyzing decision 1 of 3…"
+  },
+  {
+   "fn": "actionCount",
+   "args": [
+    1
+   ],
+   "result": "1 action"
+  },
+  {
+   "fn": "actionCount",
+   "args": [
+    4
+   ],
+   "result": "4 actions"
+  },
+  {
+   "fn": "detailTitle",
+   "args": [
+    2,
+    "Flop"
+   ],
+   "result": "Step 2 · Flop"
+  },
+  {
+   "fn": "simCaption",
+   "args": [
+    180
+   ],
+   "result": "180 hands simulated per action and range · Net chip change from this decision on"
+  },
+  {
+   "fn": "simMargin",
+   "args": [
+    1213.6
+   ],
+   "result": "≈ ±1,214"
+  },
+  {
+   "fn": "modelEnumeration",
+   "args": [
+    990
+   ],
+   "result": "River heads-up: all 990 legal opponent hole-card combos were enumerated; there's no sampling error across combos, but the real range is still unknown."
+  },
+  {
+   "fn": "modelSampling",
+   "args": [
+    180,
+    12
+   ],
+   "result": "180 samples per range, with a conservative sampling-error band of about ±12 percentage points; this isn't the error in the opponent's real range."
+  },
+  {
+   "fn": "modelEquity",
+   "args": [
+    "41%",
+    "35%"
+   ],
+   "result": "Random / action-weighted equity: 41% / 35%. The gap between the two ranges is not a confidence interval."
+  },
+  {
+   "fn": "equityAbout",
+   "args": [
+    "34%"
+   ],
+   "result": "≈34%"
+  },
+  {
+   "fn": "stepPosition",
+   "args": [
+    2,
+    5
+   ],
+   "result": "2 / 5"
+  },
+  {
+   "fn": "heroStepA11y",
+   "args": [
+    1,
+    "Preflop · UTG",
+    "Fold",
+    "Needs Work"
+   ],
+   "result": "Step 1, Preflop · UTG, Fold, Needs Work"
+  },
+  {
+   "fn": "oppStepA11y",
+   "args": [
+    7,
+    "Mia · Flop",
+    "Call 50",
+    "Steady Pro"
+   ],
+   "result": "Public action #7, Mia · Flop, Call 50, Steady Pro"
+  },
+  {
+   "fn": "simCellA11y",
+   "args": [
+    "Call 50",
+    "Random Range",
+    "+12",
+    "≈ ±40"
+   ],
+   "result": "Call 50, Random Range: +12 chips, ≈ ±40"
+  },
+  {
+   "fn": "oppHoleLabel",
+   "args": [
+    "Mia"
+   ],
+   "result": "Mia's hole cards at the time"
+  },
+  {
+   "fn": "oppChoiceLabel",
+   "args": [
+    "one pair"
+   ],
+   "result": "It chose · one pair"
+  },
+  {
+   "fn": "oppBranch",
+   "args": [
+    0.1234,
+    0.125,
+    true
+   ],
+   "result": "0.123 / threshold 12.5% · Hit"
+  },
+  {
+   "fn": "oppBranch",
+   "args": [
+    0.5,
+    0.3,
+    false
+   ],
+   "result": "0.500 / threshold 30.0% · Miss"
+  },
+  {
+   "fn": "oppPublicAction",
+   "args": [
+    7
+   ],
+   "result": "Public action #7"
+  }
+ ],
+ "cases": [
+  {
+   "name": "review hand 1 · idle",
+   "source": "hands",
+   "input": "review hand 1: 5 seats, bots opponents, hero call",
+   "panel": "hero",
+   "state": {
+    "status": "idle",
+    "progress": 0,
+    "analyzed": false,
+    "selected": 0
+   },
+   "hero": {
+    "title": "Hand #1 · Review",
+    "change": "-50 chips",
+    "context": "You folded this hand",
+    "stateText": "Preparing this hand's decision snapshots…",
+    "running": false,
+    "progress": 0,
+    "total": 2,
+    "summaryTitle": "Back to the decisions as they were",
+    "priorityButton": null,
+    "priorityIndex": null,
+    "retryVisible": false,
+    "stepCount": "2 actions",
+    "timeline": [
+     {
+      "number": "1",
+      "meta": "Preflop · UTG",
+      "action": "Call 50",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": true,
+      "a11y": "Step 1, Preflop · UTG, Call 50, Pending"
+     },
+     {
+      "number": "2",
+      "meta": "Preflop · UTG",
+      "action": "Fold",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Step 2, Preflop · UTG, Fold, Pending"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Step 1 · Preflop",
+     "statusText": "Analyzing",
+     "tone": "pending",
+     "hole": [
+      "2-14",
+      "1-7"
+     ],
+     "board": [],
+     "meta": [
+      [
+       "Position",
+       "UTG"
+      ],
+      [
+       "Pot at the time",
+       "75"
+      ],
+      [
+       "Stack remaining",
+       "5,000"
+      ]
+     ],
+     "yourChoice": "Call 50",
+     "suggestion": "Comparing available actions…",
+     "routes": [],
+     "simulation": null,
+     "simulationNote": "Simulating each legal action and the rest of the hand…",
+     "decisionTitle": "Analysis based on what you knew then",
+     "reason": "Uses your hole cards, the community cards, public actions, and stacks at the time, never opponents' hidden cards or cards dealt later.",
+     "evidence": [],
+     "confidence": "Waiting for analysis",
+     "lesson": "Judge the decision separately from the result; a specific practice focus appears when the review is done.",
+     "plan": "The follow-up plan appears when analysis finishes.",
+     "metrics": [
+      [
+       "Equity needed to call",
+       "…"
+      ],
+      [
+       "Two-range estimate",
+       "—"
+      ],
+      [
+       "Winnable after calling",
+       "…"
+      ]
+     ],
+     "modelNote": null,
+     "priceNote": "The price is only a guide; later bets, other players' actions, and potential winnings aren't included.",
+     "publicActions": [],
+     "publicActionsEmpty": "No other actions yet this round.",
+     "position": "1 / 2",
+     "canPrevious": false,
+     "canNext": true
+    }
+   }
+  },
+  {
+   "name": "review hand 1 · running",
+   "source": "hands",
+   "input": "review hand 1: 5 seats, bots opponents, hero call",
+   "panel": "hero",
+   "state": {
+    "status": "running",
+    "progress": 1,
+    "analyzed": false,
+    "selected": 1
+   },
+   "hero": {
+    "title": "Hand #1 · Review",
+    "change": "-50 chips",
+    "context": "You folded this hand",
+    "stateText": "Analyzing decision 1 of 2…",
+    "running": true,
+    "progress": 1,
+    "total": 2,
+    "summaryTitle": "Back to the decisions as they were",
+    "priorityButton": null,
+    "priorityIndex": null,
+    "retryVisible": false,
+    "stepCount": "2 actions",
+    "timeline": [
+     {
+      "number": "1",
+      "meta": "Preflop · UTG",
+      "action": "Call 50",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Step 1, Preflop · UTG, Call 50, Pending"
+     },
+     {
+      "number": "2",
+      "meta": "Preflop · UTG",
+      "action": "Fold",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": true,
+      "a11y": "Step 2, Preflop · UTG, Fold, Pending"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Step 2 · Preflop",
+     "statusText": "Analyzing",
+     "tone": "pending",
+     "hole": [
+      "2-14",
+      "1-7"
+     ],
+     "board": [],
+     "meta": [
+      [
+       "Position",
+       "UTG"
+      ],
+      [
+       "Pot at the time",
+       "403"
+      ],
+      [
+       "Stack remaining",
+       "4,950"
+      ]
+     ],
+     "yourChoice": "Fold",
+     "suggestion": "Comparing available actions…",
+     "routes": [],
+     "simulation": null,
+     "simulationNote": "Simulating each legal action and the rest of the hand…",
+     "decisionTitle": "Analysis based on what you knew then",
+     "reason": "Uses your hole cards, the community cards, public actions, and stacks at the time, never opponents' hidden cards or cards dealt later.",
+     "evidence": [],
+     "confidence": "Waiting for analysis",
+     "lesson": "Judge the decision separately from the result; a specific practice focus appears when the review is done.",
+     "plan": "The follow-up plan appears when analysis finishes.",
+     "metrics": [
+      [
+       "Equity needed to call",
+       "…"
+      ],
+      [
+       "Two-range estimate",
+       "—"
+      ],
+      [
+       "Winnable after calling",
+       "…"
+      ]
+     ],
+     "modelNote": null,
+     "priceNote": "The price is only a guide; later bets, other players' actions, and potential winnings aren't included.",
+     "publicActions": [
+      [
+       "You",
+       "Call 50"
+      ],
+      [
+       "Mia",
+       "Fold"
+      ],
+      [
+       "Alex",
+       "2-bet open to 175"
+      ],
+      [
+       "River",
+       "Call 103"
+      ],
+      [
+       "Kai",
+       "Fold"
+      ]
+     ],
+     "publicActionsEmpty": null,
+     "position": "2 / 2",
+     "canPrevious": true,
+     "canNext": false
+    }
+   }
+  },
+  {
+   "name": "review hand 1 · error",
+   "source": "hands",
+   "input": "review hand 1: 5 seats, bots opponents, hero call",
+   "panel": "hero",
+   "state": {
+    "status": "error",
+    "progress": 1,
+    "analyzed": false,
+    "selected": 0
+   },
+   "hero": {
+    "title": "Hand #1 · Review",
+    "change": "-50 chips",
+    "context": "You folded this hand",
+    "stateText": "Analysis didn't finish. You can try again.",
+    "running": false,
+    "progress": 1,
+    "total": 2,
+    "summaryTitle": "Back to the decisions as they were",
+    "priorityButton": null,
+    "priorityIndex": null,
+    "retryVisible": true,
+    "stepCount": "2 actions",
+    "timeline": [
+     {
+      "number": "1",
+      "meta": "Preflop · UTG",
+      "action": "Call 50",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": true,
+      "a11y": "Step 1, Preflop · UTG, Call 50, Pending"
+     },
+     {
+      "number": "2",
+      "meta": "Preflop · UTG",
+      "action": "Fold",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Step 2, Preflop · UTG, Fold, Pending"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Step 1 · Preflop",
+     "statusText": "Analyzing",
+     "tone": "pending",
+     "hole": [
+      "2-14",
+      "1-7"
+     ],
+     "board": [],
+     "meta": [
+      [
+       "Position",
+       "UTG"
+      ],
+      [
+       "Pot at the time",
+       "75"
+      ],
+      [
+       "Stack remaining",
+       "5,000"
+      ]
+     ],
+     "yourChoice": "Call 50",
+     "suggestion": "Comparing available actions…",
+     "routes": [],
+     "simulation": null,
+     "simulationNote": "Simulating each legal action and the rest of the hand…",
+     "decisionTitle": "Analysis based on what you knew then",
+     "reason": "Uses your hole cards, the community cards, public actions, and stacks at the time, never opponents' hidden cards or cards dealt later.",
+     "evidence": [],
+     "confidence": "Waiting for analysis",
+     "lesson": "Judge the decision separately from the result; a specific practice focus appears when the review is done.",
+     "plan": "The follow-up plan appears when analysis finishes.",
+     "metrics": [
+      [
+       "Equity needed to call",
+       "…"
+      ],
+      [
+       "Two-range estimate",
+       "—"
+      ],
+      [
+       "Winnable after calling",
+       "…"
+      ]
+     ],
+     "modelNote": null,
+     "priceNote": "The price is only a guide; later bets, other players' actions, and potential winnings aren't included.",
+     "publicActions": [],
+     "publicActionsEmpty": "No other actions yet this round.",
+     "position": "1 / 2",
+     "canPrevious": false,
+     "canNext": true
+    }
+   }
+  },
+  {
+   "name": "review hand 1 · done, step 1",
+   "source": "hands",
+   "input": "review hand 1: 5 seats, bots opponents, hero call",
+   "panel": "hero",
+   "state": {
+    "status": "done",
+    "progress": 2,
+    "analyzed": true,
+    "selected": 0
+   },
+   "hero": {
+    "title": "Hand #1 · Review",
+    "change": "-50 chips",
+    "context": "You folded this hand",
+    "stateText": "2 decisions, 50 chips put in. Start with step 1 (Preflop): Entering with a weak hand from early position lacks positional support.",
+    "running": false,
+    "progress": 2,
+    "total": 2,
+    "summaryTitle": "Check first: Entering with a weak hand from early position lacks positional support",
+    "priorityButton": "Go to the priority decision",
+    "priorityIndex": 0,
+    "retryVisible": false,
+    "stepCount": "2 actions",
+    "timeline": [
+     {
+      "number": "1",
+      "meta": "Preflop · UTG",
+      "action": "Call 50",
+      "chip": "Needs Work",
+      "tone": "attention",
+      "selected": true,
+      "a11y": "Step 1, Preflop · UTG, Call 50, Needs Work"
+     },
+     {
+      "number": "2",
+      "meta": "Preflop · UTG",
+      "action": "Fold",
+      "chip": "Well Reasoned",
+      "tone": "sound",
+      "selected": false,
+      "a11y": "Step 2, Preflop · UTG, Fold, Well Reasoned"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Step 1 · Preflop",
+     "statusText": "Needs Work",
+     "tone": "attention",
+     "hole": [
+      "2-14",
+      "1-7"
+     ],
+     "board": [],
+     "meta": [
+      [
+       "Position",
+       "UTG"
+      ],
+      [
+       "Pot at the time",
+       "75"
+      ],
+      [
+       "Stack remaining",
+       "5,000"
+      ]
+     ],
+     "yourChoice": "Call 50",
+     "suggestion": "Fold",
+     "routes": [
+      [
+       "When the main line holds",
+       "Fold",
+       "Against large sizes, multiple players continuing, or strong ranges with few bluffs, put in as little new money as possible.",
+       "Gives up current equity to avoid weak-kicker trouble and later pressure; chips already invested are not a reason to continue."
+      ],
+      [
+       "Conditional alternative",
+       "Call 50",
+       "Consider it only against a small size and wide range, with position or a big-blind discount; don't assume it by default.",
+       "Keeps showdown equity, but the risk of domination by stronger Ax and of facing later bets remains."
+      ]
+     ],
+     "simulation": {
+      "heading": "Candidate Action Simulation",
+      "stability": "Ranges or sampling error could change the order; no single best action has been shown.",
+      "stable": false,
+      "caption": "12 hands simulated per action and range · Net chip change from this decision on",
+      "columns": [
+       "Action",
+       "Random Range",
+       "Action-Weighted"
+      ],
+      "rows": [
+       {
+        "label": "Fold",
+        "cells": [
+         [
+          "0",
+          "≈ ±0",
+          "Fold, Random Range: 0 chips, ≈ ±0"
+         ],
+         [
+          "0",
+          "≈ ±0",
+          "Fold, Action-Weighted: 0 chips, ≈ ±0"
+         ]
+        ]
+       },
+       {
+        "label": "Call 50",
+        "cells": [
+         [
+          "-274",
+          "≈ ±1,506",
+          "Call 50, Random Range: -274 chips, ≈ ±1,506"
+         ],
+         [
+          "-81",
+          "≈ ±1,029",
+          "Call 50, Action-Weighted: -81 chips, ≈ ±1,029"
+         ]
+        ]
+       },
+       {
+        "label": "2-bet open to 100",
+        "cells": [
+         [
+          "+37",
+          "≈ ±1,150",
+          "2-bet open to 100, Random Range: +37 chips, ≈ ±1,150"
+         ],
+         [
+          "-8",
+          "≈ ±1,742",
+          "2-bet open to 100, Action-Weighted: -8 chips, ≈ ±1,742"
+         ]
+        ]
+       },
+       {
+        "label": "2-bet open to 150",
+        "cells": [
+         [
+          "+85",
+          "≈ ±1,052",
+          "2-bet open to 150, Random Range: +85 chips, ≈ ±1,052"
+         ],
+         [
+          "+645",
+          "≈ ±1,306",
+          "2-bet open to 150, Action-Weighted: +645 chips, ≈ ±1,306"
+         ]
+        ]
+       }
+      ],
+      "detailsSummary": "How the simulation handles later action",
+      "details": [
+       "Unknown cards are sampled from the position at the time, and each hand is played out with the opponents' public styles; your later decisions use the balanced bot strategy, with 8 equity samples per decision. The figures estimate net chip change under this simulated strategy, treat chips already invested as sunk, and include split pots, refunds, and later betting. The error shown is approximate sampling error and does not cover errors in the range or strategy model. This is not GTO or a real player's optimal EV.",
+       "Results include immediate folds, calls, later raises, and showdowns; the real hidden hole cards, the actual card order that followed, and the final winners are never used. The two range results are not a range of optimal returns."
+      ]
+     },
+     "simulationNote": null,
+     "decisionTitle": "Entering with a weak hand from early position lacks positional support",
+     "reason": "You hold A/7 offsuit in UTG and need 50 to continue; 4 players can still act. Early position lacks a positional advantage, and marginal offsuit hands have a harder time realizing equity.",
+     "evidence": [
+      "Position UTG · 4 opponents in the hand",
+      "Hand at the time: A/7 offsuit",
+      "Preflop raises: 0 · Still to act: 4",
+      "Effective stack ≈ 5,000 · SPR 66.7",
+      "Effective call cost 50; after calling you can win 125; break-even equity is about 40%.",
+      "Preflop situation: Unopened pot · Limpers: 0 · An ace blocker isn't an edge once called"
+     ],
+     "confidence": "Depends on range assumptions",
+     "lesson": "Opening, flatting an open, and defending against a re-raise need different ranges; don't judge by starting-hand tier alone.",
+     "plan": "If you later face a very small raise in the big blind, judge it again on price; \"weak hand\" doesn't automatically mean \"must fold.\"",
+     "metrics": [
+      [
+       "Equity needed to call",
+       "40%"
+      ],
+      [
+       "Two-range estimate",
+       "47%–60%"
+      ],
+      [
+       "Winnable after calling",
+       "125"
+      ]
+     ],
+     "modelNote": "60 samples per range, with a conservative sampling-error band of about ±20 percentage points; this isn't the error in the opponent's real range. Random / action-weighted equity: 60% / 47%. The gap between the two ranges is not a confidence interval.",
+     "priceNote": "Estimated separately for each pot you're eligible for; side pots beyond your all-in amount are excluded.",
+     "publicActions": [],
+     "publicActionsEmpty": "No other actions yet this round.",
+     "position": "1 / 2",
+     "canPrevious": false,
+     "canNext": true
+    }
+   }
+  },
+  {
+   "name": "review hand 1 · done, step 2",
+   "source": "hands",
+   "input": "review hand 1: 5 seats, bots opponents, hero call",
+   "panel": "hero",
+   "state": {
+    "status": "done",
+    "progress": 2,
+    "analyzed": true,
+    "selected": 1
+   },
+   "hero": {
+    "title": "Hand #1 · Review",
+    "change": "-50 chips",
+    "context": "You folded this hand",
+    "stateText": "2 decisions, 50 chips put in. Start with step 1 (Preflop): Entering with a weak hand from early position lacks positional support.",
+    "running": false,
+    "progress": 2,
+    "total": 2,
+    "summaryTitle": "Check first: Entering with a weak hand from early position lacks positional support",
+    "priorityButton": "Go to the priority decision",
+    "priorityIndex": 0,
+    "retryVisible": false,
+    "stepCount": "2 actions",
+    "timeline": [
+     {
+      "number": "1",
+      "meta": "Preflop · UTG",
+      "action": "Call 50",
+      "chip": "Needs Work",
+      "tone": "attention",
+      "selected": false,
+      "a11y": "Step 1, Preflop · UTG, Call 50, Needs Work"
+     },
+     {
+      "number": "2",
+      "meta": "Preflop · UTG",
+      "action": "Fold",
+      "chip": "Well Reasoned",
+      "tone": "sound",
+      "selected": true,
+      "a11y": "Step 2, Preflop · UTG, Fold, Well Reasoned"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Step 2 · Preflop",
+     "statusText": "Well Reasoned",
+     "tone": "sound",
+     "hole": [
+      "2-14",
+      "1-7"
+     ],
+     "board": [],
+     "meta": [
+      [
+       "Position",
+       "UTG"
+      ],
+      [
+       "Pot at the time",
+       "403"
+      ],
+      [
+       "Stack remaining",
+       "4,950"
+      ]
+     ],
+     "yourChoice": "Fold",
+     "suggestion": "Keep this line; adjust to opponent ranges",
+     "routes": [
+      [
+       "When the main line holds",
+       "Fold",
+       "The current price isn't supported by equity, or the equity is hard to realize.",
+       "Stops adding chips now; good cards that come later don't make the fold wrong."
+      ],
+      [
+       "Conditional alternative",
+       "Call 125",
+       "Only when a wider range, enough bluffs, or a better price would give an equity margin.",
+       "Tests range sensitivity; it doesn't mean the call is already justified."
+      ]
+     ],
+     "simulation": {
+      "heading": "Candidate Action Simulation",
+      "stability": "Ranges or sampling error could change the order; no single best action has been shown.",
+      "stable": false,
+      "caption": "12 hands simulated per action and range · Net chip change from this decision on",
+      "columns": [
+       "Action",
+       "Random Range",
+       "Action-Weighted"
+      ],
+      "rows": [
+       {
+        "label": "Fold",
+        "cells": [
+         [
+          "0",
+          "≈ ±0",
+          "Fold, Random Range: 0 chips, ≈ ±0"
+         ],
+         [
+          "0",
+          "≈ ±0",
+          "Fold, Action-Weighted: 0 chips, ≈ ±0"
+         ]
+        ]
+       },
+       {
+        "label": "Call 125",
+        "cells": [
+         [
+          "+86",
+          "≈ ±169",
+          "Call 125, Random Range: +86 chips, ≈ ±169"
+         ],
+         [
+          "-386",
+          "≈ ±839",
+          "Call 125, Action-Weighted: -386 chips, ≈ ±839"
+         ]
+        ]
+       },
+       {
+        "label": "3-bet raise to 450",
+        "cells": [
+         [
+          "+326",
+          "≈ ±228",
+          "3-bet raise to 450, Random Range: +326 chips, ≈ ±228"
+         ],
+         [
+          "+44",
+          "≈ ±184",
+          "3-bet raise to 450, Action-Weighted: +44 chips, ≈ ±184"
+         ]
+        ]
+       },
+       {
+        "label": "3-bet raise to 625",
+        "cells": [
+         [
+          "+361",
+          "≈ ±290",
+          "3-bet raise to 625, Random Range: +361 chips, ≈ ±290"
+         ],
+         [
+          "+15",
+          "≈ ±230",
+          "3-bet raise to 625, Action-Weighted: +15 chips, ≈ ±230"
+         ]
+        ]
+       }
+      ],
+      "detailsSummary": "How the simulation handles later action",
+      "details": [
+       "Unknown cards are sampled from the position at the time, and each hand is played out with the opponents' public styles; your later decisions use the balanced bot strategy, with 8 equity samples per decision. The figures estimate net chip change under this simulated strategy, treat chips already invested as sunk, and include split pots, refunds, and later betting. The error shown is approximate sampling error and does not cover errors in the range or strategy model. This is not GTO or a real player's optimal EV.",
+       "Results include immediate folds, calls, later raises, and showdowns; the real hidden hole cards, the actual card order that followed, and the final winners are never used. The two range results are not a range of optimal returns."
+      ]
+     },
+     "simulationNote": null,
+     "decisionTitle": "Recheck this fold against the price and risk at the time",
+     "reason": "You held A/7 offsuit in UTG and needed 125 more. Effective call cost 125; after calling you can win 528; break-even equity is about 24%. No direct straight or flush draw was detected.",
+     "evidence": [
+      "Position UTG · 2 opponents in the hand",
+      "Hand at the time: A/7 offsuit",
+      "Preflop raises: 1 · Still to act: 0",
+      "Effective stack ≈ 4,825 · SPR 12.0",
+      "Effective call cost 125; after calling you can win 528; break-even equity is about 24%.",
+      "Preflop situation: Open with callers · Limpers: 0 · An ace blocker isn't an edge once called"
+     ],
+     "confidence": "Sensitive to ranges and later strategy; no single best line shown",
+     "lesson": "Base your exit conditions on the current price, hand strength, and position; chips already in the pot are no reason you must continue.",
+     "plan": "When replaying, you can compare another line, but good cards that come later don't prove you should have called.",
+     "metrics": [
+      [
+       "Equity needed to call",
+       "24%"
+      ],
+      [
+       "Two-range estimate",
+       "44%–48%"
+      ],
+      [
+       "Winnable after calling",
+       "528"
+      ]
+     ],
+     "modelNote": "60 samples per range, with a conservative sampling-error band of about ±20 percentage points; this isn't the error in the opponent's real range. Random / action-weighted equity: 44% / 48%. The gap between the two ranges is not a confidence interval.",
+     "priceNote": "Estimated separately for each pot you're eligible for; side pots beyond your all-in amount are excluded.",
+     "publicActions": [
+      [
+       "You",
+       "Call 50"
+      ],
+      [
+       "Mia",
+       "Fold"
+      ],
+      [
+       "Alex",
+       "2-bet open to 175"
+      ],
+      [
+       "River",
+       "Call 103"
+      ],
+      [
+       "Kai",
+       "Fold"
+      ]
+     ],
+     "publicActionsEmpty": null,
+     "position": "2 / 2",
+     "canPrevious": true,
+     "canNext": false
+    }
+   }
+  },
+  {
+   "name": "review hand 1 · opponents, all, first",
+   "source": "hands",
+   "input": "review hand 1: 5 seats, bots opponents, hero call",
+   "panel": "opponents",
+   "state": {
+    "opponentFilter": null,
+    "opponentSelected": 0
+   },
+   "opponents": {
+    "filters": [
+     {
+      "seat": null,
+      "label": "All Opponents",
+      "selected": true
+     },
+     {
+      "seat": 1,
+      "label": "Mia",
+      "selected": false
+     },
+     {
+      "seat": 2,
+      "label": "Alex",
+      "selected": false
+     },
+     {
+      "seat": 3,
+      "label": "River",
+      "selected": false
+     },
+     {
+      "seat": 4,
+      "label": "Kai",
+      "selected": false
+     }
+    ],
+    "count": "4 actions",
+    "timeline": [
+     {
+      "number": "2",
+      "meta": "Mia · Preflop",
+      "action": "Fold",
+      "chip": "Daniel Cates",
+      "tone": "pending",
+      "selected": true,
+      "a11y": "Public action #2, Mia · Preflop, Fold, Daniel Cates"
+     },
+     {
+      "number": "3",
+      "meta": "Alex · Preflop",
+      "action": "2-bet open to 175",
+      "chip": "ST Wang",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #3, Alex · Preflop, 2-bet open to 175, ST Wang"
+     },
+     {
+      "number": "4",
+      "meta": "River · Preflop",
+      "action": "All-In Call 103",
+      "chip": "Daniel Cates",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #4, River · Preflop, All-In Call 103, Daniel Cates"
+     },
+     {
+      "number": "5",
+      "meta": "Kai · Preflop",
+      "action": "Fold",
+      "chip": "Peter · HCL",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #5, Kai · Preflop, Fold, Peter · HCL"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Mia · Preflop",
+     "statusText": "Actual decision record",
+     "tone": "sound",
+     "holeLabel": "Mia's hole cards at the time",
+     "hole": [
+      "2-9",
+      "1-8"
+     ],
+     "board": [],
+     "meta": [
+      [
+       "Position",
+       "CO"
+      ],
+      [
+       "Pot at the time",
+       "125"
+      ],
+      [
+       "Stack remaining",
+       "469"
+      ]
+     ],
+     "choiceLabel": "It chose · Preflop hand",
+     "choice": "Fold",
+     "explanationTitle": "Estimated equity below the calling threshold",
+     "explanation": "Actually executed: estimated equity below the calling threshold. Cards dealt later were not used to decide this step.",
+     "profileName": "Daniel Cates",
+     "reasons": [
+      "Starting-hand rank: about top 49.6%; this style, position, and the public raising line allow the top 58.0%. It was inside that range. The ranking is a starting-hand heuristic, not a win rate.",
+      "It faced 4 opponents still in, needed 50 to call, could win 175 in the model, and needed 28.6% equity to call.",
+      "Using only its own cards and the board, it sampled random opponent ranges 28 times: raw estimate 25.7%, judgment noise +1.7%, equity used 27.4%. Calling-tendency shift +2.9%, compared value 30.3%; the usual threshold, including a 2-point buffer, was 30.6%.",
+      "Simulated mood: Chasing Losses. Trigger: Lost at least 25 BB net in a single hand. Base / actual looseness 65 / 79, aggression 82 / 94, calling 64 / 79; whether this state changed the action still depends on the branches above."
+     ],
+     "warning": "This is the decision record the simulator actually used at the time. Equity is a small-sample estimate against a random range; it doesn't fully model the opponent's continuing range, equity realization, or future strategy. It is not a real pro's thinking and not proof of optimal play.",
+     "branches": [
+      [
+       "Leeway roll when equity is short",
+       "0.371 / threshold 10.9% · Miss"
+      ]
+     ],
+     "branchesEmpty": null,
+     "position": "Public action #2",
+     "canPrevious": false,
+     "canNext": true
+    }
+   }
+  },
+  {
+   "name": "review hand 1 · opponents, all, last",
+   "source": "hands",
+   "input": "review hand 1: 5 seats, bots opponents, hero call",
+   "panel": "opponents",
+   "state": {
+    "opponentFilter": null,
+    "opponentSelected": 3
+   },
+   "opponents": {
+    "filters": [
+     {
+      "seat": null,
+      "label": "All Opponents",
+      "selected": true
+     },
+     {
+      "seat": 1,
+      "label": "Mia",
+      "selected": false
+     },
+     {
+      "seat": 2,
+      "label": "Alex",
+      "selected": false
+     },
+     {
+      "seat": 3,
+      "label": "River",
+      "selected": false
+     },
+     {
+      "seat": 4,
+      "label": "Kai",
+      "selected": false
+     }
+    ],
+    "count": "4 actions",
+    "timeline": [
+     {
+      "number": "2",
+      "meta": "Mia · Preflop",
+      "action": "Fold",
+      "chip": "Daniel Cates",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #2, Mia · Preflop, Fold, Daniel Cates"
+     },
+     {
+      "number": "3",
+      "meta": "Alex · Preflop",
+      "action": "2-bet open to 175",
+      "chip": "ST Wang",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #3, Alex · Preflop, 2-bet open to 175, ST Wang"
+     },
+     {
+      "number": "4",
+      "meta": "River · Preflop",
+      "action": "All-In Call 103",
+      "chip": "Daniel Cates",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #4, River · Preflop, All-In Call 103, Daniel Cates"
+     },
+     {
+      "number": "5",
+      "meta": "Kai · Preflop",
+      "action": "Fold",
+      "chip": "Peter · HCL",
+      "tone": "pending",
+      "selected": true,
+      "a11y": "Public action #5, Kai · Preflop, Fold, Peter · HCL"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Kai · Preflop",
+     "statusText": "Actual decision record",
+     "tone": "sound",
+     "holeLabel": "Kai's hole cards at the time",
+     "hole": [
+      "2-4",
+      "0-11"
+     ],
+     "board": [],
+     "meta": [
+      [
+       "Position",
+       "BB"
+      ],
+      [
+       "Pot at the time",
+       "403"
+      ],
+      [
+       "Stack remaining",
+       "4,950"
+      ]
+     ],
+     "choiceLabel": "It chose · Preflop hand",
+     "choice": "Fold",
+     "explanationTitle": "Hand outside this defending range",
+     "explanation": "Actually executed: hand outside this defending range. Cards dealt later were not used to decide this step.",
+     "profileName": "Peter · HCL",
+     "reasons": [
+      "Starting-hand rank: about top 62.3%; this style, position, and the public raising line allow the top 39.0%. It was outside that range. The ranking is a starting-hand heuristic, not a win rate.",
+      "It faced 3 opponents still in, needed 125 to call, could win 528 in the model, and needed 23.7% equity to call.",
+      "Using only its own cards and the board, it sampled random opponent ranges 28 times: raw estimate 19.6%, judgment noise +2.9%, equity used 22.6%. Calling-tendency shift +3.4%, compared value 26.0%; the usual threshold, including a 2-point buffer, was 25.7%.",
+      "No mood shift this time; base style settings were used."
+     ],
+     "warning": "This is the decision record the simulator actually used at the time. Equity is a small-sample estimate against a random range; it doesn't fully model the opponent's continuing range, equity realization, or future strategy. It is not a real pro's thinking and not proof of optimal play.",
+     "branches": [
+      [
+       "Leeway roll when outside range",
+       "0.055 / threshold 5.5% · Miss"
+      ]
+     ],
+     "branchesEmpty": null,
+     "position": "Public action #5",
+     "canPrevious": true,
+     "canNext": false
+    }
+   }
+  },
+  {
+   "name": "review hand 1 · opponents, seat 4, last",
+   "source": "hands",
+   "input": "review hand 1: 5 seats, bots opponents, hero call",
+   "panel": "opponents",
+   "state": {
+    "opponentFilter": 4,
+    "opponentSelected": 0
+   },
+   "opponents": {
+    "filters": [
+     {
+      "seat": null,
+      "label": "All Opponents",
+      "selected": false
+     },
+     {
+      "seat": 1,
+      "label": "Mia",
+      "selected": false
+     },
+     {
+      "seat": 2,
+      "label": "Alex",
+      "selected": false
+     },
+     {
+      "seat": 3,
+      "label": "River",
+      "selected": false
+     },
+     {
+      "seat": 4,
+      "label": "Kai",
+      "selected": true
+     }
+    ],
+    "count": "1 action",
+    "timeline": [
+     {
+      "number": "5",
+      "meta": "Kai · Preflop",
+      "action": "Fold",
+      "chip": "Peter · HCL",
+      "tone": "pending",
+      "selected": true,
+      "a11y": "Public action #5, Kai · Preflop, Fold, Peter · HCL"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Kai · Preflop",
+     "statusText": "Actual decision record",
+     "tone": "sound",
+     "holeLabel": "Kai's hole cards at the time",
+     "hole": [
+      "2-4",
+      "0-11"
+     ],
+     "board": [],
+     "meta": [
+      [
+       "Position",
+       "BB"
+      ],
+      [
+       "Pot at the time",
+       "403"
+      ],
+      [
+       "Stack remaining",
+       "4,950"
+      ]
+     ],
+     "choiceLabel": "It chose · Preflop hand",
+     "choice": "Fold",
+     "explanationTitle": "Hand outside this defending range",
+     "explanation": "Actually executed: hand outside this defending range. Cards dealt later were not used to decide this step.",
+     "profileName": "Peter · HCL",
+     "reasons": [
+      "Starting-hand rank: about top 62.3%; this style, position, and the public raising line allow the top 39.0%. It was outside that range. The ranking is a starting-hand heuristic, not a win rate.",
+      "It faced 3 opponents still in, needed 125 to call, could win 528 in the model, and needed 23.7% equity to call.",
+      "Using only its own cards and the board, it sampled random opponent ranges 28 times: raw estimate 19.6%, judgment noise +2.9%, equity used 22.6%. Calling-tendency shift +3.4%, compared value 26.0%; the usual threshold, including a 2-point buffer, was 25.7%.",
+      "No mood shift this time; base style settings were used."
+     ],
+     "warning": "This is the decision record the simulator actually used at the time. Equity is a small-sample estimate against a random range; it doesn't fully model the opponent's continuing range, equity realization, or future strategy. It is not a real pro's thinking and not proof of optimal play.",
+     "branches": [
+      [
+       "Leeway roll when outside range",
+       "0.055 / threshold 5.5% · Miss"
+      ]
+     ],
+     "branchesEmpty": null,
+     "position": "Public action #5",
+     "canPrevious": false,
+     "canNext": false
+    }
+   }
+  },
+  {
+   "name": "review hand 2 · idle",
+   "source": "hands",
+   "input": "review hand 2: 6 seats, mixed opponents, hero call",
+   "panel": "hero",
+   "state": {
+    "status": "idle",
+    "progress": 0,
+    "analyzed": false,
+    "selected": 0
+   },
+   "hero": {
+    "title": "Hand #1 · Review",
+    "change": "+17 chips",
+    "context": "You won the pot",
+    "stateText": "Preparing this hand's decision snapshots…",
+    "running": false,
+    "progress": 0,
+    "total": 2,
+    "summaryTitle": "Back to the decisions as they were",
+    "priorityButton": null,
+    "priorityIndex": null,
+    "retryVisible": false,
+    "stepCount": "2 actions",
+    "timeline": [
+     {
+      "number": "1",
+      "meta": "Preflop · SB",
+      "action": "3-bet raise to 3,477",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": true,
+      "a11y": "Step 1, Preflop · SB, 3-bet raise to 3,477, Pending"
+     },
+     {
+      "number": "2",
+      "meta": "Preflop · SB",
+      "action": "All-In Call 1,523",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Step 2, Preflop · SB, All-In Call 1,523, Pending"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Step 1 · Preflop",
+     "statusText": "Analyzing",
+     "tone": "pending",
+     "hole": [
+      "3-4",
+      "1-8"
+     ],
+     "board": [],
+     "meta": [
+      [
+       "Position",
+       "SB"
+      ],
+      [
+       "Pot at the time",
+       "1,999"
+      ],
+      [
+       "Stack remaining",
+       "4,975"
+      ]
+     ],
+     "yourChoice": "3-bet raise to 3,477",
+     "suggestion": "Comparing available actions…",
+     "routes": [],
+     "simulation": null,
+     "simulationNote": "Simulating each legal action and the rest of the hand…",
+     "decisionTitle": "Analysis based on what you knew then",
+     "reason": "Uses your hole cards, the community cards, public actions, and stacks at the time, never opponents' hidden cards or cards dealt later.",
+     "evidence": [],
+     "confidence": "Waiting for analysis",
+     "lesson": "Judge the decision separately from the result; a specific practice focus appears when the review is done.",
+     "plan": "The follow-up plan appears when analysis finishes.",
+     "metrics": [
+      [
+       "Equity needed to call",
+       "…"
+      ],
+      [
+       "Two-range estimate",
+       "—"
+      ],
+      [
+       "Winnable after calling",
+       "…"
+      ]
+     ],
+     "modelNote": null,
+     "priceNote": "The price is only a guide; later bets, other players' actions, and potential winnings aren't included.",
+     "publicActions": [
+      [
+       "Alex",
+       "2-bet open to 962"
+      ],
+      [
+       "River",
+       "Fold"
+      ],
+      [
+       "Kai",
+       "Call 962"
+      ],
+      [
+       "Luna",
+       "Fold"
+      ]
+     ],
+     "publicActionsEmpty": null,
+     "position": "1 / 2",
+     "canPrevious": false,
+     "canNext": true
+    }
+   }
+  },
+  {
+   "name": "review hand 2 · running",
+   "source": "hands",
+   "input": "review hand 2: 6 seats, mixed opponents, hero call",
+   "panel": "hero",
+   "state": {
+    "status": "running",
+    "progress": 1,
+    "analyzed": false,
+    "selected": 1
+   },
+   "hero": {
+    "title": "Hand #1 · Review",
+    "change": "+17 chips",
+    "context": "You won the pot",
+    "stateText": "Analyzing decision 1 of 2…",
+    "running": true,
+    "progress": 1,
+    "total": 2,
+    "summaryTitle": "Back to the decisions as they were",
+    "priorityButton": null,
+    "priorityIndex": null,
+    "retryVisible": false,
+    "stepCount": "2 actions",
+    "timeline": [
+     {
+      "number": "1",
+      "meta": "Preflop · SB",
+      "action": "3-bet raise to 3,477",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Step 1, Preflop · SB, 3-bet raise to 3,477, Pending"
+     },
+     {
+      "number": "2",
+      "meta": "Preflop · SB",
+      "action": "All-In Call 1,523",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": true,
+      "a11y": "Step 2, Preflop · SB, All-In Call 1,523, Pending"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Step 2 · Preflop",
+     "statusText": "Analyzing",
+     "tone": "pending",
+     "hole": [
+      "3-4",
+      "1-8"
+     ],
+     "board": [],
+     "meta": [
+      [
+       "Position",
+       "SB"
+      ],
+      [
+       "Pot at the time",
+       "14,552"
+      ],
+      [
+       "Stack remaining",
+       "1,523"
+      ]
+     ],
+     "yourChoice": "All-In Call 1,523",
+     "suggestion": "Comparing available actions…",
+     "routes": [],
+     "simulation": null,
+     "simulationNote": "Simulating each legal action and the rest of the hand…",
+     "decisionTitle": "Analysis based on what you knew then",
+     "reason": "Uses your hole cards, the community cards, public actions, and stacks at the time, never opponents' hidden cards or cards dealt later.",
+     "evidence": [],
+     "confidence": "Waiting for analysis",
+     "lesson": "Judge the decision separately from the result; a specific practice focus appears when the review is done.",
+     "plan": "The follow-up plan appears when analysis finishes.",
+     "metrics": [
+      [
+       "Equity needed to call",
+       "…"
+      ],
+      [
+       "Two-range estimate",
+       "—"
+      ],
+      [
+       "Winnable after calling",
+       "…"
+      ]
+     ],
+     "modelNote": null,
+     "priceNote": "The price is only a guide; later bets, other players' actions, and potential winnings aren't included.",
+     "publicActions": [
+      [
+       "Kai",
+       "Call 962"
+      ],
+      [
+       "Luna",
+       "Fold"
+      ],
+      [
+       "You",
+       "3-bet raise to 3,477"
+      ],
+      [
+       "Mia",
+       "Fold"
+      ],
+      [
+       "Alex",
+       "4-bet raise to 6,111"
+      ],
+      [
+       "Kai",
+       "Call 3,952"
+      ]
+     ],
+     "publicActionsEmpty": null,
+     "position": "2 / 2",
+     "canPrevious": true,
+     "canNext": false
+    }
+   }
+  },
+  {
+   "name": "review hand 2 · error",
+   "source": "hands",
+   "input": "review hand 2: 6 seats, mixed opponents, hero call",
+   "panel": "hero",
+   "state": {
+    "status": "error",
+    "progress": 1,
+    "analyzed": false,
+    "selected": 0
+   },
+   "hero": {
+    "title": "Hand #1 · Review",
+    "change": "+17 chips",
+    "context": "You won the pot",
+    "stateText": "Analysis didn't finish. You can try again.",
+    "running": false,
+    "progress": 1,
+    "total": 2,
+    "summaryTitle": "Back to the decisions as they were",
+    "priorityButton": null,
+    "priorityIndex": null,
+    "retryVisible": true,
+    "stepCount": "2 actions",
+    "timeline": [
+     {
+      "number": "1",
+      "meta": "Preflop · SB",
+      "action": "3-bet raise to 3,477",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": true,
+      "a11y": "Step 1, Preflop · SB, 3-bet raise to 3,477, Pending"
+     },
+     {
+      "number": "2",
+      "meta": "Preflop · SB",
+      "action": "All-In Call 1,523",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Step 2, Preflop · SB, All-In Call 1,523, Pending"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Step 1 · Preflop",
+     "statusText": "Analyzing",
+     "tone": "pending",
+     "hole": [
+      "3-4",
+      "1-8"
+     ],
+     "board": [],
+     "meta": [
+      [
+       "Position",
+       "SB"
+      ],
+      [
+       "Pot at the time",
+       "1,999"
+      ],
+      [
+       "Stack remaining",
+       "4,975"
+      ]
+     ],
+     "yourChoice": "3-bet raise to 3,477",
+     "suggestion": "Comparing available actions…",
+     "routes": [],
+     "simulation": null,
+     "simulationNote": "Simulating each legal action and the rest of the hand…",
+     "decisionTitle": "Analysis based on what you knew then",
+     "reason": "Uses your hole cards, the community cards, public actions, and stacks at the time, never opponents' hidden cards or cards dealt later.",
+     "evidence": [],
+     "confidence": "Waiting for analysis",
+     "lesson": "Judge the decision separately from the result; a specific practice focus appears when the review is done.",
+     "plan": "The follow-up plan appears when analysis finishes.",
+     "metrics": [
+      [
+       "Equity needed to call",
+       "…"
+      ],
+      [
+       "Two-range estimate",
+       "—"
+      ],
+      [
+       "Winnable after calling",
+       "…"
+      ]
+     ],
+     "modelNote": null,
+     "priceNote": "The price is only a guide; later bets, other players' actions, and potential winnings aren't included.",
+     "publicActions": [
+      [
+       "Alex",
+       "2-bet open to 962"
+      ],
+      [
+       "River",
+       "Fold"
+      ],
+      [
+       "Kai",
+       "Call 962"
+      ],
+      [
+       "Luna",
+       "Fold"
+      ]
+     ],
+     "publicActionsEmpty": null,
+     "position": "1 / 2",
+     "canPrevious": false,
+     "canNext": true
+    }
+   }
+  },
+  {
+   "name": "review hand 2 · done, step 1",
+   "source": "hands",
+   "input": "review hand 2: 6 seats, mixed opponents, hero call",
+   "panel": "hero",
+   "state": {
+    "status": "done",
+    "progress": 2,
+    "analyzed": true,
+    "selected": 0
+   },
+   "hero": {
+    "title": "Hand #1 · Review",
+    "change": "+17 chips",
+    "context": "You won the pot",
+    "stateText": "2 decisions, 4,975 chips put in. Start with step 2 (Preflop): Defending a weak hand against multiple re-raises lacks support. 1 other issue to look through step by step.",
+    "running": false,
+    "progress": 2,
+    "total": 2,
+    "summaryTitle": "Check first: Defending a weak hand against multiple re-raises lacks support",
+    "priorityButton": "Go to the priority decision",
+    "priorityIndex": 1,
+    "retryVisible": false,
+    "stepCount": "2 actions",
+    "timeline": [
+     {
+      "number": "1",
+      "meta": "Preflop · SB",
+      "action": "3-bet raise to 3,477",
+      "chip": "Worth Discussing",
+      "tone": "consider",
+      "selected": true,
+      "a11y": "Step 1, Preflop · SB, 3-bet raise to 3,477, Worth Discussing"
+     },
+     {
+      "number": "2",
+      "meta": "Preflop · SB",
+      "action": "All-In Call 1,523",
+      "chip": "Needs Work",
+      "tone": "attention",
+      "selected": false,
+      "a11y": "Step 2, Preflop · SB, All-In Call 1,523, Needs Work"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Step 1 · Preflop",
+     "statusText": "Worth Discussing",
+     "tone": "consider",
+     "hole": [
+      "3-4",
+      "1-8"
+     ],
+     "board": [],
+     "meta": [
+      [
+       "Position",
+       "SB"
+      ],
+      [
+       "Pot at the time",
+       "1,999"
+      ],
+      [
+       "Stack remaining",
+       "4,975"
+      ]
+     ],
+     "yourChoice": "3-bet raise to 3,477",
+     "suggestion": "Fold",
+     "routes": [
+      [
+       "When the main line holds",
+       "Fold",
+       "Against large sizes, multiple players continuing, or strong ranges with few bluffs, put in as little new money as possible.",
+       "Gives up current equity to avoid weak-kicker trouble and later pressure; chips already invested are not a reason to continue."
+      ],
+      [
+       "Conditional alternative",
+       "Call 937",
+       "Consider it only against a small size and wide range, with position or a big-blind discount; don't assume it by default.",
+       "Keeps showdown equity, but the risk of domination by stronger Ax and of facing later bets remains."
+      ]
+     ],
+     "simulation": {
+      "heading": "Candidate Action Simulation",
+      "stability": "Ranges or sampling error could change the order; no single best action has been shown.",
+      "stable": false,
+      "caption": "12 hands simulated per action and range · Net chip change from this decision on",
+      "columns": [
+       "Action",
+       "Random Range",
+       "Action-Weighted"
+      ],
+      "rows": [
+       {
+        "label": "Fold",
+        "cells": [
+         [
+          "0",
+          "≈ ±0",
+          "Fold, Random Range: 0 chips, ≈ ±0"
+         ],
+         [
+          "0",
+          "≈ ±0",
+          "Fold, Action-Weighted: 0 chips, ≈ ±0"
+         ]
+        ]
+       },
+       {
+        "label": "Call 937",
+        "cells": [
+         [
+          "-504",
+          "≈ ±1,681",
+          "Call 937, Random Range: -504 chips, ≈ ±1,681"
+         ],
+         [
+          "+196",
+          "≈ ±1,616",
+          "Call 937, Action-Weighted: +196 chips, ≈ ±1,616"
+         ]
+        ]
+       },
+       {
+        "label": "3-bet raise to 2,400",
+        "cells": [
+         [
+          "+332",
+          "≈ ±1,442",
+          "3-bet raise to 2,400, Random Range: +332 chips, ≈ ±1,442"
+         ],
+         [
+          "+268",
+          "≈ ±1,780",
+          "3-bet raise to 2,400, Action-Weighted: +268 chips, ≈ ±1,780"
+         ]
+        ]
+       },
+       {
+        "label": "3-bet raise to 3,375",
+        "cells": [
+         [
+          "+88",
+          "≈ ±1,613",
+          "3-bet raise to 3,375, Random Range: +88 chips, ≈ ±1,613"
+         ],
+         [
+          "-339",
+          "≈ ±1,887",
+          "3-bet raise to 3,375, Action-Weighted: -339 chips, ≈ ±1,887"
+         ]
+        ]
+       },
+       {
+        "label": "3-bet raise to 3,477",
+        "cells": [
+         [
+          "+62",
+          "≈ ±1,632",
+          "3-bet raise to 3,477, Random Range: +62 chips, ≈ ±1,632"
+         ],
+         [
+          "-390",
+          "≈ ±1,916",
+          "3-bet raise to 3,477, Action-Weighted: -390 chips, ≈ ±1,916"
+         ]
+        ]
+       }
+      ],
+      "detailsSummary": "How the simulation handles later action",
+      "details": [
+       "Unknown cards are sampled from the position at the time, and each hand is played out with the opponents' public styles; your later decisions use the balanced bot strategy, with 8 equity samples per decision. The figures estimate net chip change under this simulated strategy, treat chips already invested as sunk, and include split pots, refunds, and later betting. The error shown is approximate sampling error and does not cover errors in the range or strategy model. This is not GTO or a real player's optimal EV.",
+       "Results include immediate folds, calls, later raises, and showdowns; the real hidden hole cards, the actual card order that followed, and the final winners are never used. The two range results are not a range of optimal returns."
+      ]
+     },
+     "simulationNote": null,
+     "decisionTitle": "Facing an open, check the price and the risk of domination first",
+     "reason": "You hold 4/8 offsuit in SB and need 937 to continue; 1 player can still act. There's already a raise in front, which raises the risk of a weak hand being dominated by a better top pair or a higher kicker.",
+     "evidence": [
+      "Position SB · 3 opponents in the hand",
+      "Hand at the time: 4/8 offsuit",
+      "Preflop raises: 1 · Still to act: 1",
+      "Effective stack ≈ 4,975 · SPR 2.5",
+      "Effective call cost 937; after calling you can win 2,936; break-even equity is about 32%.",
+      "Preflop situation: Open with callers · Limpers: 0"
+     ],
+     "confidence": "Sensitive to ranges and later strategy; no single best line shown",
+     "lesson": "Opening, flatting an open, and defending against a re-raise need different ranges; don't judge by starting-hand tier alone.",
+     "plan": "If you later face a very small raise in the big blind, judge it again on price; \"weak hand\" doesn't automatically mean \"must fold.\"",
+     "metrics": [
+      [
+       "Equity needed to call",
+       "32%"
+      ],
+      [
+       "Two-range estimate",
+       "23%–25%"
+      ],
+      [
+       "Winnable after calling",
+       "2,936"
+      ]
+     ],
+     "modelNote": "60 samples per range, with a conservative sampling-error band of about ±20 percentage points; this isn't the error in the opponent's real range. Random / action-weighted equity: 25% / 23%. The gap between the two ranges is not a confidence interval.",
+     "priceNote": "Estimated separately for each pot you're eligible for; side pots beyond your all-in amount are excluded.",
+     "publicActions": [
+      [
+       "Alex",
+       "2-bet open to 962"
+      ],
+      [
+       "River",
+       "Fold"
+      ],
+      [
+       "Kai",
+       "Call 962"
+      ],
+      [
+       "Luna",
+       "Fold"
+      ]
+     ],
+     "publicActionsEmpty": null,
+     "position": "1 / 2",
+     "canPrevious": false,
+     "canNext": true
+    }
+   }
+  },
+  {
+   "name": "review hand 2 · done, step 2",
+   "source": "hands",
+   "input": "review hand 2: 6 seats, mixed opponents, hero call",
+   "panel": "hero",
+   "state": {
+    "status": "done",
+    "progress": 2,
+    "analyzed": true,
+    "selected": 1
+   },
+   "hero": {
+    "title": "Hand #1 · Review",
+    "change": "+17 chips",
+    "context": "You won the pot",
+    "stateText": "2 decisions, 4,975 chips put in. Start with step 2 (Preflop): Defending a weak hand against multiple re-raises lacks support. 1 other issue to look through step by step.",
+    "running": false,
+    "progress": 2,
+    "total": 2,
+    "summaryTitle": "Check first: Defending a weak hand against multiple re-raises lacks support",
+    "priorityButton": "Go to the priority decision",
+    "priorityIndex": 1,
+    "retryVisible": false,
+    "stepCount": "2 actions",
+    "timeline": [
+     {
+      "number": "1",
+      "meta": "Preflop · SB",
+      "action": "3-bet raise to 3,477",
+      "chip": "Worth Discussing",
+      "tone": "consider",
+      "selected": false,
+      "a11y": "Step 1, Preflop · SB, 3-bet raise to 3,477, Worth Discussing"
+     },
+     {
+      "number": "2",
+      "meta": "Preflop · SB",
+      "action": "All-In Call 1,523",
+      "chip": "Needs Work",
+      "tone": "attention",
+      "selected": true,
+      "a11y": "Step 2, Preflop · SB, All-In Call 1,523, Needs Work"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Step 2 · Preflop",
+     "statusText": "Needs Work",
+     "tone": "attention",
+     "hole": [
+      "3-4",
+      "1-8"
+     ],
+     "board": [],
+     "meta": [
+      [
+       "Position",
+       "SB"
+      ],
+      [
+       "Pot at the time",
+       "14,552"
+      ],
+      [
+       "Stack remaining",
+       "1,523"
+      ]
+     ],
+     "yourChoice": "All-In Call 1,523",
+     "suggestion": "Fold",
+     "routes": [
+      [
+       "When the main line holds",
+       "Fold",
+       "Against large sizes, multiple players continuing, or strong ranges with few bluffs, put in as little new money as possible.",
+       "Gives up current equity to avoid weak-kicker trouble and later pressure; chips already invested are not a reason to continue."
+      ],
+      [
+       "Conditional alternative",
+       "All-In Call 1,523",
+       "Worth discussing only with clear evidence of an extremely wide range and a favorable price and closing action; it doesn't apply against normal strong ranges.",
+       "Keeps showdown equity, but the risk of domination by stronger Ax and of facing later bets remains."
+      ]
+     ],
+     "simulation": {
+      "heading": "Candidate Action Simulation",
+      "stability": "Ranges or sampling error could change the order; no single best action has been shown.",
+      "stable": false,
+      "caption": "12 hands simulated per action and range · Net chip change from this decision on",
+      "columns": [
+       "Action",
+       "Random Range",
+       "Action-Weighted"
+      ],
+      "rows": [
+       {
+        "label": "Fold",
+        "cells": [
+         [
+          "0",
+          "≈ ±0",
+          "Fold, Random Range: 0 chips, ≈ ±0"
+         ],
+         [
+          "0",
+          "≈ ±0",
+          "Fold, Action-Weighted: 0 chips, ≈ ±0"
+         ]
+        ]
+       },
+       {
+        "label": "All-In Call 1,523",
+        "cells": [
+         [
+          "+1,000",
+          "≈ ±3,288",
+          "All-In Call 1,523, Random Range: +1,000 chips, ≈ ±3,288"
+         ],
+         [
+          "+3,479",
+          "≈ ±4,163",
+          "All-In Call 1,523, Action-Weighted: +3,479 chips, ≈ ±4,163"
+         ]
+        ]
+       }
+      ],
+      "detailsSummary": "How the simulation handles later action",
+      "details": [
+       "Unknown cards are sampled from the position at the time, and each hand is played out with the opponents' public styles; your later decisions use the balanced bot strategy, with 8 equity samples per decision. The figures estimate net chip change under this simulated strategy, treat chips already invested as sunk, and include split pots, refunds, and later betting. The error shown is approximate sampling error and does not cover errors in the range or strategy model. This is not GTO or a real player's optimal EV.",
+       "Results include immediate folds, calls, later raises, and showdowns; the real hidden hole cards, the actual card order that followed, and the final winners are never used. The two range results are not a range of optimal returns."
+      ]
+     },
+     "simulationNote": null,
+     "decisionTitle": "Defending a weak hand against multiple re-raises lacks support",
+     "reason": "4/8 offsuit in SB, facing a 4-bet or more; the latest bet is 6,111, about 1.8× the previous one. Effective call cost 1,523; after calling you can win 14,964; break-even equity is about 10%. Pot equity is about 35% against a random range and 20% against an action-weighted range. A weak hand is dominated by strong ranges and has no reliable way to realize its equity postflop.",
+     "evidence": [
+      "Position SB · 2 opponents in the hand",
+      "Hand at the time: 4/8 offsuit",
+      "Preflop raises: 3 · Still to act: 0",
+      "Effective stack ≈ 306 · SPR 0.0",
+      "Effective call cost 1,523; after calling you can win 14,964; break-even equity is about 10%.",
+      "Preflop situation: Facing a 4-bet or more · Limpers: 0"
+     ],
+     "confidence": "Depends on range assumptions",
+     "lesson": "Chips already put in with your open and call are not a reason to call a 4-bet.",
+     "plan": "Facing multiple raises without evidence of a wide range, stop adding chips first; revisit defending only with clear evidence of an extremely wide range and a good price.",
+     "metrics": [
+      [
+       "Equity needed to call",
+       "10%"
+      ],
+      [
+       "Two-range estimate",
+       "20%–35%"
+      ],
+      [
+       "Winnable after calling",
+       "14,964"
+      ]
+     ],
+     "modelNote": "60 samples per range, with a conservative sampling-error band of about ±20 percentage points; this isn't the error in the opponent's real range. Random / action-weighted equity: 35% / 20%. The gap between the two ranges is not a confidence interval.",
+     "priceNote": "Estimated separately for each pot you're eligible for; side pots beyond your all-in amount are excluded.",
+     "publicActions": [
+      [
+       "Kai",
+       "Call 962"
+      ],
+      [
+       "Luna",
+       "Fold"
+      ],
+      [
+       "You",
+       "3-bet raise to 3,477"
+      ],
+      [
+       "Mia",
+       "Fold"
+      ],
+      [
+       "Alex",
+       "4-bet raise to 6,111"
+      ],
+      [
+       "Kai",
+       "Call 3,952"
+      ]
+     ],
+     "publicActionsEmpty": null,
+     "position": "2 / 2",
+     "canPrevious": true,
+     "canNext": false
+    }
+   }
+  },
+  {
+   "name": "review hand 2 · opponents, all, first",
+   "source": "hands",
+   "input": "review hand 2: 6 seats, mixed opponents, hero call",
+   "panel": "opponents",
+   "state": {
+    "opponentFilter": null,
+    "opponentSelected": 0
+   },
+   "opponents": {
+    "filters": [
+     {
+      "seat": null,
+      "label": "All Opponents",
+      "selected": true
+     },
+     {
+      "seat": 3,
+      "label": "River",
+      "selected": false
+     },
+     {
+      "seat": 5,
+      "label": "Luna",
+      "selected": false
+     },
+     {
+      "seat": 1,
+      "label": "Mia",
+      "selected": false
+     }
+    ],
+    "count": "3 actions",
+    "timeline": [
+     {
+      "number": "2",
+      "meta": "River · Preflop",
+      "action": "Fold",
+      "chip": "Daniel Cates",
+      "tone": "pending",
+      "selected": true,
+      "a11y": "Public action #2, River · Preflop, Fold, Daniel Cates"
+     },
+     {
+      "number": "4",
+      "meta": "Luna · Preflop",
+      "action": "Fold",
+      "chip": "Tom Dwan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #4, Luna · Preflop, Fold, Tom Dwan"
+     },
+     {
+      "number": "6",
+      "meta": "Mia · Preflop",
+      "action": "Fold",
+      "chip": "ST Wang",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #6, Mia · Preflop, Fold, ST Wang"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "River · Preflop",
+     "statusText": "Actual decision record",
+     "tone": "sound",
+     "holeLabel": "River's hole cards at the time",
+     "hole": [
+      "0-9",
+      "0-8"
+     ],
+     "board": [],
+     "meta": [
+      [
+       "Position",
+       "HJ"
+      ],
+      [
+       "Pot at the time",
+       "1,037"
+      ],
+      [
+       "Stack remaining",
+       "5,000"
+      ]
+     ],
+     "choiceLabel": "It chose · Preflop hand",
+     "choice": "Fold",
+     "explanationTitle": "Hand outside this defending range",
+     "explanation": "Actually executed: hand outside this defending range. Cards dealt later were not used to decide this step.",
+     "profileName": "Daniel Cates",
+     "reasons": [
+      "Starting-hand rank: about top 33.6%; this style, position, and the public raising line allow the top 28.0%. It was outside that range. The ranking is a starting-hand heuristic, not a win rate.",
+      "It faced 5 opponents still in, needed 962 to call, could win 1,999 in the model, and needed 48.1% equity to call.",
+      "Using only its own cards and the board, it sampled random opponent ranges 28 times: raw estimate 21.4%, judgment noise +3.3%, equity used 24.8%. Calling-tendency shift +1.4%, compared value 26.2%; the usual threshold, including a 2-point buffer, was 50.1%.",
+      "No mood shift this time; base style settings were used."
+     ],
+     "warning": "This is the decision record the simulator actually used at the time. Equity is a small-sample estimate against a random range; it doesn't fully model the opponent's continuing range, equity realization, or future strategy. It is not a real pro's thinking and not proof of optimal play.",
+     "branches": [
+      [
+       "Leeway roll when outside range",
+       "0.372 / threshold 3.9% · Miss"
+      ]
+     ],
+     "branchesEmpty": null,
+     "position": "Public action #2",
+     "canPrevious": false,
+     "canNext": true
+    }
+   }
+  },
+  {
+   "name": "review hand 2 · opponents, all, last",
+   "source": "hands",
+   "input": "review hand 2: 6 seats, mixed opponents, hero call",
+   "panel": "opponents",
+   "state": {
+    "opponentFilter": null,
+    "opponentSelected": 2
+   },
+   "opponents": {
+    "filters": [
+     {
+      "seat": null,
+      "label": "All Opponents",
+      "selected": true
+     },
+     {
+      "seat": 3,
+      "label": "River",
+      "selected": false
+     },
+     {
+      "seat": 5,
+      "label": "Luna",
+      "selected": false
+     },
+     {
+      "seat": 1,
+      "label": "Mia",
+      "selected": false
+     }
+    ],
+    "count": "3 actions",
+    "timeline": [
+     {
+      "number": "2",
+      "meta": "River · Preflop",
+      "action": "Fold",
+      "chip": "Daniel Cates",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #2, River · Preflop, Fold, Daniel Cates"
+     },
+     {
+      "number": "4",
+      "meta": "Luna · Preflop",
+      "action": "Fold",
+      "chip": "Tom Dwan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #4, Luna · Preflop, Fold, Tom Dwan"
+     },
+     {
+      "number": "6",
+      "meta": "Mia · Preflop",
+      "action": "Fold",
+      "chip": "ST Wang",
+      "tone": "pending",
+      "selected": true,
+      "a11y": "Public action #6, Mia · Preflop, Fold, ST Wang"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Mia · Preflop",
+     "statusText": "Actual decision record",
+     "tone": "sound",
+     "holeLabel": "Mia's hole cards at the time",
+     "hole": [
+      "1-12",
+      "2-7"
+     ],
+     "board": [],
+     "meta": [
+      [
+       "Position",
+       "BB"
+      ],
+      [
+       "Pot at the time",
+       "5,451"
+      ],
+      [
+       "Stack remaining",
+       "4,950"
+      ]
+     ],
+     "choiceLabel": "It chose · Preflop hand",
+     "choice": "Fold",
+     "explanationTitle": "Hand outside this defending range",
+     "explanation": "Actually executed: hand outside this defending range. Cards dealt later were not used to decide this step.",
+     "profileName": "ST Wang",
+     "reasons": [
+      "Starting-hand rank: about top 43.0%; this style, position, and the public raising line allow the top 14.5%. It was outside that range. The ranking is a starting-hand heuristic, not a win rate.",
+      "It faced 3 opponents still in, needed 3,427 to call, could win 8,878 in the model, and needed 38.6% equity to call.",
+      "Using only its own cards and the board, it sampled random opponent ranges 28 times: raw estimate 19.6%, judgment noise -3.8%, equity used 15.8%. Calling-tendency shift -0.8%, compared value 15.0%; the usual threshold, including a 2-point buffer, was 40.6%.",
+      "No mood shift this time; base style settings were used."
+     ],
+     "warning": "This is the decision record the simulator actually used at the time. Equity is a small-sample estimate against a random range; it doesn't fully model the opponent's continuing range, equity realization, or future strategy. It is not a real pro's thinking and not proof of optimal play.",
+     "branches": [
+      [
+       "Leeway roll when outside range",
+       "0.740 / threshold 2.4% · Miss"
+      ]
+     ],
+     "branchesEmpty": null,
+     "position": "Public action #6",
+     "canPrevious": true,
+     "canNext": false
+    }
+   }
+  },
+  {
+   "name": "review hand 2 · opponents, seat 1, last",
+   "source": "hands",
+   "input": "review hand 2: 6 seats, mixed opponents, hero call",
+   "panel": "opponents",
+   "state": {
+    "opponentFilter": 1,
+    "opponentSelected": 0
+   },
+   "opponents": {
+    "filters": [
+     {
+      "seat": null,
+      "label": "All Opponents",
+      "selected": false
+     },
+     {
+      "seat": 3,
+      "label": "River",
+      "selected": false
+     },
+     {
+      "seat": 5,
+      "label": "Luna",
+      "selected": false
+     },
+     {
+      "seat": 1,
+      "label": "Mia",
+      "selected": true
+     }
+    ],
+    "count": "1 action",
+    "timeline": [
+     {
+      "number": "6",
+      "meta": "Mia · Preflop",
+      "action": "Fold",
+      "chip": "ST Wang",
+      "tone": "pending",
+      "selected": true,
+      "a11y": "Public action #6, Mia · Preflop, Fold, ST Wang"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Mia · Preflop",
+     "statusText": "Actual decision record",
+     "tone": "sound",
+     "holeLabel": "Mia's hole cards at the time",
+     "hole": [
+      "1-12",
+      "2-7"
+     ],
+     "board": [],
+     "meta": [
+      [
+       "Position",
+       "BB"
+      ],
+      [
+       "Pot at the time",
+       "5,451"
+      ],
+      [
+       "Stack remaining",
+       "4,950"
+      ]
+     ],
+     "choiceLabel": "It chose · Preflop hand",
+     "choice": "Fold",
+     "explanationTitle": "Hand outside this defending range",
+     "explanation": "Actually executed: hand outside this defending range. Cards dealt later were not used to decide this step.",
+     "profileName": "ST Wang",
+     "reasons": [
+      "Starting-hand rank: about top 43.0%; this style, position, and the public raising line allow the top 14.5%. It was outside that range. The ranking is a starting-hand heuristic, not a win rate.",
+      "It faced 3 opponents still in, needed 3,427 to call, could win 8,878 in the model, and needed 38.6% equity to call.",
+      "Using only its own cards and the board, it sampled random opponent ranges 28 times: raw estimate 19.6%, judgment noise -3.8%, equity used 15.8%. Calling-tendency shift -0.8%, compared value 15.0%; the usual threshold, including a 2-point buffer, was 40.6%.",
+      "No mood shift this time; base style settings were used."
+     ],
+     "warning": "This is the decision record the simulator actually used at the time. Equity is a small-sample estimate against a random range; it doesn't fully model the opponent's continuing range, equity realization, or future strategy. It is not a real pro's thinking and not proof of optimal play.",
+     "branches": [
+      [
+       "Leeway roll when outside range",
+       "0.740 / threshold 2.4% · Miss"
+      ]
+     ],
+     "branchesEmpty": null,
+     "position": "Public action #6",
+     "canPrevious": false,
+     "canNext": false
+    }
+   }
+  },
+  {
+   "name": "review hand 12 · idle",
+   "source": "hands",
+   "input": "review hand 12: 6 seats, bots opponents, hero call",
+   "panel": "hero",
+   "state": {
+    "status": "idle",
+    "progress": 0,
+    "analyzed": false,
+    "selected": 0
+   },
+   "hero": {
+    "title": "Hand #1 · Review",
+    "change": "-825 chips",
+    "context": "You didn't win the pot",
+    "stateText": "Preparing this hand's decision snapshots…",
+    "running": false,
+    "progress": 0,
+    "total": 5,
+    "summaryTitle": "Back to the decisions as they were",
+    "priorityButton": null,
+    "priorityIndex": null,
+    "retryVisible": false,
+    "stepCount": "5 actions",
+    "timeline": [
+     {
+      "number": "1",
+      "meta": "Preflop · SB",
+      "action": "Call 125",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": true,
+      "a11y": "Step 1, Preflop · SB, Call 125, Pending"
+     },
+     {
+      "number": "2",
+      "meta": "Flop · SB",
+      "action": "Check",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Step 2, Flop · SB, Check, Pending"
+     },
+     {
+      "number": "3",
+      "meta": "Flop · SB",
+      "action": "Call 675",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Step 3, Flop · SB, Call 675, Pending"
+     },
+     {
+      "number": "4",
+      "meta": "Turn · SB",
+      "action": "Check",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Step 4, Turn · SB, Check, Pending"
+     },
+     {
+      "number": "5",
+      "meta": "River · SB",
+      "action": "Check",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Step 5, River · SB, Check, Pending"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Step 1 · Preflop",
+     "statusText": "Analyzing",
+     "tone": "pending",
+     "hole": [
+      "3-6",
+      "0-4"
+     ],
+     "board": [],
+     "meta": [
+      [
+       "Position",
+       "SB"
+      ],
+      [
+       "Pot at the time",
+       "525"
+      ],
+      [
+       "Stack remaining",
+       "4,975"
+      ]
+     ],
+     "yourChoice": "Call 125",
+     "suggestion": "Comparing available actions…",
+     "routes": [],
+     "simulation": null,
+     "simulationNote": "Simulating each legal action and the rest of the hand…",
+     "decisionTitle": "Analysis based on what you knew then",
+     "reason": "Uses your hole cards, the community cards, public actions, and stacks at the time, never opponents' hidden cards or cards dealt later.",
+     "evidence": [],
+     "confidence": "Waiting for analysis",
+     "lesson": "Judge the decision separately from the result; a specific practice focus appears when the review is done.",
+     "plan": "The follow-up plan appears when analysis finishes.",
+     "metrics": [
+      [
+       "Equity needed to call",
+       "…"
+      ],
+      [
+       "Two-range estimate",
+       "—"
+      ],
+      [
+       "Winnable after calling",
+       "…"
+      ]
+     ],
+     "modelNote": null,
+     "priceNote": "The price is only a guide; later bets, other players' actions, and potential winnings aren't included.",
+     "publicActions": [
+      [
+       "Alex",
+       "2-bet open to 150"
+      ],
+      [
+       "River",
+       "Call 150"
+      ],
+      [
+       "Kai",
+       "Call 150"
+      ],
+      [
+       "Luna",
+       "Fold"
+      ]
+     ],
+     "publicActionsEmpty": null,
+     "position": "1 / 5",
+     "canPrevious": false,
+     "canNext": true
+    }
+   }
+  },
+  {
+   "name": "review hand 12 · running",
+   "source": "hands",
+   "input": "review hand 12: 6 seats, bots opponents, hero call",
+   "panel": "hero",
+   "state": {
+    "status": "running",
+    "progress": 1,
+    "analyzed": false,
+    "selected": 4
+   },
+   "hero": {
+    "title": "Hand #1 · Review",
+    "change": "-825 chips",
+    "context": "You didn't win the pot",
+    "stateText": "Analyzing decision 1 of 5…",
+    "running": true,
+    "progress": 1,
+    "total": 5,
+    "summaryTitle": "Back to the decisions as they were",
+    "priorityButton": null,
+    "priorityIndex": null,
+    "retryVisible": false,
+    "stepCount": "5 actions",
+    "timeline": [
+     {
+      "number": "1",
+      "meta": "Preflop · SB",
+      "action": "Call 125",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Step 1, Preflop · SB, Call 125, Pending"
+     },
+     {
+      "number": "2",
+      "meta": "Flop · SB",
+      "action": "Check",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Step 2, Flop · SB, Check, Pending"
+     },
+     {
+      "number": "3",
+      "meta": "Flop · SB",
+      "action": "Call 675",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Step 3, Flop · SB, Call 675, Pending"
+     },
+     {
+      "number": "4",
+      "meta": "Turn · SB",
+      "action": "Check",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Step 4, Turn · SB, Check, Pending"
+     },
+     {
+      "number": "5",
+      "meta": "River · SB",
+      "action": "Check",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": true,
+      "a11y": "Step 5, River · SB, Check, Pending"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Step 5 · River",
+     "statusText": "Analyzing",
+     "tone": "pending",
+     "hole": [
+      "3-6",
+      "0-4"
+     ],
+     "board": [
+      "1-14",
+      "1-7",
+      "1-2",
+      "2-9",
+      "3-3"
+     ],
+     "meta": [
+      [
+       "Position",
+       "SB"
+      ],
+      [
+       "Pot at the time",
+       "2,775"
+      ],
+      [
+       "Stack remaining",
+       "4,175"
+      ]
+     ],
+     "yourChoice": "Check",
+     "suggestion": "Comparing available actions…",
+     "routes": [],
+     "simulation": null,
+     "simulationNote": "Simulating each legal action and the rest of the hand…",
+     "decisionTitle": "Analysis based on what you knew then",
+     "reason": "Uses your hole cards, the community cards, public actions, and stacks at the time, never opponents' hidden cards or cards dealt later.",
+     "evidence": [],
+     "confidence": "Waiting for analysis",
+     "lesson": "Judge the decision separately from the result; a specific practice focus appears when the review is done.",
+     "plan": "The follow-up plan appears when analysis finishes.",
+     "metrics": [
+      [
+       "Equity needed to call",
+       "No call needed"
+      ],
+      [
+       "Two-range estimate",
+       "—"
+      ],
+      [
+       "Winnable after calling",
+       "…"
+      ]
+     ],
+     "modelNote": null,
+     "priceNote": "The price is only a guide; later bets, other players' actions, and potential winnings aren't included.",
+     "publicActions": [],
+     "publicActionsEmpty": "No other actions yet this round.",
+     "position": "5 / 5",
+     "canPrevious": true,
+     "canNext": false
+    }
+   }
+  },
+  {
+   "name": "review hand 12 · error",
+   "source": "hands",
+   "input": "review hand 12: 6 seats, bots opponents, hero call",
+   "panel": "hero",
+   "state": {
+    "status": "error",
+    "progress": 1,
+    "analyzed": false,
+    "selected": 0
+   },
+   "hero": {
+    "title": "Hand #1 · Review",
+    "change": "-825 chips",
+    "context": "You didn't win the pot",
+    "stateText": "Analysis didn't finish. You can try again.",
+    "running": false,
+    "progress": 1,
+    "total": 5,
+    "summaryTitle": "Back to the decisions as they were",
+    "priorityButton": null,
+    "priorityIndex": null,
+    "retryVisible": true,
+    "stepCount": "5 actions",
+    "timeline": [
+     {
+      "number": "1",
+      "meta": "Preflop · SB",
+      "action": "Call 125",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": true,
+      "a11y": "Step 1, Preflop · SB, Call 125, Pending"
+     },
+     {
+      "number": "2",
+      "meta": "Flop · SB",
+      "action": "Check",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Step 2, Flop · SB, Check, Pending"
+     },
+     {
+      "number": "3",
+      "meta": "Flop · SB",
+      "action": "Call 675",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Step 3, Flop · SB, Call 675, Pending"
+     },
+     {
+      "number": "4",
+      "meta": "Turn · SB",
+      "action": "Check",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Step 4, Turn · SB, Check, Pending"
+     },
+     {
+      "number": "5",
+      "meta": "River · SB",
+      "action": "Check",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Step 5, River · SB, Check, Pending"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Step 1 · Preflop",
+     "statusText": "Analyzing",
+     "tone": "pending",
+     "hole": [
+      "3-6",
+      "0-4"
+     ],
+     "board": [],
+     "meta": [
+      [
+       "Position",
+       "SB"
+      ],
+      [
+       "Pot at the time",
+       "525"
+      ],
+      [
+       "Stack remaining",
+       "4,975"
+      ]
+     ],
+     "yourChoice": "Call 125",
+     "suggestion": "Comparing available actions…",
+     "routes": [],
+     "simulation": null,
+     "simulationNote": "Simulating each legal action and the rest of the hand…",
+     "decisionTitle": "Analysis based on what you knew then",
+     "reason": "Uses your hole cards, the community cards, public actions, and stacks at the time, never opponents' hidden cards or cards dealt later.",
+     "evidence": [],
+     "confidence": "Waiting for analysis",
+     "lesson": "Judge the decision separately from the result; a specific practice focus appears when the review is done.",
+     "plan": "The follow-up plan appears when analysis finishes.",
+     "metrics": [
+      [
+       "Equity needed to call",
+       "…"
+      ],
+      [
+       "Two-range estimate",
+       "—"
+      ],
+      [
+       "Winnable after calling",
+       "…"
+      ]
+     ],
+     "modelNote": null,
+     "priceNote": "The price is only a guide; later bets, other players' actions, and potential winnings aren't included.",
+     "publicActions": [
+      [
+       "Alex",
+       "2-bet open to 150"
+      ],
+      [
+       "River",
+       "Call 150"
+      ],
+      [
+       "Kai",
+       "Call 150"
+      ],
+      [
+       "Luna",
+       "Fold"
+      ]
+     ],
+     "publicActionsEmpty": null,
+     "position": "1 / 5",
+     "canPrevious": false,
+     "canNext": true
+    }
+   }
+  },
+  {
+   "name": "review hand 12 · done, step 1",
+   "source": "hands",
+   "input": "review hand 12: 6 seats, bots opponents, hero call",
+   "panel": "hero",
+   "state": {
+    "status": "done",
+    "progress": 5,
+    "analyzed": true,
+    "selected": 0
+   },
+   "hero": {
+    "title": "Hand #1 · Review",
+    "change": "-825 chips",
+    "context": "You didn't win the pot",
+    "stateText": "5 decisions, 800 chips put in. Start with step 1 (Preflop): Facing an open, check the price and the risk of domination first. 1 other issue to look through step by step.",
+    "running": false,
+    "progress": 5,
+    "total": 5,
+    "summaryTitle": "Worth comparing: Facing an open, check the price and the risk of domination first",
+    "priorityButton": "Go to the priority decision",
+    "priorityIndex": 0,
+    "retryVisible": false,
+    "stepCount": "5 actions",
+    "timeline": [
+     {
+      "number": "1",
+      "meta": "Preflop · SB",
+      "action": "Call 125",
+      "chip": "Worth Discussing",
+      "tone": "consider",
+      "selected": true,
+      "a11y": "Step 1, Preflop · SB, Call 125, Worth Discussing"
+     },
+     {
+      "number": "2",
+      "meta": "Flop · SB",
+      "action": "Check",
+      "chip": "Well Reasoned",
+      "tone": "sound",
+      "selected": false,
+      "a11y": "Step 2, Flop · SB, Check, Well Reasoned"
+     },
+     {
+      "number": "3",
+      "meta": "Flop · SB",
+      "action": "Call 675",
+      "chip": "Worth Discussing",
+      "tone": "consider",
+      "selected": false,
+      "a11y": "Step 3, Flop · SB, Call 675, Worth Discussing"
+     },
+     {
+      "number": "4",
+      "meta": "Turn · SB",
+      "action": "Check",
+      "chip": "Well Reasoned",
+      "tone": "sound",
+      "selected": false,
+      "a11y": "Step 4, Turn · SB, Check, Well Reasoned"
+     },
+     {
+      "number": "5",
+      "meta": "River · SB",
+      "action": "Check",
+      "chip": "Well Reasoned",
+      "tone": "sound",
+      "selected": false,
+      "a11y": "Step 5, River · SB, Check, Well Reasoned"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Step 1 · Preflop",
+     "statusText": "Worth Discussing",
+     "tone": "consider",
+     "hole": [
+      "3-6",
+      "0-4"
+     ],
+     "board": [],
+     "meta": [
+      [
+       "Position",
+       "SB"
+      ],
+      [
+       "Pot at the time",
+       "525"
+      ],
+      [
+       "Stack remaining",
+       "4,975"
+      ]
+     ],
+     "yourChoice": "Call 125",
+     "suggestion": "Fold",
+     "routes": [
+      [
+       "When the main line holds",
+       "Fold",
+       "Against large sizes, multiple players continuing, or strong ranges with few bluffs, put in as little new money as possible.",
+       "Gives up current equity to avoid weak-kicker trouble and later pressure; chips already invested are not a reason to continue."
+      ],
+      [
+       "Conditional alternative",
+       "Call 125",
+       "Consider it only against a small size and wide range, with position or a big-blind discount; don't assume it by default.",
+       "Keeps showdown equity, but the risk of domination by stronger Ax and of facing later bets remains."
+      ]
+     ],
+     "simulation": {
+      "heading": "Candidate Action Simulation",
+      "stability": "Ranges or sampling error could change the order; no single best action has been shown.",
+      "stable": false,
+      "caption": "12 hands simulated per action and range · Net chip change from this decision on",
+      "columns": [
+       "Action",
+       "Random Range",
+       "Action-Weighted"
+      ],
+      "rows": [
+       {
+        "label": "Fold",
+        "cells": [
+         [
+          "0",
+          "≈ ±0",
+          "Fold, Random Range: 0 chips, ≈ ±0"
+         ],
+         [
+          "0",
+          "≈ ±0",
+          "Fold, Action-Weighted: 0 chips, ≈ ±0"
+         ]
+        ]
+       },
+       {
+        "label": "Call 125",
+        "cells": [
+         [
+          "+194",
+          "≈ ±1,190",
+          "Call 125, Random Range: +194 chips, ≈ ±1,190"
+         ],
+         [
+          "+229",
+          "≈ ±946",
+          "Call 125, Action-Weighted: +229 chips, ≈ ±946"
+         ]
+        ]
+       },
+       {
+        "label": "3-bet raise to 375",
+        "cells": [
+         [
+          "+225",
+          "≈ ±1,092",
+          "3-bet raise to 375, Random Range: +225 chips, ≈ ±1,092"
+         ],
+         [
+          "-894",
+          "≈ ±788",
+          "3-bet raise to 375, Action-Weighted: -894 chips, ≈ ±788"
+         ]
+        ]
+       },
+       {
+        "label": "3-bet raise to 525",
+        "cells": [
+         [
+          "-254",
+          "≈ ±679",
+          "3-bet raise to 525, Random Range: -254 chips, ≈ ±679"
+         ],
+         [
+          "-440",
+          "≈ ±1,326",
+          "3-bet raise to 525, Action-Weighted: -440 chips, ≈ ±1,326"
+         ]
+        ]
+       }
+      ],
+      "detailsSummary": "How the simulation handles later action",
+      "details": [
+       "Unknown cards are sampled from the position at the time, and each hand is played out with the opponents' public styles; your later decisions use the balanced bot strategy, with 8 equity samples per decision. The figures estimate net chip change under this simulated strategy, treat chips already invested as sunk, and include split pots, refunds, and later betting. The error shown is approximate sampling error and does not cover errors in the range or strategy model. This is not GTO or a real player's optimal EV.",
+       "Results include immediate folds, calls, later raises, and showdowns; the real hidden hole cards, the actual card order that followed, and the final winners are never used. The two range results are not a range of optimal returns."
+      ]
+     },
+     "simulationNote": null,
+     "decisionTitle": "Facing an open, check the price and the risk of domination first",
+     "reason": "You hold 6/4 offsuit in SB and need 125 to continue; 1 player can still act. There's already a raise in front, which raises the risk of a weak hand being dominated by a better top pair or a higher kicker.",
+     "evidence": [
+      "Position SB · 4 opponents in the hand",
+      "Hand at the time: 6/4 offsuit",
+      "Preflop raises: 1 · Still to act: 1",
+      "Effective stack ≈ 4,975 · SPR 9.5",
+      "Effective call cost 125; after calling you can win 650; break-even equity is about 19%.",
+      "Preflop situation: Open with callers · Limpers: 0"
+     ],
+     "confidence": "Sensitive to ranges and later strategy; no single best line shown",
+     "lesson": "Opening, flatting an open, and defending against a re-raise need different ranges; don't judge by starting-hand tier alone.",
+     "plan": "If you later face a very small raise in the big blind, judge it again on price; \"weak hand\" doesn't automatically mean \"must fold.\"",
+     "metrics": [
+      [
+       "Equity needed to call",
+       "19%"
+      ],
+      [
+       "Two-range estimate",
+       "8%–25%"
+      ],
+      [
+       "Winnable after calling",
+       "650"
+      ]
+     ],
+     "modelNote": "60 samples per range, with a conservative sampling-error band of about ±20 percentage points; this isn't the error in the opponent's real range. Random / action-weighted equity: 8% / 25%. The gap between the two ranges is not a confidence interval.",
+     "priceNote": "Estimated separately for each pot you're eligible for; side pots beyond your all-in amount are excluded.",
+     "publicActions": [
+      [
+       "Alex",
+       "2-bet open to 150"
+      ],
+      [
+       "River",
+       "Call 150"
+      ],
+      [
+       "Kai",
+       "Call 150"
+      ],
+      [
+       "Luna",
+       "Fold"
+      ]
+     ],
+     "publicActionsEmpty": null,
+     "position": "1 / 5",
+     "canPrevious": false,
+     "canNext": true
+    }
+   }
+  },
+  {
+   "name": "review hand 12 · done, step 2",
+   "source": "hands",
+   "input": "review hand 12: 6 seats, bots opponents, hero call",
+   "panel": "hero",
+   "state": {
+    "status": "done",
+    "progress": 5,
+    "analyzed": true,
+    "selected": 1
+   },
+   "hero": {
+    "title": "Hand #1 · Review",
+    "change": "-825 chips",
+    "context": "You didn't win the pot",
+    "stateText": "5 decisions, 800 chips put in. Start with step 1 (Preflop): Facing an open, check the price and the risk of domination first. 1 other issue to look through step by step.",
+    "running": false,
+    "progress": 5,
+    "total": 5,
+    "summaryTitle": "Worth comparing: Facing an open, check the price and the risk of domination first",
+    "priorityButton": "Go to the priority decision",
+    "priorityIndex": 0,
+    "retryVisible": false,
+    "stepCount": "5 actions",
+    "timeline": [
+     {
+      "number": "1",
+      "meta": "Preflop · SB",
+      "action": "Call 125",
+      "chip": "Worth Discussing",
+      "tone": "consider",
+      "selected": false,
+      "a11y": "Step 1, Preflop · SB, Call 125, Worth Discussing"
+     },
+     {
+      "number": "2",
+      "meta": "Flop · SB",
+      "action": "Check",
+      "chip": "Well Reasoned",
+      "tone": "sound",
+      "selected": true,
+      "a11y": "Step 2, Flop · SB, Check, Well Reasoned"
+     },
+     {
+      "number": "3",
+      "meta": "Flop · SB",
+      "action": "Call 675",
+      "chip": "Worth Discussing",
+      "tone": "consider",
+      "selected": false,
+      "a11y": "Step 3, Flop · SB, Call 675, Worth Discussing"
+     },
+     {
+      "number": "4",
+      "meta": "Turn · SB",
+      "action": "Check",
+      "chip": "Well Reasoned",
+      "tone": "sound",
+      "selected": false,
+      "a11y": "Step 4, Turn · SB, Check, Well Reasoned"
+     },
+     {
+      "number": "5",
+      "meta": "River · SB",
+      "action": "Check",
+      "chip": "Well Reasoned",
+      "tone": "sound",
+      "selected": false,
+      "a11y": "Step 5, River · SB, Check, Well Reasoned"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Step 2 · Flop",
+     "statusText": "Well Reasoned",
+     "tone": "sound",
+     "hole": [
+      "3-6",
+      "0-4"
+     ],
+     "board": [
+      "1-14",
+      "1-7",
+      "1-2"
+     ],
+     "meta": [
+      [
+       "Position",
+       "SB"
+      ],
+      [
+       "Pot at the time",
+       "750"
+      ],
+      [
+       "Stack remaining",
+       "4,850"
+      ]
+     ],
+     "yourChoice": "Check",
+     "suggestion": "Keep this line; adjust to opponent ranges",
+     "routes": [
+      [
+       "When the main line holds",
+       "Check",
+       "Without the last-to-act advantage, watch the opponent's bets and how the board develops first.",
+       "Saves chips; it doesn't guarantee a free card, so you still need a plan for later bets."
+      ],
+      [
+       "Conditional alternative",
+       "1-bet bet to 450",
+       "When there are clear worse hands that call, or the opponent will fold better hands; without evidence, keep checking.",
+       "Gains value or fold equity but is exposed to calls and raises; it hasn't been shown to earn more."
+      ]
+     ],
+     "simulation": {
+      "heading": "Candidate Action Simulation",
+      "stability": "Ranges or sampling error could change the order; no single best action has been shown.",
+      "stable": false,
+      "caption": "12 hands simulated per action and range · Net chip change from this decision on",
+      "columns": [
+       "Action",
+       "Random Range",
+       "Action-Weighted"
+      ],
+      "rows": [
+       {
+        "label": "Fold",
+        "cells": [
+         [
+          "0",
+          "≈ ±0",
+          "Fold, Random Range: 0 chips, ≈ ±0"
+         ],
+         [
+          "0",
+          "≈ ±0",
+          "Fold, Action-Weighted: 0 chips, ≈ ±0"
+         ]
+        ]
+       },
+       {
+        "label": "Check",
+        "cells": [
+         [
+          "+8",
+          "≈ ±169",
+          "Check, Random Range: +8 chips, ≈ ±169"
+         ],
+         [
+          "-42",
+          "≈ ±82",
+          "Check, Action-Weighted: -42 chips, ≈ ±82"
+         ]
+        ]
+       },
+       {
+        "label": "1-bet bet to 250",
+        "cells": [
+         [
+          "-340",
+          "≈ ±176",
+          "1-bet bet to 250, Random Range: -340 chips, ≈ ±176"
+         ],
+         [
+          "-404",
+          "≈ ±207",
+          "1-bet bet to 250, Action-Weighted: -404 chips, ≈ ±207"
+         ]
+        ]
+       },
+       {
+        "label": "1-bet bet to 500",
+        "cells": [
+         [
+          "-627",
+          "≈ ±249",
+          "1-bet bet to 500, Random Range: -627 chips, ≈ ±249"
+         ],
+         [
+          "-846",
+          "≈ ±359",
+          "1-bet bet to 500, Action-Weighted: -846 chips, ≈ ±359"
+         ]
+        ]
+       },
+       {
+        "label": "1-bet bet to 450",
+        "cells": [
+         [
+          "-690",
+          "≈ ±317",
+          "1-bet bet to 450, Random Range: -690 chips, ≈ ±317"
+         ],
+         [
+          "-773",
+          "≈ ±335",
+          "1-bet bet to 450, Action-Weighted: -773 chips, ≈ ±335"
+         ]
+        ]
+       }
+      ],
+      "detailsSummary": "How the simulation handles later action",
+      "details": [
+       "Unknown cards are sampled from the position at the time, and each hand is played out with the opponents' public styles; your later decisions use the balanced bot strategy, with 8 equity samples per decision. The figures estimate net chip change under this simulated strategy, treat chips already invested as sunk, and include split pots, refunds, and later betting. The error shown is approximate sampling error and does not cover errors in the range or strategy model. This is not GTO or a real player's optimal EV.",
+       "Results include immediate folds, calls, later raises, and showdowns; the real hidden hole cards, the actual card order that followed, and the final winners are never used. The two range results are not a range of optimal returns."
+      ]
+     },
+     "simulationNote": null,
+     "decisionTitle": "This check controls the pot",
+     "reason": "You had high card on a board that's three to a flush, with nothing to call. 4 players can still act after you, so checking doesn't guarantee a free card.",
+     "evidence": [
+      "Position SB · 4 opponents in the hand · Not last to act",
+      "Hand at the time: High Card",
+      "Board: Three to a flush",
+      "Effective stack ≈ 4,850 · SPR 6.5"
+     ],
+     "confidence": "Sensitive to ranges and later strategy; no single best line shown",
+     "lesson": "After checking, still separate a free chance from your conditions for continuing against a bet.",
+     "plan": "If someone bets, recalculate with the actual amount; if the board alone makes the hand, think about a split first and don't invent an edge from your hole cards.",
+     "metrics": [
+      [
+       "Equity needed to call",
+       "No call needed"
+      ],
+      [
+       "Two-range estimate",
+       "≈5%"
+      ],
+      [
+       "Winnable after calling",
+       "750"
+      ]
+     ],
+     "modelNote": "60 samples per range, with a conservative sampling-error band of about ±20 percentage points; this isn't the error in the opponent's real range. Random / action-weighted equity: 5% / 5%. The gap between the two ranges is not a confidence interval.",
+     "priceNote": "The price is only a guide; later bets, other players' actions, and potential winnings aren't included.",
+     "publicActions": [],
+     "publicActionsEmpty": "No other actions yet this round.",
+     "position": "2 / 5",
+     "canPrevious": true,
+     "canNext": true
+    }
+   }
+  },
+  {
+   "name": "review hand 12 · done, step 3",
+   "source": "hands",
+   "input": "review hand 12: 6 seats, bots opponents, hero call",
+   "panel": "hero",
+   "state": {
+    "status": "done",
+    "progress": 5,
+    "analyzed": true,
+    "selected": 2
+   },
+   "hero": {
+    "title": "Hand #1 · Review",
+    "change": "-825 chips",
+    "context": "You didn't win the pot",
+    "stateText": "5 decisions, 800 chips put in. Start with step 1 (Preflop): Facing an open, check the price and the risk of domination first. 1 other issue to look through step by step.",
+    "running": false,
+    "progress": 5,
+    "total": 5,
+    "summaryTitle": "Worth comparing: Facing an open, check the price and the risk of domination first",
+    "priorityButton": "Go to the priority decision",
+    "priorityIndex": 0,
+    "retryVisible": false,
+    "stepCount": "5 actions",
+    "timeline": [
+     {
+      "number": "1",
+      "meta": "Preflop · SB",
+      "action": "Call 125",
+      "chip": "Worth Discussing",
+      "tone": "consider",
+      "selected": false,
+      "a11y": "Step 1, Preflop · SB, Call 125, Worth Discussing"
+     },
+     {
+      "number": "2",
+      "meta": "Flop · SB",
+      "action": "Check",
+      "chip": "Well Reasoned",
+      "tone": "sound",
+      "selected": false,
+      "a11y": "Step 2, Flop · SB, Check, Well Reasoned"
+     },
+     {
+      "number": "3",
+      "meta": "Flop · SB",
+      "action": "Call 675",
+      "chip": "Worth Discussing",
+      "tone": "consider",
+      "selected": true,
+      "a11y": "Step 3, Flop · SB, Call 675, Worth Discussing"
+     },
+     {
+      "number": "4",
+      "meta": "Turn · SB",
+      "action": "Check",
+      "chip": "Well Reasoned",
+      "tone": "sound",
+      "selected": false,
+      "a11y": "Step 4, Turn · SB, Check, Well Reasoned"
+     },
+     {
+      "number": "5",
+      "meta": "River · SB",
+      "action": "Check",
+      "chip": "Well Reasoned",
+      "tone": "sound",
+      "selected": false,
+      "a11y": "Step 5, River · SB, Check, Well Reasoned"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Step 3 · Flop",
+     "statusText": "Worth Discussing",
+     "tone": "consider",
+     "hole": [
+      "3-6",
+      "0-4"
+     ],
+     "board": [
+      "1-14",
+      "1-7",
+      "1-2"
+     ],
+     "meta": [
+      [
+       "Position",
+       "SB"
+      ],
+      [
+       "Pot at the time",
+       "1,425"
+      ],
+      [
+       "Stack remaining",
+       "4,850"
+      ]
+     ],
+     "yourChoice": "Call 675",
+     "suggestion": "Simulation pick: Fold",
+     "routes": [
+      [
+       "When the main line holds",
+       "Fold",
+       "When this hand's public styles, the two starting ranges, and the balanced follow-up strategy are representative of your practice games.",
+       "The samples support comparing this first, but real continuing ranges and better follow-up play could still change the ranking."
+      ],
+      [
+       "Conditional alternative",
+       "Call 675",
+       "When opponent ranges or the follow-up strategy change, keep the original conservative / value line as a comparison.",
+       "Judge using the numbers below and the specific conditions; a simulated lead doesn't mean you must take that line."
+      ]
+     ],
+     "simulation": {
+      "heading": "Candidate Action Simulation",
+      "stability": "In this sample, one line clearly led under both ranges; it still depends on assumptions about later play.",
+      "stable": true,
+      "caption": "12 hands simulated per action and range · Net chip change from this decision on",
+      "columns": [
+       "Action",
+       "Random Range",
+       "Action-Weighted"
+      ],
+      "rows": [
+       {
+        "label": "Fold",
+        "cells": [
+         [
+          "0",
+          "≈ ±0",
+          "Fold, Random Range: 0 chips, ≈ ±0"
+         ],
+         [
+          "0",
+          "≈ ±0",
+          "Fold, Action-Weighted: 0 chips, ≈ ±0"
+         ]
+        ]
+       },
+       {
+        "label": "Call 675",
+        "cells": [
+         [
+          "-598",
+          "≈ ±151",
+          "Call 675, Random Range: -598 chips, ≈ ±151"
+         ],
+         [
+          "-675",
+          "≈ ±0",
+          "Call 675, Action-Weighted: -675 chips, ≈ ±0"
+         ]
+        ]
+       },
+       {
+        "label": "2-bet raise to 1,700",
+        "cells": [
+         [
+          "-2,206",
+          "≈ ±670",
+          "2-bet raise to 1,700, Random Range: -2,206 chips, ≈ ±670"
+         ],
+         [
+          "-1,440",
+          "≈ ±510",
+          "2-bet raise to 1,700, Action-Weighted: -1,440 chips, ≈ ±510"
+         ]
+        ]
+       },
+       {
+        "label": "2-bet raise to 2,375",
+        "cells": [
+         [
+          "-2,471",
+          "≈ ±880",
+          "2-bet raise to 2,375, Random Range: -2,471 chips, ≈ ±880"
+         ],
+         [
+          "-2,058",
+          "≈ ±621",
+          "2-bet raise to 2,375, Action-Weighted: -2,058 chips, ≈ ±621"
+         ]
+        ]
+       }
+      ],
+      "detailsSummary": "How the simulation handles later action",
+      "details": [
+       "Unknown cards are sampled from the position at the time, and each hand is played out with the opponents' public styles; your later decisions use the balanced bot strategy, with 8 equity samples per decision. The figures estimate net chip change under this simulated strategy, treat chips already invested as sunk, and include split pots, refunds, and later betting. The error shown is approximate sampling error and does not cover errors in the range or strategy model. This is not GTO or a real player's optimal EV.",
+       "Results include immediate folds, calls, later raises, and showdowns; the real hidden hole cards, the actual card order that followed, and the final winners are never used. The two range results are not a range of optimal returns."
+      ]
+     },
+     "simulationNote": null,
+     "decisionTitle": "This call depends on price and your ability to realize equity",
+     "reason": "You held high card, with 4 opponents still in. Effective call cost 675; after calling you can win 2,100; break-even equity is about 32%. Pot equity is about 11% against a random range and 1% against an action-weighted range. In the candidate-action simulation, Fold showed a fairly clear chip advantage under both ranges and is worth practicing instead of the original heuristic suggestion; the edge depends on the simulated follow-up strategy and doesn't prove optimal play.",
+     "evidence": [
+      "Position SB · 4 opponents in the hand · Not last to act",
+      "Hand at the time: High Card",
+      "Board: Three to a flush",
+      "Effective stack ≈ 4,850 · SPR 3.4",
+      "Effective call cost 675; after calling you can win 2,100; break-even equity is about 32%."
+     ],
+     "confidence": "Both range samples agree, but later play is still a model",
+     "lesson": "Having room on the price doesn't mean you can call down automatically; further action and equity realization are still risky.",
+     "plan": "Watch the 3 players who can still act, and whether the next card brings a stronger straight or flush texture. When replaying, compare the simulation pick with the original line first; if opponents defend very differently, analyze again.",
+     "metrics": [
+      [
+       "Equity needed to call",
+       "32%"
+      ],
+      [
+       "Two-range estimate",
+       "1%–11%"
+      ],
+      [
+       "Winnable after calling",
+       "2,100"
+      ]
+     ],
+     "modelNote": "60 samples per range, with a conservative sampling-error band of about ±20 percentage points; this isn't the error in the opponent's real range. Random / action-weighted equity: 11% / 1%. The gap between the two ranges is not a confidence interval.",
+     "priceNote": "Estimated separately for each pot you're eligible for; side pots beyond your all-in amount are excluded.",
+     "publicActions": [
+      [
+       "You",
+       "Check"
+      ],
+      [
+       "Mia",
+       "Check"
+      ],
+      [
+       "Alex",
+       "Check"
+      ],
+      [
+       "River",
+       "Check"
+      ],
+      [
+       "Kai",
+       "1-bet bet to 675"
+      ]
+     ],
+     "publicActionsEmpty": null,
+     "position": "3 / 5",
+     "canPrevious": true,
+     "canNext": true
+    }
+   }
+  },
+  {
+   "name": "review hand 12 · done, step 4",
+   "source": "hands",
+   "input": "review hand 12: 6 seats, bots opponents, hero call",
+   "panel": "hero",
+   "state": {
+    "status": "done",
+    "progress": 5,
+    "analyzed": true,
+    "selected": 3
+   },
+   "hero": {
+    "title": "Hand #1 · Review",
+    "change": "-825 chips",
+    "context": "You didn't win the pot",
+    "stateText": "5 decisions, 800 chips put in. Start with step 1 (Preflop): Facing an open, check the price and the risk of domination first. 1 other issue to look through step by step.",
+    "running": false,
+    "progress": 5,
+    "total": 5,
+    "summaryTitle": "Worth comparing: Facing an open, check the price and the risk of domination first",
+    "priorityButton": "Go to the priority decision",
+    "priorityIndex": 0,
+    "retryVisible": false,
+    "stepCount": "5 actions",
+    "timeline": [
+     {
+      "number": "1",
+      "meta": "Preflop · SB",
+      "action": "Call 125",
+      "chip": "Worth Discussing",
+      "tone": "consider",
+      "selected": false,
+      "a11y": "Step 1, Preflop · SB, Call 125, Worth Discussing"
+     },
+     {
+      "number": "2",
+      "meta": "Flop · SB",
+      "action": "Check",
+      "chip": "Well Reasoned",
+      "tone": "sound",
+      "selected": false,
+      "a11y": "Step 2, Flop · SB, Check, Well Reasoned"
+     },
+     {
+      "number": "3",
+      "meta": "Flop · SB",
+      "action": "Call 675",
+      "chip": "Worth Discussing",
+      "tone": "consider",
+      "selected": false,
+      "a11y": "Step 3, Flop · SB, Call 675, Worth Discussing"
+     },
+     {
+      "number": "4",
+      "meta": "Turn · SB",
+      "action": "Check",
+      "chip": "Well Reasoned",
+      "tone": "sound",
+      "selected": true,
+      "a11y": "Step 4, Turn · SB, Check, Well Reasoned"
+     },
+     {
+      "number": "5",
+      "meta": "River · SB",
+      "action": "Check",
+      "chip": "Well Reasoned",
+      "tone": "sound",
+      "selected": false,
+      "a11y": "Step 5, River · SB, Check, Well Reasoned"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Step 4 · Turn",
+     "statusText": "Well Reasoned",
+     "tone": "sound",
+     "hole": [
+      "3-6",
+      "0-4"
+     ],
+     "board": [
+      "1-14",
+      "1-7",
+      "1-2",
+      "2-9"
+     ],
+     "meta": [
+      [
+       "Position",
+       "SB"
+      ],
+      [
+       "Pot at the time",
+       "2,775"
+      ],
+      [
+       "Stack remaining",
+       "4,175"
+      ]
+     ],
+     "yourChoice": "Check",
+     "suggestion": "Keep this line; adjust to opponent ranges",
+     "routes": [
+      [
+       "When the main line holds",
+       "Check",
+       "Without the last-to-act advantage, watch the opponent's bets and how the board develops first.",
+       "Saves chips; it doesn't guarantee a free card, so you still need a plan for later bets."
+      ],
+      [
+       "Conditional alternative",
+       "1-bet bet to 1,675",
+       "When there are clear worse hands that call, or the opponent will fold better hands; without evidence, keep checking.",
+       "Gains value or fold equity but is exposed to calls and raises; it hasn't been shown to earn more."
+      ]
+     ],
+     "simulation": {
+      "heading": "Candidate Action Simulation",
+      "stability": "Ranges or sampling error could change the order; no single best action has been shown.",
+      "stable": false,
+      "caption": "12 hands simulated per action and range · Net chip change from this decision on",
+      "columns": [
+       "Action",
+       "Random Range",
+       "Action-Weighted"
+      ],
+      "rows": [
+       {
+        "label": "Fold",
+        "cells": [
+         [
+          "0",
+          "≈ ±0",
+          "Fold, Random Range: 0 chips, ≈ ±0"
+         ],
+         [
+          "0",
+          "≈ ±0",
+          "Fold, Action-Weighted: 0 chips, ≈ ±0"
+         ]
+        ]
+       },
+       {
+        "label": "Check",
+        "cells": [
+         [
+          "0",
+          "≈ ±0",
+          "Check, Random Range: 0 chips, ≈ ±0"
+         ],
+         [
+          "0",
+          "≈ ±0",
+          "Check, Action-Weighted: 0 chips, ≈ ±0"
+         ]
+        ]
+       },
+       {
+        "label": "1-bet bet to 925",
+        "cells": [
+         [
+          "-1,196",
+          "≈ ±531",
+          "1-bet bet to 925, Random Range: -1,196 chips, ≈ ±531"
+         ],
+         [
+          "-1,196",
+          "≈ ±531",
+          "1-bet bet to 925, Action-Weighted: -1,196 chips, ≈ ±531"
+         ]
+        ]
+       },
+       {
+        "label": "1-bet bet to 1,800",
+        "cells": [
+         [
+          "-1,617",
+          "≈ ±873",
+          "1-bet bet to 1,800, Random Range: -1,617 chips, ≈ ±873"
+         ],
+         [
+          "-1,752",
+          "≈ ±922",
+          "1-bet bet to 1,800, Action-Weighted: -1,752 chips, ≈ ±922"
+         ]
+        ]
+       },
+       {
+        "label": "1-bet bet to 1,675",
+        "cells": [
+         [
+          "-1,512",
+          "≈ ±865",
+          "1-bet bet to 1,675, Random Range: -1,512 chips, ≈ ±865"
+         ],
+         [
+          "-1,512",
+          "≈ ±865",
+          "1-bet bet to 1,675, Action-Weighted: -1,512 chips, ≈ ±865"
+         ]
+        ]
+       }
+      ],
+      "detailsSummary": "How the simulation handles later action",
+      "details": [
+       "Unknown cards are sampled from the position at the time, and each hand is played out with the opponents' public styles; your later decisions use the balanced bot strategy, with 8 equity samples per decision. The figures estimate net chip change under this simulated strategy, treat chips already invested as sunk, and include split pots, refunds, and later betting. The error shown is approximate sampling error and does not cover errors in the range or strategy model. This is not GTO or a real player's optimal EV.",
+       "Results include immediate folds, calls, later raises, and showdowns; the real hidden hole cards, the actual card order that followed, and the final winners are never used. The two range results are not a range of optimal returns."
+      ]
+     },
+     "simulationNote": null,
+     "decisionTitle": "This check controls the pot",
+     "reason": "You had high card on a board that's three to a flush, with nothing to call. 2 players can still act after you, so checking doesn't guarantee a free card.",
+     "evidence": [
+      "Position SB · 2 opponents in the hand · Not last to act",
+      "Hand at the time: High Card",
+      "Board: Three to a flush",
+      "Effective stack ≈ 4,175 · SPR 1.5"
+     ],
+     "confidence": "Sensitive to ranges and later strategy; no single best line shown",
+     "lesson": "After checking, still separate a free chance from your conditions for continuing against a bet.",
+     "plan": "If someone bets, recalculate with the actual amount; if the board alone makes the hand, think about a split first and don't invent an edge from your hole cards.",
+     "metrics": [
+      [
+       "Equity needed to call",
+       "No call needed"
+      ],
+      [
+       "Two-range estimate",
+       "2%–3%"
+      ],
+      [
+       "Winnable after calling",
+       "2,775"
+      ]
+     ],
+     "modelNote": "60 samples per range, with a conservative sampling-error band of about ±20 percentage points; this isn't the error in the opponent's real range. Random / action-weighted equity: 2% / 3%. The gap between the two ranges is not a confidence interval.",
+     "priceNote": "The price is only a guide; later bets, other players' actions, and potential winnings aren't included.",
+     "publicActions": [],
+     "publicActionsEmpty": "No other actions yet this round.",
+     "position": "4 / 5",
+     "canPrevious": true,
+     "canNext": true
+    }
+   }
+  },
+  {
+   "name": "review hand 12 · done, step 5",
+   "source": "hands",
+   "input": "review hand 12: 6 seats, bots opponents, hero call",
+   "panel": "hero",
+   "state": {
+    "status": "done",
+    "progress": 5,
+    "analyzed": true,
+    "selected": 4
+   },
+   "hero": {
+    "title": "Hand #1 · Review",
+    "change": "-825 chips",
+    "context": "You didn't win the pot",
+    "stateText": "5 decisions, 800 chips put in. Start with step 1 (Preflop): Facing an open, check the price and the risk of domination first. 1 other issue to look through step by step.",
+    "running": false,
+    "progress": 5,
+    "total": 5,
+    "summaryTitle": "Worth comparing: Facing an open, check the price and the risk of domination first",
+    "priorityButton": "Go to the priority decision",
+    "priorityIndex": 0,
+    "retryVisible": false,
+    "stepCount": "5 actions",
+    "timeline": [
+     {
+      "number": "1",
+      "meta": "Preflop · SB",
+      "action": "Call 125",
+      "chip": "Worth Discussing",
+      "tone": "consider",
+      "selected": false,
+      "a11y": "Step 1, Preflop · SB, Call 125, Worth Discussing"
+     },
+     {
+      "number": "2",
+      "meta": "Flop · SB",
+      "action": "Check",
+      "chip": "Well Reasoned",
+      "tone": "sound",
+      "selected": false,
+      "a11y": "Step 2, Flop · SB, Check, Well Reasoned"
+     },
+     {
+      "number": "3",
+      "meta": "Flop · SB",
+      "action": "Call 675",
+      "chip": "Worth Discussing",
+      "tone": "consider",
+      "selected": false,
+      "a11y": "Step 3, Flop · SB, Call 675, Worth Discussing"
+     },
+     {
+      "number": "4",
+      "meta": "Turn · SB",
+      "action": "Check",
+      "chip": "Well Reasoned",
+      "tone": "sound",
+      "selected": false,
+      "a11y": "Step 4, Turn · SB, Check, Well Reasoned"
+     },
+     {
+      "number": "5",
+      "meta": "River · SB",
+      "action": "Check",
+      "chip": "Well Reasoned",
+      "tone": "sound",
+      "selected": true,
+      "a11y": "Step 5, River · SB, Check, Well Reasoned"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Step 5 · River",
+     "statusText": "Well Reasoned",
+     "tone": "sound",
+     "hole": [
+      "3-6",
+      "0-4"
+     ],
+     "board": [
+      "1-14",
+      "1-7",
+      "1-2",
+      "2-9",
+      "3-3"
+     ],
+     "meta": [
+      [
+       "Position",
+       "SB"
+      ],
+      [
+       "Pot at the time",
+       "2,775"
+      ],
+      [
+       "Stack remaining",
+       "4,175"
+      ]
+     ],
+     "yourChoice": "Check",
+     "suggestion": "Keep this line; adjust to opponent ranges",
+     "routes": [
+      [
+       "When the main line holds",
+       "Check",
+       "Without the last-to-act advantage, watch the opponent's bets and how the board develops first.",
+       "Saves chips; it doesn't guarantee a free card, so you still need a plan for later bets."
+      ],
+      [
+       "Conditional alternative",
+       "1-bet bet to 1,675",
+       "When there are clear worse hands that call, or the opponent will fold better hands; without evidence, keep checking.",
+       "Gains value or fold equity but is exposed to calls and raises; it hasn't been shown to earn more."
+      ]
+     ],
+     "simulation": {
+      "heading": "Candidate Action Simulation",
+      "stability": "Ranges or sampling error could change the order; no single best action has been shown.",
+      "stable": false,
+      "caption": "12 hands simulated per action and range · Net chip change from this decision on",
+      "columns": [
+       "Action",
+       "Random Range",
+       "Action-Weighted"
+      ],
+      "rows": [
+       {
+        "label": "Fold",
+        "cells": [
+         [
+          "0",
+          "≈ ±0",
+          "Fold, Random Range: 0 chips, ≈ ±0"
+         ],
+         [
+          "0",
+          "≈ ±0",
+          "Fold, Action-Weighted: 0 chips, ≈ ±0"
+         ]
+        ]
+       },
+       {
+        "label": "Check",
+        "cells": [
+         [
+          "0",
+          "≈ ±0",
+          "Check, Random Range: 0 chips, ≈ ±0"
+         ],
+         [
+          "0",
+          "≈ ±0",
+          "Check, Action-Weighted: 0 chips, ≈ ±0"
+         ]
+        ]
+       },
+       {
+        "label": "1-bet bet to 925",
+        "cells": [
+         [
+          "-617",
+          "≈ ±604",
+          "1-bet bet to 925, Random Range: -617 chips, ≈ ±604"
+         ],
+         [
+          "-617",
+          "≈ ±604",
+          "1-bet bet to 925, Action-Weighted: -617 chips, ≈ ±604"
+         ]
+        ]
+       },
+       {
+        "label": "1-bet bet to 1,800",
+        "cells": [
+         [
+          "-1,419",
+          "≈ ±747",
+          "1-bet bet to 1,800, Random Range: -1,419 chips, ≈ ±747"
+         ],
+         [
+          "-1,037",
+          "≈ ±1,008",
+          "1-bet bet to 1,800, Action-Weighted: -1,037 chips, ≈ ±1,008"
+         ]
+        ]
+       },
+       {
+        "label": "1-bet bet to 1,675",
+        "cells": [
+         [
+          "-1,304",
+          "≈ ±727",
+          "1-bet bet to 1,675, Random Range: -1,304 chips, ≈ ±727"
+         ],
+         [
+          "-933",
+          "≈ ±980",
+          "1-bet bet to 1,675, Action-Weighted: -933 chips, ≈ ±980"
+         ]
+        ]
+       }
+      ],
+      "detailsSummary": "How the simulation handles later action",
+      "details": [
+       "Unknown cards are sampled from the position at the time, and each hand is played out with the opponents' public styles; your later decisions use the balanced bot strategy, with 8 equity samples per decision. The figures estimate net chip change under this simulated strategy, treat chips already invested as sunk, and include split pots, refunds, and later betting. The error shown is approximate sampling error and does not cover errors in the range or strategy model. This is not GTO or a real player's optimal EV.",
+       "Results include immediate folds, calls, later raises, and showdowns; the real hidden hole cards, the actual card order that followed, and the final winners are never used. The two range results are not a range of optimal returns."
+      ]
+     },
+     "simulationNote": null,
+     "decisionTitle": "This check controls the pot",
+     "reason": "You had high card on a board that's three to a flush, clearly straight-connected, with nothing to call. 2 players can still act after you, so checking doesn't guarantee a free card.",
+     "evidence": [
+      "Position SB · 2 opponents in the hand · Not last to act",
+      "Hand at the time: High Card",
+      "Board: Three to a flush, clearly straight-connected",
+      "Effective stack ≈ 4,175 · SPR 1.5"
+     ],
+     "confidence": "Sensitive to ranges and later strategy; no single best line shown",
+     "lesson": "After checking, still separate a free chance from your conditions for continuing against a bet.",
+     "plan": "If someone bets, recalculate with the actual amount; if the board alone makes the hand, think about a split first and don't invent an edge from your hole cards.",
+     "metrics": [
+      [
+       "Equity needed to call",
+       "No call needed"
+      ],
+      [
+       "Two-range estimate",
+       "≈0%"
+      ],
+      [
+       "Winnable after calling",
+       "2,775"
+      ]
+     ],
+     "modelNote": "60 samples per range, with a conservative sampling-error band of about ±20 percentage points; this isn't the error in the opponent's real range. Random / action-weighted equity: 0% / 0%. The gap between the two ranges is not a confidence interval.",
+     "priceNote": "The price is only a guide; later bets, other players' actions, and potential winnings aren't included.",
+     "publicActions": [],
+     "publicActionsEmpty": "No other actions yet this round.",
+     "position": "5 / 5",
+     "canPrevious": true,
+     "canNext": false
+    }
+   }
+  },
+  {
+   "name": "review hand 12 · opponents, all, first",
+   "source": "hands",
+   "input": "review hand 12: 6 seats, bots opponents, hero call",
+   "panel": "opponents",
+   "state": {
+    "opponentFilter": null,
+    "opponentSelected": 0
+   },
+   "opponents": {
+    "filters": [
+     {
+      "seat": null,
+      "label": "All Opponents",
+      "selected": true
+     },
+     {
+      "seat": 2,
+      "label": "Alex",
+      "selected": false
+     },
+     {
+      "seat": 3,
+      "label": "River",
+      "selected": false
+     },
+     {
+      "seat": 4,
+      "label": "Kai",
+      "selected": false
+     },
+     {
+      "seat": 5,
+      "label": "Luna",
+      "selected": false
+     },
+     {
+      "seat": 1,
+      "label": "Mia",
+      "selected": false
+     }
+    ],
+    "count": "16 actions",
+    "timeline": [
+     {
+      "number": "1",
+      "meta": "Alex · Preflop",
+      "action": "2-bet open to 150",
+      "chip": "Johnny Tan · Tan Xuan",
+      "tone": "pending",
+      "selected": true,
+      "a11y": "Public action #1, Alex · Preflop, 2-bet open to 150, Johnny Tan · Tan Xuan"
+     },
+     {
+      "number": "2",
+      "meta": "River · Preflop",
+      "action": "Call 150",
+      "chip": "Johnny Tan · Tan Xuan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #2, River · Preflop, Call 150, Johnny Tan · Tan Xuan"
+     },
+     {
+      "number": "3",
+      "meta": "Kai · Preflop",
+      "action": "Call 150",
+      "chip": "Tom Dwan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #3, Kai · Preflop, Call 150, Tom Dwan"
+     },
+     {
+      "number": "4",
+      "meta": "Luna · Preflop",
+      "action": "Fold",
+      "chip": "Johnny Tan · Tan Xuan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #4, Luna · Preflop, Fold, Johnny Tan · Tan Xuan"
+     },
+     {
+      "number": "6",
+      "meta": "Mia · Preflop",
+      "action": "Call 100",
+      "chip": "Tom Dwan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #6, Mia · Preflop, Call 100, Tom Dwan"
+     },
+     {
+      "number": "8",
+      "meta": "Mia · Flop",
+      "action": "Check",
+      "chip": "Tom Dwan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #8, Mia · Flop, Check, Tom Dwan"
+     },
+     {
+      "number": "9",
+      "meta": "Alex · Flop",
+      "action": "Check",
+      "chip": "Johnny Tan · Tan Xuan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #9, Alex · Flop, Check, Johnny Tan · Tan Xuan"
+     },
+     {
+      "number": "10",
+      "meta": "River · Flop",
+      "action": "Check",
+      "chip": "Johnny Tan · Tan Xuan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #10, River · Flop, Check, Johnny Tan · Tan Xuan"
+     },
+     {
+      "number": "11",
+      "meta": "Kai · Flop",
+      "action": "1-bet bet to 675",
+      "chip": "Tom Dwan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #11, Kai · Flop, 1-bet bet to 675, Tom Dwan"
+     },
+     {
+      "number": "13",
+      "meta": "Mia · Flop",
+      "action": "Fold",
+      "chip": "Tom Dwan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #13, Mia · Flop, Fold, Tom Dwan"
+     },
+     {
+      "number": "14",
+      "meta": "Alex · Flop",
+      "action": "Fold",
+      "chip": "Johnny Tan · Tan Xuan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #14, Alex · Flop, Fold, Johnny Tan · Tan Xuan"
+     },
+     {
+      "number": "15",
+      "meta": "River · Flop",
+      "action": "Call 675",
+      "chip": "Johnny Tan · Tan Xuan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #15, River · Flop, Call 675, Johnny Tan · Tan Xuan"
+     },
+     {
+      "number": "17",
+      "meta": "River · Turn",
+      "action": "Check",
+      "chip": "Johnny Tan · Tan Xuan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #17, River · Turn, Check, Johnny Tan · Tan Xuan"
+     },
+     {
+      "number": "18",
+      "meta": "Kai · Turn",
+      "action": "Check",
+      "chip": "Tom Dwan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #18, Kai · Turn, Check, Tom Dwan"
+     },
+     {
+      "number": "20",
+      "meta": "River · River",
+      "action": "Check",
+      "chip": "Johnny Tan · Tan Xuan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #20, River · River, Check, Johnny Tan · Tan Xuan"
+     },
+     {
+      "number": "21",
+      "meta": "Kai · River",
+      "action": "Check",
+      "chip": "Tom Dwan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #21, Kai · River, Check, Tom Dwan"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Alex · Preflop",
+     "statusText": "Actual decision record",
+     "tone": "sound",
+     "holeLabel": "Alex's hole cards at the time",
+     "hole": [
+      "3-8",
+      "3-13"
+     ],
+     "board": [],
+     "meta": [
+      [
+       "Position",
+       "UTG"
+      ],
+      [
+       "Pot at the time",
+       "75"
+      ],
+      [
+       "Stack remaining",
+       "6,842"
+      ]
+     ],
+     "choiceLabel": "It chose · Preflop hand",
+     "choice": "2-bet open to 150",
+     "explanationTitle": "Raising range triggered aggression",
+     "explanation": "The hand was in the open / isolation raise candidate range (about the top 38.8%), or triggered the premium branch, and the aggression roll hit, so it built the pot. Marginal hands allowed to flat don't automatically re-raise just because the entry range widened, and the label doesn't mean the nuts.",
+     "profileName": "Johnny Tan · Tan Xuan",
+     "reasons": [
+      "Starting-hand rank: about top 17.2%; this style, position, and the public raising line allow the top 69.8%. It was inside that range. The ranking is a starting-hand heuristic, not a win rate.",
+      "It faced 5 opponents still in, needed 50 to call, could win 125 in the model, and needed 40.0% equity to call.",
+      "It passed the low-cost entry branch, so the normal equity fold check didn't run; the equity and threshold below are only the values computed at the time, not what triggered this action.",
+      "Using only its own cards and the board, it sampled random opponent ranges 28 times: raw estimate 15.5%, judgment noise -1.4%, equity used 14.1%. Calling-tendency shift +2.0%, compared value 16.1%; the usual threshold, including a 2-point buffer, was 42.0%.",
+      "No mood shift this time; base style settings were used.",
+      "Sizing first produced a total of 150, then was clamped to the legal range 100–6,842, giving 150. In an unraised pot, it uses the open / number-of-limpers formula."
+     ],
+     "warning": "This is the decision record the simulator actually used at the time. Equity is a small-sample estimate against a random range; it doesn't fully model the opponent's continuing range, equity realization, or future strategy. It is not a real pro's thinking and not proof of optimal play.",
+     "branches": [
+      [
+       "Aggression frequency roll",
+       "0.446 / threshold 84.8% · Hit"
+      ]
+     ],
+     "branchesEmpty": null,
+     "position": "Public action #1",
+     "canPrevious": false,
+     "canNext": true
+    }
+   }
+  },
+  {
+   "name": "review hand 12 · opponents, all, last",
+   "source": "hands",
+   "input": "review hand 12: 6 seats, bots opponents, hero call",
+   "panel": "opponents",
+   "state": {
+    "opponentFilter": null,
+    "opponentSelected": 15
+   },
+   "opponents": {
+    "filters": [
+     {
+      "seat": null,
+      "label": "All Opponents",
+      "selected": true
+     },
+     {
+      "seat": 2,
+      "label": "Alex",
+      "selected": false
+     },
+     {
+      "seat": 3,
+      "label": "River",
+      "selected": false
+     },
+     {
+      "seat": 4,
+      "label": "Kai",
+      "selected": false
+     },
+     {
+      "seat": 5,
+      "label": "Luna",
+      "selected": false
+     },
+     {
+      "seat": 1,
+      "label": "Mia",
+      "selected": false
+     }
+    ],
+    "count": "16 actions",
+    "timeline": [
+     {
+      "number": "1",
+      "meta": "Alex · Preflop",
+      "action": "2-bet open to 150",
+      "chip": "Johnny Tan · Tan Xuan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #1, Alex · Preflop, 2-bet open to 150, Johnny Tan · Tan Xuan"
+     },
+     {
+      "number": "2",
+      "meta": "River · Preflop",
+      "action": "Call 150",
+      "chip": "Johnny Tan · Tan Xuan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #2, River · Preflop, Call 150, Johnny Tan · Tan Xuan"
+     },
+     {
+      "number": "3",
+      "meta": "Kai · Preflop",
+      "action": "Call 150",
+      "chip": "Tom Dwan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #3, Kai · Preflop, Call 150, Tom Dwan"
+     },
+     {
+      "number": "4",
+      "meta": "Luna · Preflop",
+      "action": "Fold",
+      "chip": "Johnny Tan · Tan Xuan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #4, Luna · Preflop, Fold, Johnny Tan · Tan Xuan"
+     },
+     {
+      "number": "6",
+      "meta": "Mia · Preflop",
+      "action": "Call 100",
+      "chip": "Tom Dwan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #6, Mia · Preflop, Call 100, Tom Dwan"
+     },
+     {
+      "number": "8",
+      "meta": "Mia · Flop",
+      "action": "Check",
+      "chip": "Tom Dwan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #8, Mia · Flop, Check, Tom Dwan"
+     },
+     {
+      "number": "9",
+      "meta": "Alex · Flop",
+      "action": "Check",
+      "chip": "Johnny Tan · Tan Xuan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #9, Alex · Flop, Check, Johnny Tan · Tan Xuan"
+     },
+     {
+      "number": "10",
+      "meta": "River · Flop",
+      "action": "Check",
+      "chip": "Johnny Tan · Tan Xuan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #10, River · Flop, Check, Johnny Tan · Tan Xuan"
+     },
+     {
+      "number": "11",
+      "meta": "Kai · Flop",
+      "action": "1-bet bet to 675",
+      "chip": "Tom Dwan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #11, Kai · Flop, 1-bet bet to 675, Tom Dwan"
+     },
+     {
+      "number": "13",
+      "meta": "Mia · Flop",
+      "action": "Fold",
+      "chip": "Tom Dwan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #13, Mia · Flop, Fold, Tom Dwan"
+     },
+     {
+      "number": "14",
+      "meta": "Alex · Flop",
+      "action": "Fold",
+      "chip": "Johnny Tan · Tan Xuan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #14, Alex · Flop, Fold, Johnny Tan · Tan Xuan"
+     },
+     {
+      "number": "15",
+      "meta": "River · Flop",
+      "action": "Call 675",
+      "chip": "Johnny Tan · Tan Xuan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #15, River · Flop, Call 675, Johnny Tan · Tan Xuan"
+     },
+     {
+      "number": "17",
+      "meta": "River · Turn",
+      "action": "Check",
+      "chip": "Johnny Tan · Tan Xuan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #17, River · Turn, Check, Johnny Tan · Tan Xuan"
+     },
+     {
+      "number": "18",
+      "meta": "Kai · Turn",
+      "action": "Check",
+      "chip": "Tom Dwan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #18, Kai · Turn, Check, Tom Dwan"
+     },
+     {
+      "number": "20",
+      "meta": "River · River",
+      "action": "Check",
+      "chip": "Johnny Tan · Tan Xuan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #20, River · River, Check, Johnny Tan · Tan Xuan"
+     },
+     {
+      "number": "21",
+      "meta": "Kai · River",
+      "action": "Check",
+      "chip": "Tom Dwan",
+      "tone": "pending",
+      "selected": true,
+      "a11y": "Public action #21, Kai · River, Check, Tom Dwan"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Kai · River",
+     "statusText": "Actual decision record",
+     "tone": "sound",
+     "holeLabel": "Kai's hole cards at the time",
+     "hole": [
+      "0-10",
+      "1-13"
+     ],
+     "board": [
+      "1-14",
+      "1-7",
+      "1-2",
+      "2-9",
+      "3-3"
+     ],
+     "meta": [
+      [
+       "Position",
+       "CO"
+      ],
+      [
+       "Pot at the time",
+       "2,775"
+      ],
+      [
+       "Stack remaining",
+       "4,175"
+      ]
+     ],
+     "choiceLabel": "It chose · High Card",
+     "choice": "Check",
+     "explanationTitle": "Took a free look / pot control",
+     "explanation": "It had nothing to call, didn't raise, and took a free look. A check doesn't mean it was weak; the aggression roll may simply have missed.",
+     "profileName": "Tom Dwan",
+     "reasons": [
+      "It faced 2 opponents still in, needed 0 to call, could win 2,775 in the model, and needed 0.0% equity to call.",
+      "Using only its own cards and the board, it sampled random opponent ranges 28 times: raw estimate 7.1%, judgment noise -3.6%, equity used 3.6%. Calling-tendency shift +2.5%, compared value 6.1%; the usual threshold, including a 2-point buffer, was 2.0%.",
+      "No mood shift this time; base style settings were used."
+     ],
+     "warning": "This is the decision record the simulator actually used at the time. Equity is a small-sample estimate against a random range; it doesn't fully model the opponent's continuing range, equity realization, or future strategy. It is not a real pro's thinking and not proof of optimal play.",
+     "branches": [
+      [
+       "Bluff roll triggered pressure",
+       "0.065 / threshold 3.2% · Miss"
+      ]
+     ],
+     "branchesEmpty": null,
+     "position": "Public action #21",
+     "canPrevious": true,
+     "canNext": false
+    }
+   }
+  },
+  {
+   "name": "review hand 12 · opponents, seat 4, last",
+   "source": "hands",
+   "input": "review hand 12: 6 seats, bots opponents, hero call",
+   "panel": "opponents",
+   "state": {
+    "opponentFilter": 4,
+    "opponentSelected": 3
+   },
+   "opponents": {
+    "filters": [
+     {
+      "seat": null,
+      "label": "All Opponents",
+      "selected": false
+     },
+     {
+      "seat": 2,
+      "label": "Alex",
+      "selected": false
+     },
+     {
+      "seat": 3,
+      "label": "River",
+      "selected": false
+     },
+     {
+      "seat": 4,
+      "label": "Kai",
+      "selected": true
+     },
+     {
+      "seat": 5,
+      "label": "Luna",
+      "selected": false
+     },
+     {
+      "seat": 1,
+      "label": "Mia",
+      "selected": false
+     }
+    ],
+    "count": "4 actions",
+    "timeline": [
+     {
+      "number": "3",
+      "meta": "Kai · Preflop",
+      "action": "Call 150",
+      "chip": "Tom Dwan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #3, Kai · Preflop, Call 150, Tom Dwan"
+     },
+     {
+      "number": "11",
+      "meta": "Kai · Flop",
+      "action": "1-bet bet to 675",
+      "chip": "Tom Dwan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #11, Kai · Flop, 1-bet bet to 675, Tom Dwan"
+     },
+     {
+      "number": "18",
+      "meta": "Kai · Turn",
+      "action": "Check",
+      "chip": "Tom Dwan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #18, Kai · Turn, Check, Tom Dwan"
+     },
+     {
+      "number": "21",
+      "meta": "Kai · River",
+      "action": "Check",
+      "chip": "Tom Dwan",
+      "tone": "pending",
+      "selected": true,
+      "a11y": "Public action #21, Kai · River, Check, Tom Dwan"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Kai · River",
+     "statusText": "Actual decision record",
+     "tone": "sound",
+     "holeLabel": "Kai's hole cards at the time",
+     "hole": [
+      "0-10",
+      "1-13"
+     ],
+     "board": [
+      "1-14",
+      "1-7",
+      "1-2",
+      "2-9",
+      "3-3"
+     ],
+     "meta": [
+      [
+       "Position",
+       "CO"
+      ],
+      [
+       "Pot at the time",
+       "2,775"
+      ],
+      [
+       "Stack remaining",
+       "4,175"
+      ]
+     ],
+     "choiceLabel": "It chose · High Card",
+     "choice": "Check",
+     "explanationTitle": "Took a free look / pot control",
+     "explanation": "It had nothing to call, didn't raise, and took a free look. A check doesn't mean it was weak; the aggression roll may simply have missed.",
+     "profileName": "Tom Dwan",
+     "reasons": [
+      "It faced 2 opponents still in, needed 0 to call, could win 2,775 in the model, and needed 0.0% equity to call.",
+      "Using only its own cards and the board, it sampled random opponent ranges 28 times: raw estimate 7.1%, judgment noise -3.6%, equity used 3.6%. Calling-tendency shift +2.5%, compared value 6.1%; the usual threshold, including a 2-point buffer, was 2.0%.",
+      "No mood shift this time; base style settings were used."
+     ],
+     "warning": "This is the decision record the simulator actually used at the time. Equity is a small-sample estimate against a random range; it doesn't fully model the opponent's continuing range, equity realization, or future strategy. It is not a real pro's thinking and not proof of optimal play.",
+     "branches": [
+      [
+       "Bluff roll triggered pressure",
+       "0.065 / threshold 3.2% · Miss"
+      ]
+     ],
+     "branchesEmpty": null,
+     "position": "Public action #21",
+     "canPrevious": true,
+     "canNext": false
+    }
+   }
+  },
+  {
+   "name": "review hand 20 · idle",
+   "source": "hands",
+   "input": "review hand 20: 9 seats, bots opponents, hero mixed",
+   "panel": "hero",
+   "state": {
+    "status": "idle",
+    "progress": 0,
+    "analyzed": false,
+    "selected": 0
+   },
+   "hero": {
+    "title": "Hand #1 · Review",
+    "change": "+575 chips",
+    "context": "You won the pot",
+    "stateText": "Preparing this hand's decision snapshots…",
+    "running": false,
+    "progress": 0,
+    "total": 2,
+    "summaryTitle": "Back to the decisions as they were",
+    "priorityButton": null,
+    "priorityIndex": null,
+    "retryVisible": false,
+    "stepCount": "2 actions",
+    "timeline": [
+     {
+      "number": "1",
+      "meta": "Preflop · UTG+1",
+      "action": "Call 50",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": true,
+      "a11y": "Step 1, Preflop · UTG+1, Call 50, Pending"
+     },
+     {
+      "number": "2",
+      "meta": "Preflop · UTG+1",
+      "action": "3-bet raise to 1,121",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Step 2, Preflop · UTG+1, 3-bet raise to 1,121, Pending"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Step 1 · Preflop",
+     "statusText": "Analyzing",
+     "tone": "pending",
+     "hole": [
+      "1-12",
+      "1-11"
+     ],
+     "board": [],
+     "meta": [
+      [
+       "Position",
+       "UTG+1"
+      ],
+      [
+       "Pot at the time",
+       "125"
+      ],
+      [
+       "Stack remaining",
+       "5,000"
+      ]
+     ],
+     "yourChoice": "Call 50",
+     "suggestion": "Comparing available actions…",
+     "routes": [],
+     "simulation": null,
+     "simulationNote": "Simulating each legal action and the rest of the hand…",
+     "decisionTitle": "Analysis based on what you knew then",
+     "reason": "Uses your hole cards, the community cards, public actions, and stacks at the time, never opponents' hidden cards or cards dealt later.",
+     "evidence": [],
+     "confidence": "Waiting for analysis",
+     "lesson": "Judge the decision separately from the result; a specific practice focus appears when the review is done.",
+     "plan": "The follow-up plan appears when analysis finishes.",
+     "metrics": [
+      [
+       "Equity needed to call",
+       "…"
+      ],
+      [
+       "Two-range estimate",
+       "—"
+      ],
+      [
+       "Winnable after calling",
+       "…"
+      ]
+     ],
+     "modelNote": null,
+     "priceNote": "The price is only a guide; later bets, other players' actions, and potential winnings aren't included.",
+     "publicActions": [
+      [
+       "Leo",
+       "Call 50"
+      ]
+     ],
+     "publicActionsEmpty": null,
+     "position": "1 / 2",
+     "canPrevious": false,
+     "canNext": true
+    }
+   }
+  },
+  {
+   "name": "review hand 20 · running",
+   "source": "hands",
+   "input": "review hand 20: 9 seats, bots opponents, hero mixed",
+   "panel": "hero",
+   "state": {
+    "status": "running",
+    "progress": 1,
+    "analyzed": false,
+    "selected": 1
+   },
+   "hero": {
+    "title": "Hand #1 · Review",
+    "change": "+575 chips",
+    "context": "You won the pot",
+    "stateText": "Analyzing decision 1 of 2…",
+    "running": true,
+    "progress": 1,
+    "total": 2,
+    "summaryTitle": "Back to the decisions as they were",
+    "priorityButton": null,
+    "priorityIndex": null,
+    "retryVisible": false,
+    "stepCount": "2 actions",
+    "timeline": [
+     {
+      "number": "1",
+      "meta": "Preflop · UTG+1",
+      "action": "Call 50",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Step 1, Preflop · UTG+1, Call 50, Pending"
+     },
+     {
+      "number": "2",
+      "meta": "Preflop · UTG+1",
+      "action": "3-bet raise to 1,121",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": true,
+      "a11y": "Step 2, Preflop · UTG+1, 3-bet raise to 1,121, Pending"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Step 2 · Preflop",
+     "statusText": "Analyzing",
+     "tone": "pending",
+     "hole": [
+      "1-12",
+      "1-11"
+     ],
+     "board": [],
+     "meta": [
+      [
+       "Position",
+       "UTG+1"
+      ],
+      [
+       "Pot at the time",
+       "625"
+      ],
+      [
+       "Stack remaining",
+       "4,950"
+      ]
+     ],
+     "yourChoice": "3-bet raise to 1,121",
+     "suggestion": "Comparing available actions…",
+     "routes": [],
+     "simulation": null,
+     "simulationNote": "Simulating each legal action and the rest of the hand…",
+     "decisionTitle": "Analysis based on what you knew then",
+     "reason": "Uses your hole cards, the community cards, public actions, and stacks at the time, never opponents' hidden cards or cards dealt later.",
+     "evidence": [],
+     "confidence": "Waiting for analysis",
+     "lesson": "Judge the decision separately from the result; a specific practice focus appears when the review is done.",
+     "plan": "The follow-up plan appears when analysis finishes.",
+     "metrics": [
+      [
+       "Equity needed to call",
+       "…"
+      ],
+      [
+       "Two-range estimate",
+       "—"
+      ],
+      [
+       "Winnable after calling",
+       "…"
+      ]
+     ],
+     "modelNote": null,
+     "priceNote": "The price is only a guide; later bets, other players' actions, and potential winnings aren't included.",
+     "publicActions": [
+      [
+       "River",
+       "Fold"
+      ],
+      [
+       "Kai",
+       "Fold"
+      ],
+      [
+       "Luna",
+       "Fold"
+      ],
+      [
+       "Theo",
+       "Fold"
+      ],
+      [
+       "Jade",
+       "Call 200"
+      ],
+      [
+       "Leo",
+       "Fold"
+      ]
+     ],
+     "publicActionsEmpty": null,
+     "position": "2 / 2",
+     "canPrevious": true,
+     "canNext": false
+    }
+   }
+  },
+  {
+   "name": "review hand 20 · error",
+   "source": "hands",
+   "input": "review hand 20: 9 seats, bots opponents, hero mixed",
+   "panel": "hero",
+   "state": {
+    "status": "error",
+    "progress": 1,
+    "analyzed": false,
+    "selected": 0
+   },
+   "hero": {
+    "title": "Hand #1 · Review",
+    "change": "+575 chips",
+    "context": "You won the pot",
+    "stateText": "Analysis didn't finish. You can try again.",
+    "running": false,
+    "progress": 1,
+    "total": 2,
+    "summaryTitle": "Back to the decisions as they were",
+    "priorityButton": null,
+    "priorityIndex": null,
+    "retryVisible": true,
+    "stepCount": "2 actions",
+    "timeline": [
+     {
+      "number": "1",
+      "meta": "Preflop · UTG+1",
+      "action": "Call 50",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": true,
+      "a11y": "Step 1, Preflop · UTG+1, Call 50, Pending"
+     },
+     {
+      "number": "2",
+      "meta": "Preflop · UTG+1",
+      "action": "3-bet raise to 1,121",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Step 2, Preflop · UTG+1, 3-bet raise to 1,121, Pending"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Step 1 · Preflop",
+     "statusText": "Analyzing",
+     "tone": "pending",
+     "hole": [
+      "1-12",
+      "1-11"
+     ],
+     "board": [],
+     "meta": [
+      [
+       "Position",
+       "UTG+1"
+      ],
+      [
+       "Pot at the time",
+       "125"
+      ],
+      [
+       "Stack remaining",
+       "5,000"
+      ]
+     ],
+     "yourChoice": "Call 50",
+     "suggestion": "Comparing available actions…",
+     "routes": [],
+     "simulation": null,
+     "simulationNote": "Simulating each legal action and the rest of the hand…",
+     "decisionTitle": "Analysis based on what you knew then",
+     "reason": "Uses your hole cards, the community cards, public actions, and stacks at the time, never opponents' hidden cards or cards dealt later.",
+     "evidence": [],
+     "confidence": "Waiting for analysis",
+     "lesson": "Judge the decision separately from the result; a specific practice focus appears when the review is done.",
+     "plan": "The follow-up plan appears when analysis finishes.",
+     "metrics": [
+      [
+       "Equity needed to call",
+       "…"
+      ],
+      [
+       "Two-range estimate",
+       "—"
+      ],
+      [
+       "Winnable after calling",
+       "…"
+      ]
+     ],
+     "modelNote": null,
+     "priceNote": "The price is only a guide; later bets, other players' actions, and potential winnings aren't included.",
+     "publicActions": [
+      [
+       "Leo",
+       "Call 50"
+      ]
+     ],
+     "publicActionsEmpty": null,
+     "position": "1 / 2",
+     "canPrevious": false,
+     "canNext": true
+    }
+   }
+  },
+  {
+   "name": "review hand 20 · done, step 1",
+   "source": "hands",
+   "input": "review hand 20: 9 seats, bots opponents, hero mixed",
+   "panel": "hero",
+   "state": {
+    "status": "done",
+    "progress": 2,
+    "analyzed": true,
+    "selected": 0
+   },
+   "hero": {
+    "title": "Hand #1 · Review",
+    "change": "+575 chips",
+    "context": "You won the pot",
+    "stateText": "2 decisions, 1,121 chips put in. Start with step 1 (Preflop): This call depends on price and your ability to realize equity.",
+    "running": false,
+    "progress": 2,
+    "total": 2,
+    "summaryTitle": "No obvious decision mistakes found",
+    "priorityButton": "Review from step 1",
+    "priorityIndex": 0,
+    "retryVisible": false,
+    "stepCount": "2 actions",
+    "timeline": [
+     {
+      "number": "1",
+      "meta": "Preflop · UTG+1",
+      "action": "Call 50",
+      "chip": "Well Reasoned",
+      "tone": "sound",
+      "selected": true,
+      "a11y": "Step 1, Preflop · UTG+1, Call 50, Well Reasoned"
+     },
+     {
+      "number": "2",
+      "meta": "Preflop · UTG+1",
+      "action": "3-bet raise to 1,121",
+      "chip": "Well Reasoned",
+      "tone": "sound",
+      "selected": false,
+      "a11y": "Step 2, Preflop · UTG+1, 3-bet raise to 1,121, Well Reasoned"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Step 1 · Preflop",
+     "statusText": "Well Reasoned",
+     "tone": "sound",
+     "hole": [
+      "1-12",
+      "1-11"
+     ],
+     "board": [],
+     "meta": [
+      [
+       "Position",
+       "UTG+1"
+      ],
+      [
+       "Pot at the time",
+       "125"
+      ],
+      [
+       "Stack remaining",
+       "5,000"
+      ]
+     ],
+     "yourChoice": "Call 50",
+     "suggestion": "Keep this line; adjust to opponent ranges",
+     "routes": [
+      [
+       "When the main line holds",
+       "Call 50",
+       "The opponent's range and the price leave enough margin, and later pressure is manageable.",
+       "Keeps your range wide and avoids turning thin-value hands into a raise that only gets called by stronger hands."
+      ],
+      [
+       "Conditional alternative",
+       "Fold",
+       "When the opponent's value range is narrower, someone behind may re-raise, or you can't afford later bets.",
+       "Gives up some equity for lower risk; having called one street isn't a reason to keep calling."
+      ]
+     ],
+     "simulation": {
+      "heading": "Candidate Action Simulation",
+      "stability": "Ranges or sampling error could change the order; no single best action has been shown.",
+      "stable": false,
+      "caption": "12 hands simulated per action and range · Net chip change from this decision on",
+      "columns": [
+       "Action",
+       "Random Range",
+       "Action-Weighted"
+      ],
+      "rows": [
+       {
+        "label": "Fold",
+        "cells": [
+         [
+          "0",
+          "≈ ±0",
+          "Fold, Random Range: 0 chips, ≈ ±0"
+         ],
+         [
+          "0",
+          "≈ ±0",
+          "Fold, Action-Weighted: 0 chips, ≈ ±0"
+         ]
+        ]
+       },
+       {
+        "label": "Call 50",
+        "cells": [
+         [
+          "-687",
+          "≈ ±1,804",
+          "Call 50, Random Range: -687 chips, ≈ ±1,804"
+         ],
+         [
+          "-756",
+          "≈ ±1,795",
+          "Call 50, Action-Weighted: -756 chips, ≈ ±1,795"
+         ]
+        ]
+       },
+       {
+        "label": "2-bet open to 100",
+        "cells": [
+         [
+          "-705",
+          "≈ ±1,654",
+          "2-bet open to 100, Random Range: -705 chips, ≈ ±1,654"
+         ],
+         [
+          "-540",
+          "≈ ±1,972",
+          "2-bet open to 100, Action-Weighted: -540 chips, ≈ ±1,972"
+         ]
+        ]
+       },
+       {
+        "label": "2-bet open to 150",
+        "cells": [
+         [
+          "-609",
+          "≈ ±1,637",
+          "2-bet open to 150, Random Range: -609 chips, ≈ ±1,637"
+         ],
+         [
+          "+183",
+          "≈ ±2,318",
+          "2-bet open to 150, Action-Weighted: +183 chips, ≈ ±2,318"
+         ]
+        ]
+       }
+      ],
+      "detailsSummary": "How the simulation handles later action",
+      "details": [
+       "Unknown cards are sampled from the position at the time, and each hand is played out with the opponents' public styles; your later decisions use the balanced bot strategy, with 8 equity samples per decision. The figures estimate net chip change under this simulated strategy, treat chips already invested as sunk, and include split pots, refunds, and later betting. The error shown is approximate sampling error and does not cover errors in the range or strategy model. This is not GTO or a real player's optimal EV.",
+       "Results include immediate folds, calls, later raises, and showdowns; the real hidden hole cards, the actual card order that followed, and the final winners are never used. The two range results are not a range of optimal returns."
+      ]
+     },
+     "simulationNote": null,
+     "decisionTitle": "This call depends on price and your ability to realize equity",
+     "reason": "You held Q/J suited, with 8 opponents still in. Effective call cost 50; after calling you can win 175; break-even equity is about 29%. Pot equity is about 35% against a random range and 28% against an action-weighted range.",
+     "evidence": [
+      "Position UTG+1 · 8 opponents in the hand",
+      "Hand at the time: Q/J suited",
+      "Preflop raises: 0 · Still to act: 7",
+      "Effective stack ≈ 5,000 · SPR 40.0",
+      "Effective call cost 50; after calling you can win 175; break-even equity is about 29%.",
+      "Preflop situation: Unraised, with limpers · Limpers: 1"
+     ],
+     "confidence": "Sensitive to ranges and later strategy; no single best line shown",
+     "lesson": "Having room on the price doesn't mean you can call down automatically; further action and equity realization are still risky.",
+     "plan": "Watch the 7 players who can still act, and whether the next card brings a stronger straight or flush texture.",
+     "metrics": [
+      [
+       "Equity needed to call",
+       "29%"
+      ],
+      [
+       "Two-range estimate",
+       "28%–35%"
+      ],
+      [
+       "Winnable after calling",
+       "175"
+      ]
+     ],
+     "modelNote": "60 samples per range, with a conservative sampling-error band of about ±20 percentage points; this isn't the error in the opponent's real range. Random / action-weighted equity: 35% / 28%. The gap between the two ranges is not a confidence interval.",
+     "priceNote": "Estimated separately for each pot you're eligible for; side pots beyond your all-in amount are excluded.",
+     "publicActions": [
+      [
+       "Leo",
+       "Call 50"
+      ]
+     ],
+     "publicActionsEmpty": null,
+     "position": "1 / 2",
+     "canPrevious": false,
+     "canNext": true
+    }
+   }
+  },
+  {
+   "name": "review hand 20 · done, step 2",
+   "source": "hands",
+   "input": "review hand 20: 9 seats, bots opponents, hero mixed",
+   "panel": "hero",
+   "state": {
+    "status": "done",
+    "progress": 2,
+    "analyzed": true,
+    "selected": 1
+   },
+   "hero": {
+    "title": "Hand #1 · Review",
+    "change": "+575 chips",
+    "context": "You won the pot",
+    "stateText": "2 decisions, 1,121 chips put in. Start with step 1 (Preflop): This call depends on price and your ability to realize equity.",
+    "running": false,
+    "progress": 2,
+    "total": 2,
+    "summaryTitle": "No obvious decision mistakes found",
+    "priorityButton": "Review from step 1",
+    "priorityIndex": 0,
+    "retryVisible": false,
+    "stepCount": "2 actions",
+    "timeline": [
+     {
+      "number": "1",
+      "meta": "Preflop · UTG+1",
+      "action": "Call 50",
+      "chip": "Well Reasoned",
+      "tone": "sound",
+      "selected": false,
+      "a11y": "Step 1, Preflop · UTG+1, Call 50, Well Reasoned"
+     },
+     {
+      "number": "2",
+      "meta": "Preflop · UTG+1",
+      "action": "3-bet raise to 1,121",
+      "chip": "Well Reasoned",
+      "tone": "sound",
+      "selected": true,
+      "a11y": "Step 2, Preflop · UTG+1, 3-bet raise to 1,121, Well Reasoned"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Step 2 · Preflop",
+     "statusText": "Well Reasoned",
+     "tone": "sound",
+     "hole": [
+      "1-12",
+      "1-11"
+     ],
+     "board": [],
+     "meta": [
+      [
+       "Position",
+       "UTG+1"
+      ],
+      [
+       "Pot at the time",
+       "625"
+      ],
+      [
+       "Stack remaining",
+       "4,950"
+      ]
+     ],
+     "yourChoice": "3-bet raise to 1,121",
+     "suggestion": "Keep this line; adjust to opponent ranges",
+     "routes": [
+      [
+       "When the main line holds",
+       "3-bet raise to 1,121",
+       "You can name worse hands that will pay, and you're prepared to reassess if raised.",
+       "Builds the pot and protects equity; the bigger the size, the stronger the continuing range may be."
+      ],
+      [
+       "Conditional alternative",
+       "Call 200",
+       "When the opponent will bet on their own or you lack position, keep an induce / pot-control line.",
+       "Keeps the pot smaller, but may give draws a free card or miss value."
+      ]
+     ],
+     "simulation": {
+      "heading": "Candidate Action Simulation",
+      "stability": "Ranges or sampling error could change the order; no single best action has been shown.",
+      "stable": false,
+      "caption": "12 hands simulated per action and range · Net chip change from this decision on",
+      "columns": [
+       "Action",
+       "Random Range",
+       "Action-Weighted"
+      ],
+      "rows": [
+       {
+        "label": "Fold",
+        "cells": [
+         [
+          "0",
+          "≈ ±0",
+          "Fold, Random Range: 0 chips, ≈ ±0"
+         ],
+         [
+          "0",
+          "≈ ±0",
+          "Fold, Action-Weighted: 0 chips, ≈ ±0"
+         ]
+        ]
+       },
+       {
+        "label": "Call 200",
+        "cells": [
+         [
+          "+1,348",
+          "≈ ±2,036",
+          "Call 200, Random Range: +1,348 chips, ≈ ±2,036"
+         ],
+         [
+          "+244",
+          "≈ ±973",
+          "Call 200, Action-Weighted: +244 chips, ≈ ±973"
+         ]
+        ]
+       },
+       {
+        "label": "3-bet raise to 625",
+        "cells": [
+         [
+          "+556",
+          "≈ ±1,249",
+          "3-bet raise to 625, Random Range: +556 chips, ≈ ±1,249"
+         ],
+         [
+          "-440",
+          "≈ ±1,611",
+          "3-bet raise to 625, Action-Weighted: -440 chips, ≈ ±1,611"
+         ]
+        ]
+       },
+       {
+        "label": "3-bet raise to 875",
+        "cells": [
+         [
+          "+719",
+          "≈ ±1,018",
+          "3-bet raise to 875, Random Range: +719 chips, ≈ ±1,018"
+         ],
+         [
+          "-252",
+          "≈ ±1,650",
+          "3-bet raise to 875, Action-Weighted: -252 chips, ≈ ±1,650"
+         ]
+        ]
+       },
+       {
+        "label": "3-bet raise to 1,121",
+        "cells": [
+         [
+          "+655",
+          "≈ ±1,104",
+          "3-bet raise to 1,121, Random Range: +655 chips, ≈ ±1,104"
+         ],
+         [
+          "-160",
+          "≈ ±1,715",
+          "3-bet raise to 1,121, Action-Weighted: -160 chips, ≈ ±1,715"
+         ]
+        ]
+       }
+      ],
+      "detailsSummary": "How the simulation handles later action",
+      "details": [
+       "Unknown cards are sampled from the position at the time, and each hand is played out with the opponents' public styles; your later decisions use the balanced bot strategy, with 8 equity samples per decision. The figures estimate net chip change under this simulated strategy, treat chips already invested as sunk, and include split pots, refunds, and later betting. The error shown is approximate sampling error and does not cover errors in the range or strategy model. This is not GTO or a real player's optimal EV.",
+       "Results include immediate folds, calls, later raises, and showdowns; the real hidden hole cards, the actual card order that followed, and the final winners are never used. The two range results are not a range of optimal returns."
+      ]
+     },
+     "simulationNote": null,
+     "decisionTitle": "This bet has value targets you can check",
+     "reason": "Q/J suited: put in an extra 1,071, about 171% of the pot; the board is not dealt yet, with 2 opponents still in. You can try to get value from worse hands; which hands the opponent will call with still needs judging.",
+     "evidence": [
+      "Position UTG+1 · 2 opponents in the hand",
+      "Hand at the time: Q/J suited",
+      "Preflop raises: 1 · Still to act: 0",
+      "Effective stack ≈ 4,950 · SPR 7.9",
+      "Effective call cost 200; after calling you can win 825; break-even equity is about 24%.",
+      "Preflop situation: Open with callers · Limpers: 1"
+     ],
+     "confidence": "Sensitive to ranges and later strategy; no single best line shown",
+     "lesson": "List the specific worse hands that will pay; a hand's name doesn't prove the best size.",
+     "plan": "If re-raised, compare the price and ranges again; if called, plan a new value or exit line for the next street's board.",
+     "metrics": [
+      [
+       "Equity needed to call",
+       "24%"
+      ],
+      [
+       "Two-range estimate",
+       "30%–43%"
+      ],
+      [
+       "Winnable after calling",
+       "825"
+      ]
+     ],
+     "modelNote": "60 samples per range, with a conservative sampling-error band of about ±20 percentage points; this isn't the error in the opponent's real range. Random / action-weighted equity: 43% / 30%. The gap between the two ranges is not a confidence interval.",
+     "priceNote": "The price is only a guide; later bets, other players' actions, and potential winnings aren't included.",
+     "publicActions": [
+      [
+       "River",
+       "Fold"
+      ],
+      [
+       "Kai",
+       "Fold"
+      ],
+      [
+       "Luna",
+       "Fold"
+      ],
+      [
+       "Theo",
+       "Fold"
+      ],
+      [
+       "Jade",
+       "Call 200"
+      ],
+      [
+       "Leo",
+       "Fold"
+      ]
+     ],
+     "publicActionsEmpty": null,
+     "position": "2 / 2",
+     "canPrevious": true,
+     "canNext": false
+    }
+   }
+  },
+  {
+   "name": "review hand 20 · opponents, all, first",
+   "source": "hands",
+   "input": "review hand 20: 9 seats, bots opponents, hero mixed",
+   "panel": "opponents",
+   "state": {
+    "opponentFilter": null,
+    "opponentSelected": 0
+   },
+   "opponents": {
+    "filters": [
+     {
+      "seat": null,
+      "label": "All Opponents",
+      "selected": true
+     },
+     {
+      "seat": 8,
+      "label": "Leo",
+      "selected": false
+     },
+     {
+      "seat": 1,
+      "label": "Mia",
+      "selected": false
+     },
+     {
+      "seat": 2,
+      "label": "Alex",
+      "selected": false
+     },
+     {
+      "seat": 3,
+      "label": "River",
+      "selected": false
+     },
+     {
+      "seat": 4,
+      "label": "Kai",
+      "selected": false
+     },
+     {
+      "seat": 5,
+      "label": "Luna",
+      "selected": false
+     },
+     {
+      "seat": 6,
+      "label": "Theo",
+      "selected": false
+     },
+     {
+      "seat": 7,
+      "label": "Jade",
+      "selected": false
+     }
+    ],
+    "count": "11 actions",
+    "timeline": [
+     {
+      "number": "1",
+      "meta": "Leo · Preflop",
+      "action": "Call 50",
+      "chip": "Peter · HCL",
+      "tone": "pending",
+      "selected": true,
+      "a11y": "Public action #1, Leo · Preflop, Call 50, Peter · HCL"
+     },
+     {
+      "number": "3",
+      "meta": "Mia · Preflop",
+      "action": "2-bet open to 250",
+      "chip": "Tom Dwan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #3, Mia · Preflop, 2-bet open to 250, Tom Dwan"
+     },
+     {
+      "number": "4",
+      "meta": "Alex · Preflop",
+      "action": "Fold",
+      "chip": "Tom Dwan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #4, Alex · Preflop, Fold, Tom Dwan"
+     },
+     {
+      "number": "5",
+      "meta": "River · Preflop",
+      "action": "Fold",
+      "chip": "Johnny Tan · Tan Xuan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #5, River · Preflop, Fold, Johnny Tan · Tan Xuan"
+     },
+     {
+      "number": "6",
+      "meta": "Kai · Preflop",
+      "action": "Fold",
+      "chip": "Aaron Zang",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #6, Kai · Preflop, Fold, Aaron Zang"
+     },
+     {
+      "number": "7",
+      "meta": "Luna · Preflop",
+      "action": "Fold",
+      "chip": "Viktor Blom",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #7, Luna · Preflop, Fold, Viktor Blom"
+     },
+     {
+      "number": "8",
+      "meta": "Theo · Preflop",
+      "action": "Fold",
+      "chip": "Peter · HCL",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #8, Theo · Preflop, Fold, Peter · HCL"
+     },
+     {
+      "number": "9",
+      "meta": "Jade · Preflop",
+      "action": "Call 200",
+      "chip": "Daniel Cates",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #9, Jade · Preflop, Call 200, Daniel Cates"
+     },
+     {
+      "number": "10",
+      "meta": "Leo · Preflop",
+      "action": "Fold",
+      "chip": "Peter · HCL",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #10, Leo · Preflop, Fold, Peter · HCL"
+     },
+     {
+      "number": "12",
+      "meta": "Mia · Preflop",
+      "action": "Fold",
+      "chip": "Tom Dwan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #12, Mia · Preflop, Fold, Tom Dwan"
+     },
+     {
+      "number": "13",
+      "meta": "Jade · Preflop",
+      "action": "Fold",
+      "chip": "Daniel Cates",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #13, Jade · Preflop, Fold, Daniel Cates"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Leo · Preflop",
+     "statusText": "Actual decision record",
+     "tone": "sound",
+     "holeLabel": "Leo's hole cards at the time",
+     "hole": [
+      "0-4",
+      "0-12"
+     ],
+     "board": [],
+     "meta": [
+      [
+       "Position",
+       "UTG"
+      ],
+      [
+       "Pot at the time",
+       "75"
+      ],
+      [
+       "Stack remaining",
+       "5,000"
+      ]
+     ],
+     "choiceLabel": "It chose · Preflop hand",
+     "choice": "Call 50",
+     "explanationTitle": "Low-cost entry range kept it in",
+     "explanation": "This was a low-cost entry into an unraised pot, costing at most one more BB. The hand was in an entry range widened by position and style, so it didn't mechanically fold by comparing multiway showdown equity against random hands with the immediate blind odds; this is no reason to call a big raise or an all-in.",
+     "profileName": "Peter · HCL",
+     "reasons": [
+      "Starting-hand rank: about top 37.0%; this style, position, and the public raising line allow the top 69.3%. It was inside that range. The ranking is a starting-hand heuristic, not a win rate.",
+      "It faced 8 opponents still in, needed 50 to call, could win 125 in the model, and needed 40.0% equity to call.",
+      "It passed the low-cost entry branch, so the normal equity fold check didn't run; the equity and threshold below are only the values computed at the time, not what triggered this action.",
+      "Using only its own cards and the board, it sampled random opponent ranges 28 times: raw estimate 10.7%, judgment noise -2.7%, equity used 8.0%. Calling-tendency shift +3.4%, compared value 11.4%; the usual threshold, including a 2-point buffer, was 42.0%.",
+      "No mood shift this time; base style settings were used."
+     ],
+     "warning": "This is the decision record the simulator actually used at the time. Equity is a small-sample estimate against a random range; it doesn't fully model the opponent's continuing range, equity realization, or future strategy. It is not a real pro's thinking and not proof of optimal play.",
+     "branches": [],
+     "branchesEmpty": "No extra random branches on this step.",
+     "position": "Public action #1",
+     "canPrevious": false,
+     "canNext": true
+    }
+   }
+  },
+  {
+   "name": "review hand 20 · opponents, all, last",
+   "source": "hands",
+   "input": "review hand 20: 9 seats, bots opponents, hero mixed",
+   "panel": "opponents",
+   "state": {
+    "opponentFilter": null,
+    "opponentSelected": 10
+   },
+   "opponents": {
+    "filters": [
+     {
+      "seat": null,
+      "label": "All Opponents",
+      "selected": true
+     },
+     {
+      "seat": 8,
+      "label": "Leo",
+      "selected": false
+     },
+     {
+      "seat": 1,
+      "label": "Mia",
+      "selected": false
+     },
+     {
+      "seat": 2,
+      "label": "Alex",
+      "selected": false
+     },
+     {
+      "seat": 3,
+      "label": "River",
+      "selected": false
+     },
+     {
+      "seat": 4,
+      "label": "Kai",
+      "selected": false
+     },
+     {
+      "seat": 5,
+      "label": "Luna",
+      "selected": false
+     },
+     {
+      "seat": 6,
+      "label": "Theo",
+      "selected": false
+     },
+     {
+      "seat": 7,
+      "label": "Jade",
+      "selected": false
+     }
+    ],
+    "count": "11 actions",
+    "timeline": [
+     {
+      "number": "1",
+      "meta": "Leo · Preflop",
+      "action": "Call 50",
+      "chip": "Peter · HCL",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #1, Leo · Preflop, Call 50, Peter · HCL"
+     },
+     {
+      "number": "3",
+      "meta": "Mia · Preflop",
+      "action": "2-bet open to 250",
+      "chip": "Tom Dwan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #3, Mia · Preflop, 2-bet open to 250, Tom Dwan"
+     },
+     {
+      "number": "4",
+      "meta": "Alex · Preflop",
+      "action": "Fold",
+      "chip": "Tom Dwan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #4, Alex · Preflop, Fold, Tom Dwan"
+     },
+     {
+      "number": "5",
+      "meta": "River · Preflop",
+      "action": "Fold",
+      "chip": "Johnny Tan · Tan Xuan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #5, River · Preflop, Fold, Johnny Tan · Tan Xuan"
+     },
+     {
+      "number": "6",
+      "meta": "Kai · Preflop",
+      "action": "Fold",
+      "chip": "Aaron Zang",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #6, Kai · Preflop, Fold, Aaron Zang"
+     },
+     {
+      "number": "7",
+      "meta": "Luna · Preflop",
+      "action": "Fold",
+      "chip": "Viktor Blom",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #7, Luna · Preflop, Fold, Viktor Blom"
+     },
+     {
+      "number": "8",
+      "meta": "Theo · Preflop",
+      "action": "Fold",
+      "chip": "Peter · HCL",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #8, Theo · Preflop, Fold, Peter · HCL"
+     },
+     {
+      "number": "9",
+      "meta": "Jade · Preflop",
+      "action": "Call 200",
+      "chip": "Daniel Cates",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #9, Jade · Preflop, Call 200, Daniel Cates"
+     },
+     {
+      "number": "10",
+      "meta": "Leo · Preflop",
+      "action": "Fold",
+      "chip": "Peter · HCL",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #10, Leo · Preflop, Fold, Peter · HCL"
+     },
+     {
+      "number": "12",
+      "meta": "Mia · Preflop",
+      "action": "Fold",
+      "chip": "Tom Dwan",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #12, Mia · Preflop, Fold, Tom Dwan"
+     },
+     {
+      "number": "13",
+      "meta": "Jade · Preflop",
+      "action": "Fold",
+      "chip": "Daniel Cates",
+      "tone": "pending",
+      "selected": true,
+      "a11y": "Public action #13, Jade · Preflop, Fold, Daniel Cates"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Jade · Preflop",
+     "statusText": "Actual decision record",
+     "tone": "sound",
+     "holeLabel": "Jade's hole cards at the time",
+     "hole": [
+      "1-5",
+      "0-14"
+     ],
+     "board": [],
+     "meta": [
+      [
+       "Position",
+       "BB"
+      ],
+      [
+       "Pot at the time",
+       "1,696"
+      ],
+      [
+       "Stack remaining",
+       "4,750"
+      ]
+     ],
+     "choiceLabel": "It chose · Preflop hand",
+     "choice": "Fold",
+     "explanationTitle": "Hand outside this defending range",
+     "explanation": "Actually executed: hand outside this defending range. Cards dealt later were not used to decide this step.",
+     "profileName": "Daniel Cates",
+     "reasons": [
+      "Starting-hand rank: about top 22.6%; this style, position, and the public raising line allow the top 17.2%. It was outside that range. The ranking is a starting-hand heuristic, not a win rate.",
+      "It faced 1 opponent still in, needed 871 to call, could win 2,567 in the model, and needed 33.9% equity to call.",
+      "Using only its own cards and the board, it sampled random opponent ranges 28 times: raw estimate 58.9%, judgment noise -2.5%, equity used 56.4%. Calling-tendency shift +1.4%, compared value 57.8%; the usual threshold, including a 2-point buffer, was 35.9%.",
+      "No mood shift this time; base style settings were used."
+     ],
+     "warning": "This is the decision record the simulator actually used at the time. Equity is a small-sample estimate against a random range; it doesn't fully model the opponent's continuing range, equity realization, or future strategy. It is not a real pro's thinking and not proof of optimal play.",
+     "branches": [
+      [
+       "Leeway roll when outside range",
+       "0.955 / threshold 3.9% · Miss"
+      ]
+     ],
+     "branchesEmpty": null,
+     "position": "Public action #13",
+     "canPrevious": true,
+     "canNext": false
+    }
+   }
+  },
+  {
+   "name": "review hand 20 · opponents, seat 7, last",
+   "source": "hands",
+   "input": "review hand 20: 9 seats, bots opponents, hero mixed",
+   "panel": "opponents",
+   "state": {
+    "opponentFilter": 7,
+    "opponentSelected": 1
+   },
+   "opponents": {
+    "filters": [
+     {
+      "seat": null,
+      "label": "All Opponents",
+      "selected": false
+     },
+     {
+      "seat": 8,
+      "label": "Leo",
+      "selected": false
+     },
+     {
+      "seat": 1,
+      "label": "Mia",
+      "selected": false
+     },
+     {
+      "seat": 2,
+      "label": "Alex",
+      "selected": false
+     },
+     {
+      "seat": 3,
+      "label": "River",
+      "selected": false
+     },
+     {
+      "seat": 4,
+      "label": "Kai",
+      "selected": false
+     },
+     {
+      "seat": 5,
+      "label": "Luna",
+      "selected": false
+     },
+     {
+      "seat": 6,
+      "label": "Theo",
+      "selected": false
+     },
+     {
+      "seat": 7,
+      "label": "Jade",
+      "selected": true
+     }
+    ],
+    "count": "2 actions",
+    "timeline": [
+     {
+      "number": "9",
+      "meta": "Jade · Preflop",
+      "action": "Call 200",
+      "chip": "Daniel Cates",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Public action #9, Jade · Preflop, Call 200, Daniel Cates"
+     },
+     {
+      "number": "13",
+      "meta": "Jade · Preflop",
+      "action": "Fold",
+      "chip": "Daniel Cates",
+      "tone": "pending",
+      "selected": true,
+      "a11y": "Public action #13, Jade · Preflop, Fold, Daniel Cates"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Jade · Preflop",
+     "statusText": "Actual decision record",
+     "tone": "sound",
+     "holeLabel": "Jade's hole cards at the time",
+     "hole": [
+      "1-5",
+      "0-14"
+     ],
+     "board": [],
+     "meta": [
+      [
+       "Position",
+       "BB"
+      ],
+      [
+       "Pot at the time",
+       "1,696"
+      ],
+      [
+       "Stack remaining",
+       "4,750"
+      ]
+     ],
+     "choiceLabel": "It chose · Preflop hand",
+     "choice": "Fold",
+     "explanationTitle": "Hand outside this defending range",
+     "explanation": "Actually executed: hand outside this defending range. Cards dealt later were not used to decide this step.",
+     "profileName": "Daniel Cates",
+     "reasons": [
+      "Starting-hand rank: about top 22.6%; this style, position, and the public raising line allow the top 17.2%. It was outside that range. The ranking is a starting-hand heuristic, not a win rate.",
+      "It faced 1 opponent still in, needed 871 to call, could win 2,567 in the model, and needed 33.9% equity to call.",
+      "Using only its own cards and the board, it sampled random opponent ranges 28 times: raw estimate 58.9%, judgment noise -2.5%, equity used 56.4%. Calling-tendency shift +1.4%, compared value 57.8%; the usual threshold, including a 2-point buffer, was 35.9%.",
+      "No mood shift this time; base style settings were used."
+     ],
+     "warning": "This is the decision record the simulator actually used at the time. Equity is a small-sample estimate against a random range; it doesn't fully model the opponent's continuing range, equity realization, or future strategy. It is not a real pro's thinking and not proof of optimal play.",
+     "branches": [
+      [
+       "Leeway roll when outside range",
+       "0.955 / threshold 3.9% · Miss"
+      ]
+     ],
+     "branchesEmpty": null,
+     "position": "Public action #13",
+     "canPrevious": true,
+     "canNext": false
+    }
+   }
+  },
+  {
+   "name": "review hand 12 · done, step 2, simulation unavailable",
+   "source": "hands",
+   "input": "review hand 12: 6 seats, bots opponents, hero call",
+   "panel": "hero",
+   "state": {
+    "status": "done",
+    "progress": 5,
+    "analyzed": true,
+    "selected": 1,
+    "dropSimulation": 1
+   },
+   "hero": {
+    "title": "Hand #1 · Review",
+    "change": "-825 chips",
+    "context": "You didn't win the pot",
+    "stateText": "5 decisions, 800 chips put in. Start with step 1 (Preflop): Facing an open, check the price and the risk of domination first. 1 other issue to look through step by step.",
+    "running": false,
+    "progress": 5,
+    "total": 5,
+    "summaryTitle": "Worth comparing: Facing an open, check the price and the risk of domination first",
+    "priorityButton": "Go to the priority decision",
+    "priorityIndex": 0,
+    "retryVisible": false,
+    "stepCount": "5 actions",
+    "timeline": [
+     {
+      "number": "1",
+      "meta": "Preflop · SB",
+      "action": "Call 125",
+      "chip": "Worth Discussing",
+      "tone": "consider",
+      "selected": false,
+      "a11y": "Step 1, Preflop · SB, Call 125, Worth Discussing"
+     },
+     {
+      "number": "2",
+      "meta": "Flop · SB",
+      "action": "Check",
+      "chip": "Well Reasoned",
+      "tone": "sound",
+      "selected": true,
+      "a11y": "Step 2, Flop · SB, Check, Well Reasoned"
+     },
+     {
+      "number": "3",
+      "meta": "Flop · SB",
+      "action": "Call 675",
+      "chip": "Worth Discussing",
+      "tone": "consider",
+      "selected": false,
+      "a11y": "Step 3, Flop · SB, Call 675, Worth Discussing"
+     },
+     {
+      "number": "4",
+      "meta": "Turn · SB",
+      "action": "Check",
+      "chip": "Well Reasoned",
+      "tone": "sound",
+      "selected": false,
+      "a11y": "Step 4, Turn · SB, Check, Well Reasoned"
+     },
+     {
+      "number": "5",
+      "meta": "River · SB",
+      "action": "Check",
+      "chip": "Well Reasoned",
+      "tone": "sound",
+      "selected": false,
+      "a11y": "Step 5, River · SB, Check, Well Reasoned"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Step 2 · Flop",
+     "statusText": "Well Reasoned",
+     "tone": "sound",
+     "hole": [
+      "3-6",
+      "0-4"
+     ],
+     "board": [
+      "1-14",
+      "1-7",
+      "1-2"
+     ],
+     "meta": [
+      [
+       "Position",
+       "SB"
+      ],
+      [
+       "Pot at the time",
+       "750"
+      ],
+      [
+       "Stack remaining",
+       "4,850"
+      ]
+     ],
+     "yourChoice": "Check",
+     "suggestion": "Keep this line; adjust to opponent ranges",
+     "routes": [
+      [
+       "When the main line holds",
+       "Check",
+       "Without the last-to-act advantage, watch the opponent's bets and how the board develops first.",
+       "Saves chips; it doesn't guarantee a free card, so you still need a plan for later bets."
+      ],
+      [
+       "Conditional alternative",
+       "1-bet bet to 450",
+       "When there are clear worse hands that call, or the opponent will fold better hands; without evidence, keep checking.",
+       "Gains value or fold equity but is exposed to calls and raises; it hasn't been shown to earn more."
+      ]
+     ],
+     "simulation": null,
+     "simulationNote": "This older snapshot lacks the full action state, so later action can't be simulated; the range and price analysis from public information still applies.",
+     "decisionTitle": "This check controls the pot",
+     "reason": "You had high card on a board that's three to a flush, with nothing to call. 4 players can still act after you, so checking doesn't guarantee a free card.",
+     "evidence": [
+      "Position SB · 4 opponents in the hand · Not last to act",
+      "Hand at the time: High Card",
+      "Board: Three to a flush",
+      "Effective stack ≈ 4,850 · SPR 6.5"
+     ],
+     "confidence": "Sensitive to ranges and later strategy; no single best line shown",
+     "lesson": "After checking, still separate a free chance from your conditions for continuing against a bet.",
+     "plan": "If someone bets, recalculate with the actual amount; if the board alone makes the hand, think about a split first and don't invent an edge from your hole cards.",
+     "metrics": [
+      [
+       "Equity needed to call",
+       "No call needed"
+      ],
+      [
+       "Two-range estimate",
+       "≈5%"
+      ],
+      [
+       "Winnable after calling",
+       "750"
+      ]
+     ],
+     "modelNote": "60 samples per range, with a conservative sampling-error band of about ±20 percentage points; this isn't the error in the opponent's real range. Random / action-weighted equity: 5% / 5%. The gap between the two ranges is not a confidence interval.",
+     "priceNote": "The price is only a guide; later bets, other players' actions, and potential winnings aren't included.",
+     "publicActions": [],
+     "publicActionsEmpty": "No other actions yet this round.",
+     "position": "2 / 5",
+     "canPrevious": true,
+     "canNext": true
+    }
+   }
+  },
+  {
+   "name": "review hand 2 · idle after a background pause",
+   "source": "hands",
+   "input": "review hand 2: 6 seats, mixed opponents, hero call",
+   "panel": "hero",
+   "state": {
+    "status": "idle",
+    "progress": 1,
+    "analyzed": false,
+    "selected": 0
+   },
+   "hero": {
+    "title": "Hand #1 · Review",
+    "change": "+17 chips",
+    "context": "You won the pot",
+    "stateText": "Preparing this hand's decision snapshots…",
+    "running": false,
+    "progress": 1,
+    "total": 2,
+    "summaryTitle": "Back to the decisions as they were",
+    "priorityButton": null,
+    "priorityIndex": null,
+    "retryVisible": false,
+    "stepCount": "2 actions",
+    "timeline": [
+     {
+      "number": "1",
+      "meta": "Preflop · SB",
+      "action": "3-bet raise to 3,477",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": true,
+      "a11y": "Step 1, Preflop · SB, 3-bet raise to 3,477, Pending"
+     },
+     {
+      "number": "2",
+      "meta": "Preflop · SB",
+      "action": "All-In Call 1,523",
+      "chip": "Pending",
+      "tone": "pending",
+      "selected": false,
+      "a11y": "Step 2, Preflop · SB, All-In Call 1,523, Pending"
+     }
+    ],
+    "empty": null,
+    "step": {
+     "title": "Step 1 · Preflop",
+     "statusText": "Analyzing",
+     "tone": "pending",
+     "hole": [
+      "3-4",
+      "1-8"
+     ],
+     "board": [],
+     "meta": [
+      [
+       "Position",
+       "SB"
+      ],
+      [
+       "Pot at the time",
+       "1,999"
+      ],
+      [
+       "Stack remaining",
+       "4,975"
+      ]
+     ],
+     "yourChoice": "3-bet raise to 3,477",
+     "suggestion": "Comparing available actions…",
+     "routes": [],
+     "simulation": null,
+     "simulationNote": "Simulating each legal action and the rest of the hand…",
+     "decisionTitle": "Analysis based on what you knew then",
+     "reason": "Uses your hole cards, the community cards, public actions, and stacks at the time, never opponents' hidden cards or cards dealt later.",
+     "evidence": [],
+     "confidence": "Waiting for analysis",
+     "lesson": "Judge the decision separately from the result; a specific practice focus appears when the review is done.",
+     "plan": "The follow-up plan appears when analysis finishes.",
+     "metrics": [
+      [
+       "Equity needed to call",
+       "…"
+      ],
+      [
+       "Two-range estimate",
+       "—"
+      ],
+      [
+       "Winnable after calling",
+       "…"
+      ]
+     ],
+     "modelNote": null,
+     "priceNote": "The price is only a guide; later bets, other players' actions, and potential winnings aren't included.",
+     "publicActions": [
+      [
+       "Alex",
+       "2-bet open to 962"
+      ],
+      [
+       "River",
+       "Fold"
+      ],
+      [
+       "Kai",
+       "Call 962"
+      ],
+      [
+       "Luna",
+       "Fold"
+      ]
+     ],
+     "publicActionsEmpty": null,
+     "position": "1 / 2",
+     "canPrevious": false,
+     "canNext": true
+    }
+   }
+  },
+  {
+   "name": "review-check: blind-only loss · idle",
+   "source": "reviewInputs",
+   "input": "review-check: blind-only loss",
+   "panel": "hero",
+   "state": {
+    "status": "idle",
+    "progress": 0,
+    "analyzed": false,
+    "selected": 0
+   },
+   "hero": {
+    "title": "Hand #1 · Review",
+    "change": "-25 chips",
+    "context": "You didn't win the pot",
+    "stateText": "Preparing this hand's decision snapshots…",
+    "running": false,
+    "progress": 0,
+    "total": 0,
+    "summaryTitle": "Back to the decisions as they were",
+    "priorityButton": null,
+    "priorityIndex": null,
+    "retryVisible": false,
+    "stepCount": "0 actions",
+    "timeline": [],
+    "empty": "You made no decisions this hand, so there's nothing to evaluate. Blinds are forced bets and never count as mistakes.",
+    "step": null
+   }
+  },
+  {
+   "name": "review-check: blind-only loss · done",
+   "source": "reviewInputs",
+   "input": "review-check: blind-only loss",
+   "panel": "hero",
+   "state": {
+    "status": "done",
+    "progress": 0,
+    "analyzed": true,
+    "selected": 0
+   },
+   "hero": {
+    "title": "Hand #1 · Review",
+    "change": "-25 chips",
+    "context": "You didn't win the pot",
+    "stateText": "You made no decisions this hand; forced blinds can't count as mistakes.",
+    "running": false,
+    "progress": 0,
+    "total": 0,
+    "summaryTitle": "No obvious decision mistakes found",
+    "priorityButton": null,
+    "priorityIndex": null,
+    "retryVisible": false,
+    "stepCount": "0 actions",
+    "timeline": [],
+    "empty": "You made no decisions this hand, so there's nothing to evaluate. Blinds are forced bets and never count as mistakes.",
+    "step": null
+   }
+  },
+  {
+   "name": "review-check: blind-only loss · opponents, none",
+   "source": "reviewInputs",
+   "input": "review-check: blind-only loss",
+   "panel": "opponents",
+   "state": {
+    "opponentFilter": null,
+    "opponentSelected": 0
+   },
+   "opponents": {
+    "filters": [
+     {
+      "seat": null,
+      "label": "All Opponents",
+      "selected": true
+     }
+    ],
+    "count": "0 actions",
+    "timeline": [],
+    "empty": "No bot decision records for this hand. Reasons are never invented for actions that can't be reconstructed; the next hand will record the actual decisions.",
+    "step": null
+   }
+  }
+ ]
+}

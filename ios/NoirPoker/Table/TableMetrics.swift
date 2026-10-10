@@ -1,0 +1,115 @@
+import SwiftUI
+import PokerCore
+
+/// Reference arena geometry (visual spec §5–7) for a given arena width, seat
+/// count and hand state. Heights are fixed per state; seat x is a percentage
+/// of the width and seat y a percentage of the height.
+struct TableMetrics {
+    let width: CGFloat
+    let count: Int
+    let done: Bool
+    let longNames: Bool
+    /// Dynamic Type is at an accessibility size: plates drop their avatars.
+    let largeText: Bool
+    /// Docked wide layouts fit the felt to the window, down to a floor that
+    /// keeps plates, revealed cards and the board apart.
+    var maxHeight: CGFloat? = nil
+    /// Phone landscape: the felt fills the height beside the action rail, so
+    /// it uses its own flatter geometry and smaller cards.
+    var console: Bool = false
+
+    var compact: Bool { width <= 600 || console }
+    var dense: Bool { compact && count >= 7 }
+    var tiny: Bool { width <= 360 }
+
+    var height: CGFloat {
+        if console, let maxHeight { return max(maxHeight, 250) }
+        let base: CGFloat
+        switch count {
+        case ...6: base = compact ? (done ? 600 : 490) : (done ? 620 : 550)
+        case 7: base = 620
+        default:
+            if compact && longNames { base = count == 8 ? 800 : 900 } else { base = compact ? 720 : 690 }
+        }
+        let full = base + (largeText ? 90 : 0)
+        guard let maxHeight, !(compact && longNames) else { return full }
+        let floor: CGFloat
+        switch count {
+        case ...6: floor = compact ? (done ? 600 : 470) : (done ? 600 : 480)
+        case 7: floor = compact ? 560 : (done ? 560 : 520)
+        default: floor = compact ? 580 : (done ? 580 : 520)
+        }
+        return min(full, max(floor, maxHeight))
+    }
+
+    /// Rail ellipse insets: top, horizontal, bottom.
+    var railInsets: (top: CGFloat, side: CGFloat, bottom: CGFloat) {
+        if console { return (height * 0.11, width * 0.07, height * 0.12) }
+        if count >= 8 {
+            return compact ? (56, width * 0.015, 75) : (56, width * 0.05, 74)
+        }
+        return compact ? (58, width * 0.015, 76) : (57, width * 0.055, 60)
+    }
+
+    var railPadding: CGFloat { compact ? 9 : 13 }
+    var feltOutlineInset: CGFloat { compact ? 7 : 10 }
+
+    var centerTop: CGFloat {
+        if console { return height * (count >= 7 ? 0.37 : 0.36) }
+        if count >= 8 { return height * 0.33 }
+        if done && count <= 6 { return height * (compact ? 0.34 : 0.36) }
+        return height * 0.30
+    }
+
+    var heroBottom: CGFloat { height - (console ? 6 : 20) }
+
+    var boardCard: CGSize {
+        if console { return dense ? CGSize(width: 33, height: 47) : CGSize(width: 37, height: 53) }
+        if dense {
+            if tiny { return done && count == 9 ? CGSize(width: 26, height: 38) : CGSize(width: 32, height: 47) }
+            let w = min(max(28, width * 0.09), 37)
+            let h = min(max(41, width * 0.13), 54)
+            return CGSize(width: w, height: h)
+        }
+        if tiny { return CGSize(width: 39, height: 58) }
+        return compact ? CGSize(width: 43, height: 63) : CGSize(width: 55, height: 78)
+    }
+
+    var boardGap: CGFloat { dense ? 4 : (compact ? 5 : 8) }
+    var heroCard: CGSize {
+        if console { return CGSize(width: 44, height: 63) }
+        return compact ? CGSize(width: 55, height: 79) : CGSize(width: 63, height: 91)
+    }
+    var cardBack: CGSize { console ? CGSize(width: 21, height: 30) : compact ? CGSize(width: 25, height: 36) : CGSize(width: 29, height: 41) }
+    var seatCard: CGSize { console ? CGSize(width: 28, height: 40) : compact ? CGSize(width: 33, height: 46) : CGSize(width: 38, height: 53) }
+    var showAvatars: Bool { !console && !dense && !tiny && !largeText }
+    var plateMinWidth: CGFloat { dense ? (tiny ? 72 : 78) : (tiny ? 77 : (compact ? 84 : 98)) }
+    var avatarSize: CGFloat { compact ? 24 : 30 }
+
+    /// Landscape phone seat places (x %, y %), by seat id 1...count-1. The
+    /// felt is short and wide there, so the side seats spread outward and
+    /// the top row widens instead of stacking three plates per side.
+    static let consoleLayouts: [Int: [(x: Double, y: Double)]] = [
+        5: [(15, 55), (25, 0), (75, 0), (85, 55)],
+        6: [(14, 55), (17, 12), (50, 0), (83, 12), (86, 55)],
+        7: [(15, 64), (6, 22), (33, 0), (67, 0), (94, 22), (85, 64)],
+        8: [(15, 64), (6, 22), (25, 0), (50, 0), (75, 0), (94, 22), (85, 64)],
+        9: [(15, 64), (6, 22), (24, 0), (41.5, 0), (58.5, 0), (76, 0), (94, 22), (85, 64)],
+    ]
+
+    func seatPoint(_ x: Double, _ y: Double) -> CGPoint {
+        CGPoint(x: width * x / 100, y: height * y / 100)
+    }
+
+    /// The seat's top-center anchor. A settled 6-max table on a phone lifts
+    /// seats 2 and 4 by 20 pt so revealed cards clear the board.
+    func seatAnchor(_ seat: SeatState) -> CGPoint {
+        if console, let layout = Self.consoleLayouts[count], layout.indices.contains(seat.id - 1) {
+            let place = layout[seat.id - 1]
+            return seatPoint(place.x, place.y)
+        }
+        var point = seatPoint(seat.layoutX, seat.layoutY)
+        if compact && done && count == 6 && (seat.id == 2 || seat.id == 4) { point.y -= 20 }
+        return point
+    }
+}

@@ -17,3 +17,8 @@ node_modules/
 *.mobileprovision
 *.ipa
 *.apk
+*.jks
+*.p8
+*.aab
+keystore.properties
+*.mobileprovisionprofile
