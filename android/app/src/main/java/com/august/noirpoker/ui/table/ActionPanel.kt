@@ -151,8 +151,8 @@ private fun BetControls(actions: ActionPanelState, callbacks: ActionPanelCallbac
         )
     }
     val amountStyle = NoirType.tabular(NoirType.style(if (metrics.compact) 16.sp else 18.sp, FontWeight.SemiBold))
-    if (metrics.largeText) {
-        // Large text: label and amount on one line, the slider full width, presets 2 × 2.
+    if (metrics.largeText || metrics.console) {
+        // Large text and the landscape rail: label and amount on one line, the slider full width, presets 2 × 2.
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(actions.sliderLabel, style = NoirType.style(12.sp, color = Noir.TextSliderLabel))
@@ -327,7 +327,13 @@ private fun SettledButtons(actions: ActionPanelState, callbacks: ActionPanelCall
     val review: @Composable (Modifier) -> Unit = { m ->
         NoirButton(actions.reviewLabel, callbacks::openReview, bg = Noir.ReviewBg, fg = Noir.ReviewText, border = Noir.ReviewBorder, modifier = m.testTag("review-hand"))
     }
-    if (metrics.compact || metrics.largeText) {
+    if (metrics.console) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (actions.nextHandVisible) next(Modifier.fillMaxWidth())
+            if (actions.replayVisible) replay(Modifier.fillMaxWidth())
+            if (actions.reviewVisible) review(Modifier.fillMaxWidth())
+        }
+    } else if (metrics.compact || metrics.largeText) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 if (actions.nextHandVisible) next(Modifier.weight(1f))

@@ -17,6 +17,7 @@ object UiCopy {
     const val soundOnA11y = "Turn sound on"
     const val soundOffA11y = "Turn sound off"
     const val rulesButton = "How to Play"
+    const val tableInfoA11y = "Table and Session"
     const val tableRegionA11y = "Texas Hold'em table"
     const val tableEyebrow = "THE PRACTICE ROOM"
     const val tableHeadline = "Every hand is a fresh chance"

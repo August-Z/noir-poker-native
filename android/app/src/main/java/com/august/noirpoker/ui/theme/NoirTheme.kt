@@ -230,6 +230,8 @@ data class NoirMetrics(
     val tiny: Boolean,
     /** Two panes but under 1,150 dp (the reference's 901–1150 band): one showdown column, stacked bet controls. */
     val narrowPane: Boolean = false,
+    /** Phone landscape: the felt fills the height beside the action rail, with its own seat places and smaller cards. */
+    val console: Boolean = false,
 )
 
 val LocalNoirMetrics = staticCompositionLocalOf { NoirMetrics(compact = true, twoPane = false, largeText = false, tiny = false) }

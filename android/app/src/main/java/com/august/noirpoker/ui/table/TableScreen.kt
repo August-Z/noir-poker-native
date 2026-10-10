@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -60,6 +61,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.august.noirpoker.core.Difficulty
@@ -76,6 +78,127 @@ import com.august.noirpoker.ui.theme.NoirType
 /** Width at which the sidebar moves beside the table (the reference's 901 px breakpoint). */
 private val TWO_PANE_MIN = 900.dp
 
+/** Landscape windows shorter than this use the console table. */
+private val CONSOLE_MAX_HEIGHT = 520.dp
+
+/**
+ * The landscape phone table: the felt at the full height under a one-line
+ * title, and the rail on the right under the thumb, with the table controls on
+ * top and the decision strip, bet controls and buttons at the bottom. Session
+ * stats and table settings open in a sheet.
+ */
+@Composable
+private fun ConsoleTable(
+    state: TableRenderState,
+    model: TableModel,
+    callbacks: ActionPanelCallbacks,
+    width: Dp,
+    height: Dp,
+    onInfo: () -> Unit,
+    onSettings: () -> Unit,
+    onRules: () -> Unit,
+) {
+    val session = model.session
+    val railWidth = if (width >= 780.dp) 264.dp else 240.dp
+    val gap = 10.dp
+    val titleHeight = 28.dp
+    Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(gap)) {
+        Column(Modifier.width(width - railWidth - gap)) {
+            ConsoleTitle(state, Modifier.height(titleHeight))
+            Arena(
+                state,
+                onTogglePeek = { session.toggleReveal(it) },
+                onPotDetails = session::openPotDetails,
+                effects = model.effects,
+                fixedHeight = height - titleHeight,
+            )
+        }
+        val shape = RoundedCornerShape(16.dp)
+        Column(
+            Modifier
+                .width(railWidth)
+                .fillMaxHeight()
+                .padding(vertical = 6.dp)
+                .background(Noir.Panel, shape)
+                .border(1.dp, Noir.SurfaceBorder, shape)
+                .testTag("action-dock"),
+        ) {
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                ConsoleIcon(UiCopy.tableInfoA11y, "table-info", onInfo) { drawStatsGlyph(it) }
+                SoundButton(state.settings, session::toggleSound)
+                SettingsButton(onSettings)
+                ConsoleIcon(UiCopy.rulesButton, "rules", onRules, text = "?")
+            }
+            HorizontalDivider(color = Noir.StripDivider)
+            BoxWithConstraints(Modifier.fillMaxWidth().weight(1f)) {
+                val inner = maxHeight
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .heightIn(min = inner)
+                        .padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.Bottom),
+                ) {
+                    Notes(state)
+                    DecisionStrip(state.actions)
+                    ActionPanel(state.actions, callbacks)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ConsoleTitle(state: TableRenderState, modifier: Modifier) {
+    Row(modifier.padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Canvas(Modifier.size(15.dp).semantics { contentDescription = UiCopy.brandA11y }) {
+            drawSuit(0, center, size.width * 0.9f, Noir.Mint)
+        }
+        Spacer(Modifier.width(8.dp))
+        Text(UiCopy.brandNoir, style = NoirType.style(13.sp, FontWeight.ExtraBold, tracking = 2.sp))
+        Spacer(Modifier.width(12.dp))
+        HandLabel(state)
+    }
+}
+
+@Composable
+private fun ConsoleIcon(
+    a11y: String,
+    tag: String,
+    onClick: () -> Unit,
+    text: String? = null,
+    glyph: (androidx.compose.ui.graphics.drawscope.DrawScope.(Color) -> Unit)? = null,
+) {
+    Box(
+        Modifier
+            .size(48.dp)
+            .clickable(role = Role.Button, onClick = onClick)
+            .testTag(tag)
+            .semantics { contentDescription = a11y },
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(Modifier.size(32.dp).border(1.dp, Noir.Line, CircleShape), contentAlignment = Alignment.Center) {
+            if (text != null) Text(text, style = NoirType.style(12.sp, color = Noir.TextDialogBody))
+            if (glyph != null) Canvas(Modifier.size(14.dp)) { glyph(Noir.TextDialogBody) }
+        }
+    }
+}
+
+/** Three rising bars: session stats. */
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawStatsGlyph(color: Color) {
+    val w = size.width
+    val h = size.height
+    val stroke = w * 0.16f
+    listOf(0.2f to 0.55f, 0.5f to 0.25f, 0.8f to 0.05f).forEach { (x, top) ->
+        drawLine(color, Offset(w * x, h * 0.95f), Offset(w * x, h * top), stroke, StrokeCap.Round)
+    }
+}
+
 /** The table root: header, the table surface, the sidebar cards and the sheets. */
 @Composable
 fun NoirTableScreen(model: TableModel) {
@@ -84,6 +207,7 @@ fun NoirTableScreen(model: TableModel) {
     var showRules by rememberSaveable { mutableStateOf(false) }
     var showReset by rememberSaveable { mutableStateOf(false) }
     var showSettings by rememberSaveable { mutableStateOf(false) }
+    var showInfo by rememberSaveable { mutableStateOf(false) }
     val callbacks = remember(session) {
         object : ActionPanelCallbacks {
             override fun fold() { session.fold() }
@@ -139,15 +263,25 @@ fun NoirTableScreen(model: TableModel) {
     ) {
         val fontScale = LocalDensity.current.fontScale
         val width = maxWidth
+        // Phones in landscape: the felt fills the height beside a fixed action rail.
+        val console = maxWidth > maxHeight && maxHeight < CONSOLE_MAX_HEIGHT && fontScale < 1.3f
         val metrics = NoirMetrics(
-            compact = maxWidth <= 600.dp,
-            twoPane = maxWidth >= TWO_PANE_MIN,
+            compact = maxWidth <= 600.dp || console,
+            twoPane = maxWidth >= TWO_PANE_MIN && !console,
+            console = console,
             largeText = fontScale >= 1.3f,
             tiny = maxWidth <= 360.dp,
             narrowPane = maxWidth >= TWO_PANE_MIN && maxWidth < 1150.dp,
         )
         CompositionLocalProvider(LocalNoirMetrics provides metrics) {
-            Column(Modifier.fillMaxSize()) {
+            if (console) {
+                ConsoleTable(
+                    state, model, callbacks, maxWidth, maxHeight,
+                    onInfo = { showInfo = true },
+                    onSettings = { showSettings = true },
+                    onRules = { showRules = true },
+                )
+            } else Column(Modifier.fillMaxSize()) {
                 Header(state, onToggleSound = session::toggleSound, onSettings = { showSettings = true }, onRules = { showRules = true })
                 if (metrics.twoPane) {
                     Row(
@@ -184,6 +318,20 @@ fun NoirTableScreen(model: TableModel) {
                     ) {
                         TableColumn(state, model, callbacks) { showReset = true }
                         SidebarCards(state, session::toggleHints, stacked = metrics.tiny || metrics.largeText)
+                    }
+                }
+            }
+            if (showInfo) {
+                NoirSheet(eyebrow = UiCopy.tableEyebrow, onDismiss = { showInfo = false }) {
+                    SurfaceTopBar(state, session::setSeatCount, session::setDifficulty) {
+                        showInfo = false
+                        session.openOpponentSettings()
+                    }
+                    Notes(state)
+                    SidebarCards(state, session::toggleHints, stacked = false)
+                    TableFooter {
+                        showInfo = false
+                        showReset = true
                     }
                 }
             }

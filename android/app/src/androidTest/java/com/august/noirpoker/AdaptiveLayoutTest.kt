@@ -233,6 +233,35 @@ class AdaptiveLayoutTest {
         assertActionButtons()
     }
 
+    /** Phones in landscape: the felt and the action rail share the screen without scrolling. */
+    private fun assertConsole(seats: Int) {
+        show(DpSize(840.dp, 390.dp), seats = seats)
+        val table = tableBounds()
+        val rail = bounds("action-dock")
+        assertTrue("The felt sits left of the rail ($table, $rail)", table.right <= rail.left + 1.dp)
+        assertTrue("The whole felt fits the window ($table)", table.bottom <= 391.dp)
+        assertSeats(seats)
+        assertActionButtons()
+        listOf("fold", "call", "raise").forEach {
+            val b = bounds(it)
+            assertTrue("$it sits in the rail", b.left >= rail.left && b.right <= rail.right + 1.dp)
+        }
+        compose.onNodeWithTag("table-info").assertIsDisplayed()
+    }
+
+    @Test fun phoneLandscapeShowsTheConsoleAtSixSeats() = assertConsole(6)
+
+    @Test fun phoneLandscapeShowsTheConsoleAtNineSeats() = assertConsole(9)
+
+    @Test fun phoneLandscapeSettledHandFitsTheRail() {
+        show(DpSize(840.dp, 390.dp), seats = 9, settled = true)
+        assertSeats(9)
+        compose.onNodeWithTag("next-hand").assertIsDisplayed()
+        val rail = bounds("action-dock")
+        val next = bounds("next-hand")
+        assertTrue("Next Hand sits in the rail", next.left >= rail.left && next.right <= rail.right + 1.dp)
+    }
+
     @Test fun tabletLandscapePlacesTheSidebarBesideTheTable() {
         show(DpSize(1280.dp, 800.dp), seats = 9)
         val table = tableBounds()
